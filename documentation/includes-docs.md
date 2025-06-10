@@ -1,6 +1,6 @@
 ---
 layout: base
-title: Refactored: `_includes` Cleanup and Consolidation Documentation
+title: Includes folder documentation
 hide: true
 permalink: /includes_docs
 nav: true
