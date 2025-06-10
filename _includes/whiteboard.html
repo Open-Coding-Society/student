@@ -1,0 +1,343 @@
+<title>Live Whiteboard Viewer</title>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  crossorigin="anonymous"
+/>
+
+<div style="display: flex; max-width: 1200px; width: 100%; min-height: 600px; background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%); border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; animation: slideUp 0.8s ease-out; transition: all 0.5s ease;" class="wb-container">
+  <aside style="flex: 0 0 350px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); border-radius: 20px 0 0 20px; border: 1px solid rgba(255, 255, 255, 0.2); padding: 2.5rem 3.5rem 2.5rem 2rem; display: flex; flex-direction: column; position: relative; z-index: 2; transition: all 0.5s ease;" class="wb-sidebar">
+      <button id="wbSidebarToggle" onclick="wbToggleSidebar()" style="position: absolute; top: 25px; right: 15px; background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(8px); border: 1px solid rgba(30, 41, 59, 0.3); border-radius: 8px; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 1rem; color: white; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; z-index: 10;" class="wb-toggle-btn">
+          <i class="fas fa-chevron-left" style="transition: transform 0.3s ease;"></i>
+      </button>
+    <div style="display: flex; align-items: center; margin-bottom: 2.5rem;" class="wb-title-section">
+      <div style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; margin-right: 1rem; box-shadow: 0 0 20px rgba(121, 209, 195, 0.4); animation: pulseGlow 3s infinite ease-in-out;" class="wb-icon-circle">
+        <i class="fas fa-chalkboard-teacher" style="color: white; font-size: 1.3rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);"></i>
+      </div>
+      <div>
+        <h1 style="color: #1e293b; font-size: 1.8rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1.2; margin: 0; text-shadow: none;" class="wb-title">Live Whiteboard</h1>
+        <p style="color: #475569; font-size: 0.9rem; margin-top: 0.5rem; font-weight: 500;" class="wb-subtitle">Connect to your teacher's shared whiteboard</p>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem; flex-grow: 1;" class="wb-input-group">
+      <label style="display: flex; align-items: center; color: #1e293b; font-weight: 600; margin-bottom: 0.75rem; font-size: 1rem;" class="wb-input-label" for="wbBoardCode">
+        <i class="fas fa-key" style="margin-right: 0.5rem; color: #06d6a0;"></i> Board Code
+      </label>
+      <input
+        type="text"
+        id="wbBoardCode"
+        style="width: 100%; padding: 1rem 1.25rem; border: 2px solid rgba(30, 41, 59, 0.2); border-radius: 12px; font-size: 1rem; font-weight: 500; color: #1e293b; background: rgba(255, 255, 255, 0.95); transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);"
+        class="wb-input-field"
+        placeholder="Enter board code (e.g., svVDABAW)"
+        maxlength="20"
+        autocomplete="off"
+      />
+      <div style="color: #64748b; font-size: 0.85rem; font-style: italic; margin-top: 0.75rem; line-height: 1.4;" class="wb-example-text">
+        Example: From https://www.whiteboard.team/app/board/<strong>svVDABAW</strong>,
+        enter <strong>svVDABAW</strong>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: auto;" class="wb-button-container">
+      <button onclick="wbLoadBoard()" style="flex: 1; padding: 1rem 1.5rem; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease; position: relative; overflow: hidden; text-decoration: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);" class="wb-btn wb-btn-primary">
+        <span style="position: relative; z-index: 2;"><i class="fas fa-play"></i> Load Whiteboard</span>
+      </button>
+      <button onclick="wbClearBoard()" style="flex: 1; padding: 1rem 1.5rem; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease; position: relative; overflow: hidden; text-decoration: none; background: linear-gradient(135deg, #64748b 0%, #475569 100%); color: white; box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);" class="wb-btn wb-btn-secondary">
+        <span style="position: relative; z-index: 2;"><i class="fas fa-times"></i> Clear</span>
+      </button>
+    </div>
+
+    <div id="wbStatusMessage" style="margin-top: 1.5rem; background: rgba(6, 214, 160, 0.15); color: #1e293b; padding: 1rem; border-left: 4px solid #06d6a0; border-radius: 8px; font-weight: 500; display: none; animation: fadeInUp 0.5s ease;" class="wb-status-message"></div>
+  </aside>
+
+  <section style="flex: 1; position: relative; background: white; display: flex; transition: all 0.5s ease; border-radius: 0 20px 20px 0;" class="wb-iframe-container" id="wbIframeContainer">
+    <div id="wbLoadingOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; transition: opacity 0.3s ease;" class="wb-loading-overlay">
+      <div style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #6366f1; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem;" class="wb-spinner"></div>
+      <p style="color: #4f46e5; font-weight: 500; font-size: 1rem;" class="wb-loading-text">Loading whiteboard...</p>
+    </div>
+    <iframe
+      id="wbWhiteboardFrame"
+      style="width: 100%; height: 100%; border: none; background: white; transition: opacity 0.3s ease;"
+      class="wb-whiteboard-frame"
+      title="Live Whiteboard"
+      allowfullscreen
+      onload="wbHideLoadingOverlay()"
+    ></iframe>
+  </section>
+</div>
+
+<button onclick="wbRestartSession()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 50px; padding: 12px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); transition: all 0.3s ease; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);" class="wb-restart-btn" id="wbRestartBtn">
+  <i class="fas fa-redo"></i> New Board
+</button>
+
+<style>
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(6, 214, 160, 0.4); }
+    50% { box-shadow: 0 0 30px rgba(6, 214, 160, 0.8); }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes slideInFromTop {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes expandToFullscreen {
+    from { max-width: 1200px; width: 100%; min-height: 600px; border-radius: 20px; }
+    to { max-width: 100%; width: 100vw; height: 100vh; border-radius: 0; }
+  }
+  
+  .wb-input-field:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    outline: none !important;
+    background: rgba(255, 255, 255, 1) !important;
+    transform: translateY(-1px) !important;
+  }
+  .wb-input-field::placeholder { color: #64748b; opacity: 0.7; }
+  .wb-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); }
+  .wb-btn:active { transform: translateY(0); }
+  .wb-toggle-btn:hover { 
+    background: rgba(30, 41, 59, 1); 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
+    transform: scale(1.05); 
+  }
+  .wb-toggle-btn.collapsed i { 
+    transform: rotate(180deg); 
+  }
+  .wb-fullscreen-btn:hover { background: rgba(255, 255, 255, 0.3); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); transform: scale(1.1); }
+  .wb-fullscreen-btn:active { transform: scale(1); }
+  .wb-fullscreen-btn.visible { display: flex !important; animation: slideInFromTop 0.5s ease-out; }
+  .wb-restart-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4); }
+  .wb-restart-btn:active { transform: translateY(0) scale(1); }
+  .wb-restart-btn.visible { display: flex !important; animation: slideInFromTop 0.5s ease-out; }
+  .wb-status-message.error { background: rgba(239, 68, 68, 0.15) !important; color: #7f1d1d !important; border-left-color: #ef4444 !important; }
+  
+  .wb-container.fullscreen { max-width: 100% !important; width: 100vw !important; height: 100vh !important; border-radius: 0 !important; animation: expandToFullscreen 0.5s ease-out; }
+  .wb-iframe-container.fullscreen { border-radius: 0 !important; }
+  
+  .wb-sidebar.hidden { flex: 0 0 70px !important; padding: 2.5rem 1rem !important; overflow: hidden !important; border-radius: 20px 0 0 20px !important; justify-content: flex-start !important; align-items: center !important; }
+  .wb-sidebar.hidden .wb-title-section, .wb-sidebar.hidden .wb-input-group, .wb-sidebar.hidden .wb-button-container, .wb-sidebar.hidden .wb-status-message { display: none !important; }
+  
+  @media (max-width: 1024px) {
+    .wb-sidebar { flex: 0 0 320px !important; padding-right: 3rem !important; }
+  }
+  @media (max-width: 900px) {
+    .wb-container { flex-direction: column !important; min-height: 100vh !important; border-radius: 12px !important; max-width: 100% !important; }
+    .wb-container.fullscreen { border-radius: 0 !important; padding: 0 !important; }
+    .wb-sidebar { flex: none !important; border-radius: 12px 12px 0 0 !important; padding: 1.5rem !important; min-height: auto !important; transition: all 0.5s ease !important; padding-right: 1.5rem !important; }
+    .wb-sidebar.hidden { transform: translateY(-100%) !important; flex: 0 0 0px !important; padding: 0 !important; overflow: hidden !important; opacity: 0 !important; }
+    .wb-sidebar.hidden .wb-toggle-btn { display: none !important; }
+    .wb-iframe-container { flex: 1 !important; min-height: 400px !important; border-radius: 0 0 12px 12px !important; }
+    .wb-iframe-container.fullscreen { border-radius: 0 !important; }
+    .wb-fullscreen-btn { top: 10px !important; left: 10px !important; width: 45px !important; height: 45px !important; font-size: 1.1rem !important; }
+    .wb-restart-btn { top: 10px !important; right: 10px !important; padding: 10px 16px !important; font-size: 0.85rem !important; }
+  }
+  @media (max-width: 480px) {
+    .wb-sidebar { padding: 1rem !important; }
+    .wb-title-section { margin-bottom: 1.5rem !important; }
+    .wb-title { font-size: 1.3rem !important; }
+    .wb-input-field { padding: 0.875rem 1rem !important; }
+    .wb-btn { padding: 0.875rem 1.25rem !important; font-size: 0.9rem !important; }
+  }
+</style>
+
+<script>
+  // Toggle Sidebar Function
+  function wbToggleSidebar() {
+      const sidebar = document.querySelector('.wb-sidebar');
+      const iframeContainer = document.getElementById('wbIframeContainer');
+      const toggleButton = document.getElementById('wbSidebarToggle');
+
+      sidebar.classList.toggle('hidden');
+      toggleButton.classList.toggle('collapsed');
+
+      // Update iframe container border radius
+      if (sidebar.classList.contains('hidden')) {
+          iframeContainer.style.borderRadius = '20px';
+      } else {
+          iframeContainer.style.borderRadius = '0 20px 20px 0';
+      }
+  }
+
+  // Toggle Fullscreen Function
+  function wbToggleFullscreen() {
+    const mainContainer = document.querySelector('.wb-container');
+    const container = document.getElementById('wbIframeContainer');
+    const sidebar = document.querySelector('.wb-sidebar');
+    const fullscreenBtn = document.getElementById('wbFullscreenBtn');
+    const fullscreenIcon = document.getElementById('wbFullscreenIcon');
+
+    if (!isFullscreen) {
+      // Enter fullscreen
+      if (!sidebar.classList.contains('hidden')) {
+        wbToggleSidebar();
+      }
+
+      mainContainer.classList.add('fullscreen');
+      container.classList.add('fullscreen');
+      
+      document.body.style.padding = '0';
+      document.body.style.alignItems = 'stretch';
+
+      fullscreenIcon.textContent = '←';
+      isFullscreen = true;
+    } else {
+      // Exit fullscreen
+      mainContainer.classList.remove('fullscreen');
+      container.classList.remove('fullscreen');
+
+      if (sidebar.classList.contains('hidden')) {
+        wbToggleSidebar();
+      }
+
+      document.body.style.padding = '1rem';
+      document.body.style.alignItems = 'center';
+
+      fullscreenIcon.textContent = '→';
+      isFullscreen = false;
+    }
+  }
+
+  function wbLoadBoard() {
+    const boardCode = document.getElementById('wbBoardCode').value.trim();
+    const iframe = document.getElementById('wbWhiteboardFrame');
+    const container = document.getElementById('wbIframeContainer');
+    const statusMessage = document.getElementById('wbStatusMessage');
+    const loadingOverlay = document.getElementById('wbLoadingOverlay');
+    const restartBtn = document.getElementById('wbRestartBtn');
+
+    if (!boardCode) {
+      showStatusMessage('Please enter a board code!', 'error');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9]+$/.test(boardCode)) {
+      showStatusMessage('Invalid board code format. Use only letters and numbers.', 'error');
+      return;
+    }
+
+    loadingOverlay.style.opacity = '1';
+    loadingOverlay.style.display = 'flex';
+    iframe.style.opacity = '0';
+
+    iframe.src = `https://www.whiteboard.team/app/board/${boardCode}`;
+    container.style.display = 'flex';
+
+    showStatusMessage('Whiteboard loaded successfully!', 'success');
+
+    // Show control buttons
+    restartBtn.classList.add('visible');
+  }
+
+  function wbClearBoard() {
+    const iframe = document.getElementById('wbWhiteboardFrame');
+    const container = document.getElementById('wbIframeContainer');
+    const boardCodeInput = document.getElementById('wbBoardCode');
+    const statusMessage = document.getElementById('wbStatusMessage');
+    const loadingOverlay = document.getElementById('wbLoadingOverlay');
+
+    iframe.src = '';
+    container.style.display = 'none';
+    boardCodeInput.value = '';
+    statusMessage.style.display = 'none';
+    loadingOverlay.style.display = 'none';
+    iframe.style.opacity = '1';
+
+    boardCodeInput.focus();
+  }
+
+  function wbRestartSession() {
+    const iframe = document.getElementById('wbWhiteboardFrame');
+    const container = document.getElementById('wbIframeContainer');
+    const sidebar = document.querySelector('.wb-sidebar');
+    const mainContainer = document.querySelector('.wb-container');
+    const boardCodeInput = document.getElementById('wbBoardCode');
+    const statusMessage = document.getElementById('wbStatusMessage');
+    const loadingOverlay = document.getElementById('wbLoadingOverlay');
+    const restartBtn = document.getElementById('wbRestartBtn');
+    const fullscreenBtn = document.getElementById('wbFullscreenBtn');
+
+    iframe.src = '';
+    container.style.display = 'none';
+    container.classList.remove('fullscreen');
+
+    if (sidebar.classList.contains('hidden')) {
+        wbToggleSidebar();
+    }
+
+    mainContainer.classList.remove('fullscreen');
+    restartBtn.classList.remove('visible');
+
+    boardCodeInput.value = '';
+    statusMessage.style.display = 'none';
+    loadingOverlay.style.display = 'none';
+    iframe.style.opacity = '1';
+
+    document.body.style.padding = '1rem';
+    document.body.style.alignItems = 'center';
+
+    setTimeout(() => {
+      boardCodeInput.focus();
+    }, 300);
+  }
+
+  function wbHideLoadingOverlay() {
+    const loadingOverlay = document.getElementById('wbLoadingOverlay');
+    const iframe = document.getElementById('wbWhiteboardFrame');
+
+    loadingOverlay.style.opacity = '0';
+    setTimeout(() => {
+      loadingOverlay.style.display = 'none';
+      iframe.style.opacity = '1';
+    }, 300);
+  }
+
+  function showStatusMessage(message, type = 'success') {
+    const statusMessage = document.getElementById('wbStatusMessage');
+    const icon = type === 'error' ? 'fas fa-exclamation-triangle' : 'fas fa-check-circle';
+
+    statusMessage.className = `wb-status-message ${type}`;
+    statusMessage.innerHTML = `<i class="${icon}"></i> ${message}`;
+    statusMessage.style.display = 'block';
+
+    setTimeout(() => {
+      statusMessage.style.display = 'none';
+    }, 4000);
+  }
+
+  document.getElementById('wbBoardCode').addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+      wbLoadBoard();
+    }
+  });
+
+  document.getElementById('wbBoardCode').addEventListener('input', (event) => {
+    event.target.value = event.target.value.replace(/[^a-zA-Z0-9]/g, '');
+  });
+
+  window.addEventListener('load', () => {
+    document.getElementById('wbBoardCode').focus();
+  });
+
+  document.getElementById('wbWhiteboardFrame').addEventListener('error', () => {
+    showStatusMessage('Failed to load whiteboard. Please check the board code.', 'error');
+    wbHideLoadingOverlay();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && document.querySelector('.wb-sidebar').classList.contains('hidden')) {
+      wbToggleSidebar();
+    }
+  });
+</script>

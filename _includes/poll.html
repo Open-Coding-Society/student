@@ -1,0 +1,275 @@
+<div class="section-container p-3 mb-4 animate-in" style="background: linear-gradient(135deg, #0B486B 0%, #3A8BCA 50%, #79D1C3 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden; animation: fadeInUp 0.5s ease 0.3s both; max-width: 800px; margin: 0 auto;">
+  <!-- Decorative elements -->
+  <div style="position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); top: -100px; right: -70px; border-radius: 50%;"></div>
+  <div style="position: absolute; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%); bottom: -70px; left: -50px; border-radius: 50%;"></div>
+  <div style="position: absolute; height: 3px; width: 60%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); top: 10px; left: 20%; border-radius: 3px;"></div>
+  
+  <!-- Header with enhanced styling -->
+  <h2 class="section-title" style="color: white; font-weight: 700; display: flex; align-items: center; position: relative; z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.2); letter-spacing: 0.5px; padding: 20px; margin: 0;">
+    <span class="icon-circle" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; width: 46px; height: 46px; display: flex; justify-content: center; align-items: center; margin-right: 12px; box-shadow: 0 0 20px rgba(121, 209, 195, 0.5);">
+      <span style="font-size: 1.25rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));">💭</span>
+    </span> 
+    <span style="background: linear-gradient(to right, #ffffff, #e0f7fa); -webkit-background-clip: text; background-clip: text; color: transparent;">How was this lesson?</span>
+  </h2>
+  
+  <!-- Content area with glass morphism effect -->
+  <div class="section-content p-4 mt-3" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px rgba(31,38,135,0.1); transition: all 0.3s ease; margin: 20px; padding: 30px;">
+    
+    <!-- Thumbs up/down buttons -->
+    <div class="feedback-buttons" style="display: flex; justify-content: center; gap: 30px; margin-bottom: 25px;">
+      <button id="thumbsUp" onclick="selectFeedback('up')" class="thumb-btn" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; border: none; border-radius: 50%; width: 80px; height: 80px; font-size: 2rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-3px) scale(1.1)'; this.style.boxShadow='0 7px 20px rgba(0, 0, 0, 0.3)'; this.querySelector('div').style.left='100%';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 15px rgba(76, 175, 80, 0.4)'; this.querySelector('div').style.left='-100%';">
+        <i class="fas fa-thumbs-up"></i>
+        <div style="position: absolute; top: 0; left: -100%; width: 200%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transform: skewX(-15deg); transition: all 0.5s ease; z-index: 1;"></div>
+      </button>
+      
+      <button id="thumbsDown" onclick="selectFeedback('down')" class="thumb-btn" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; border: none; border-radius: 50%; width: 80px; height: 80px; font-size: 2rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4); position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-3px) scale(1.1)'; this.style.boxShadow='0 7px 20px rgba(0, 0, 0, 0.3)'; this.querySelector('div').style.left='100%';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 15px rgba(244, 67, 54, 0.4)'; this.querySelector('div').style.left='-100%';">
+        <i class="fas fa-thumbs-down"></i>
+        <div style="position: absolute; top: 0; left: -100%; width: 200%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transform: skewX(-15deg); transition: all 0.5s ease; z-index: 1;"></div>
+      </button>
+    </div>
+    
+    <!-- Feedback form (initially hidden) -->
+    <div id="feedbackForm" class="feedback-form" style="display: none; animation: fadeInUp 0.5s ease; border-top: 1px solid rgba(58, 139, 202, 0.2); padding-top: 20px;">
+      <h3 id="feedbackTitle" style="color: #0B486B; font-size: 1.2rem; font-weight: 600; border-left: 4px solid #3A8BCA; padding-left: 12px; margin-bottom: 1.2rem;"></h3>
+      
+      <textarea id="feedbackText" class="form-control custom-input" placeholder="Share your thoughts..." style="width: 100%; height: 120px; border: 2px solid rgba(58, 139, 202, 0.3); border-radius: 10px; padding: 12px 15px; background-color: rgba(255,255,255,0.7); transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); resize: vertical; font-family: inherit; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;" onfocus="this.style.borderColor='#3A8BCA'; this.style.boxShadow='0 0 0 3px rgba(58, 139, 202, 0.25)'; this.style.backgroundColor='rgba(255, 255, 255, 0.95)'; this.style.outline='none';" onblur="this.style.borderColor='rgba(58, 139, 202, 0.3)'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.05)'; this.style.backgroundColor='rgba(255,255,255,0.7)';"></textarea>
+      
+      <div style="display: flex; gap: 10px;">
+        <button onclick="submitFeedback()" class="btn btn-primary" style="background: linear-gradient(135deg, #0B486B 0%, #3A8BCA 100%); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 500; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(58, 139, 202, 0.4); position: relative; overflow: hidden; flex: 1;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 7px 20px rgba(0, 0, 0, 0.3)'; this.querySelector('div').style.left='100%';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 15px rgba(58, 139, 202, 0.4)'; this.querySelector('div').style.left='-100%';">
+          <span style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-paper-plane mr-2" style="margin-right: 8px;"></i> Submit Feedback
+          </span>
+          <div style="position: absolute; top: 0; left: -100%; width: 200%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transform: skewX(-15deg); transition: all 0.5s ease; z-index: 1;"></div>
+        </button>
+        
+        <button onclick="resetFeedback()" class="btn btn-secondary" style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 500; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4); position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 7px 20px rgba(0, 0, 0, 0.3)'; if(this.querySelector('div')) this.querySelector('div').style.left='100%';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 15px rgba(108, 117, 125, 0.4)'; if(this.querySelector('div')) this.querySelector('div').style.left='-100%';">
+          <span style="position: relative; z-index: 2;">
+            <i class="fas fa-undo mr-2" style="margin-right: 8px;"></i> Reset
+          </span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Status message with improved styling -->
+    <div id="feedbackStatus" class="status-message" style="display: none; color: #0B486B; margin-top: 15px; background: rgba(121, 209, 195, 0.15); padding: 15px; border-radius: 8px; font-weight: 500; border-left: 3px solid #79D1C3; animation: fadeInUp 0.5s ease;">
+      <i class="fas fa-check-circle" style="margin-right: 6px;"></i> 
+      <span id="statusText">Feedback submitted successfully!</span>
+    </div>
+  </div>
+
+  <!-- Enhanced Data Insights Section -->
+  <div class="data-insights-section" style="margin: 20px; position: relative; z-index: 2;">
+    <!-- Toggle Button -->
+    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+      <button id="dataToggle" onclick="toggleDataView()" class="data-toggle-btn" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); color: white; border-radius: 50px; padding: 12px 30px; font-weight: 600; cursor: pointer; transition: all 0.4s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 35px rgba(0,0,0,0.2)'; this.style.borderColor='rgba(255,255,255,0.5)'; this.querySelector('.fas.fa-chart-bar').style.transform='scale(1.1)'; this.querySelector('div').style.left='100%';" onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 32px rgba(0,0,0,0.1)'; this.style.borderColor='rgba(255,255,255,0.3)'; this.querySelector('.fas.fa-chart-bar').style.transform=''; this.querySelector('div').style.left='-100%';">
+        <i class="fas fa-chart-bar" style="font-size: 1.1rem; transition: transform 0.3s ease;"></i>
+        <span id="toggleText">View Response Data</span>
+        <i class="fas fa-chevron-down toggle-arrow" style="transition: transform 0.3s ease; font-size: 0.9rem;"></i>
+        <div style="position: absolute; top: 0; left: -100%; width: 200%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); transform: skewX(-15deg); transition: left 0.6s ease;"></div>
+      </button>
+    </div>
+
+    <!-- Data Container -->
+    <div id="dataContainer" class="data-container" style="display: none; background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 12px 40px rgba(0,0,0,0.1); overflow: hidden; transform: translateY(-20px); opacity: 0; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);">
+      
+      <!-- Data Header -->
+      <div class="data-header" style="background: linear-gradient(135deg, rgba(11, 72, 107, 0.9) 0%, rgba(58, 139, 202, 0.9) 100%); padding: 20px 30px; color: white; position: relative;">
+        <div style="position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%; transform: translate(30px, -30px);"></div>
+        <h3 style="margin: 0; font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; position: relative; z-index: 2;">
+          <i class="fas fa-analytics" style="margin-right: 12px; font-size: 1.2rem; color: #79D1C3;"></i>
+          Response Analytics Dashboard
+        </h3>
+        <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 0.95rem; position: relative; z-index: 2;">Real-time feedback insights and trends</p>
+      </div>
+
+      <!-- Enhanced iframe container -->
+      <div class="iframe-container" style="position: relative; background: white; margin: 0;">
+        <!-- Loading overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; transition: opacity 0.3s ease;">
+          <div class="spinner" style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #3A8BCA; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
+          <p style="color: #0B486B; font-weight: 500; margin: 0;">Loading response data...</p>
+        </div>
+
+        <!-- Iframe with enhanced styling -->
+        <iframe 
+          id="dataIframe"
+          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTUvTOZ92-ulp4sAsnpuDqPfq60c8AukRnZNLxZKav10R1xgO7jX1Kdddmx5nFYmEgmoI6gt_Tvw7vm/pubhtml?gid=169496216&single=true" 
+          width="100%" 
+          height="500" 
+          frameborder="0"
+          style="border: none; background: white; transition: opacity 0.3s ease;"
+          onload="hideLoadingOverlay()">
+        </iframe>
+        
+        <!-- Data summary overlay -->
+        <div class="data-summary" style="position: absolute; top: 15px; right: 15px; background: rgba(11, 72, 107, 0.9); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 5;">
+          <i class="fas fa-database" style="margin-right: 6px; color: #79D1C3;"></i>
+          <span id="lastUpdated">Live Data</span>
+        </div>
+      </div>
+      
+      <!-- Data Footer with actions -->
+      <div class="data-footer" style="background: rgba(248, 249, 250, 0.8); padding: 15px 30px; border-top: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 15px; font-size: 0.9rem; color: #6c757d;">
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <i class="fas fa-sync-alt" style="color: #28a745;"></i>
+            Auto-refresh enabled
+          </span>
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <i class="fas fa-shield-alt" style="color: #17a2b8;"></i>
+            Secure connection
+          </span>
+        </div>
+        <button onclick="refreshData()" class="refresh-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.transform='translateY(-1px) scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(40, 167, 69, 0.4)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">
+          <i class="fas fa-refresh"></i>
+          Refresh Data
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add keyframe animations with style tag for animations that can't be inline -->
+<style>
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+</style>
+
+<script>
+let selectedFeedback = null;
+
+function selectFeedback(type) {
+  selectedFeedback = type;
+  const feedbackForm = document.getElementById('feedbackForm');
+  const feedbackTitle = document.getElementById('feedbackTitle');
+  const thumbsUpBtn = document.getElementById('thumbsUp');
+  const thumbsDownBtn = document.getElementById('thumbsDown');
+  
+  // Reset button states
+  thumbsUpBtn.style.transform = '';
+  thumbsUpBtn.style.animation = '';
+  thumbsUpBtn.style.boxShadow = '0 4px 15px rgba(76, 175, 80, 0.4)';
+  thumbsDownBtn.style.transform = '';
+  thumbsDownBtn.style.animation = '';
+  thumbsDownBtn.style.boxShadow = '0 4px 15px rgba(244, 67, 54, 0.4)';
+  
+  if (type === 'up') {
+    feedbackTitle.textContent = '😊 Great! What did you like most?';
+    thumbsUpBtn.style.transform = 'scale(1.1)';
+    thumbsUpBtn.style.animation = 'pulse 2s infinite';
+    thumbsUpBtn.style.boxShadow = '0 0 25px rgba(255, 255, 255, 0.5)';
+  } else {
+    feedbackTitle.textContent = '🤔 How can we improve?';
+    thumbsDownBtn.style.transform = 'scale(1.1)';
+    thumbsDownBtn.style.animation = 'pulse 2s infinite';
+    thumbsDownBtn.style.boxShadow = '0 0 25px rgba(255, 255, 255, 0.5)';
+  }
+  
+  feedbackForm.style.display = 'block';
+  feedbackForm.style.animation = 'fadeInUp 0.5s ease';
+}
+
+function submitFeedback() {
+  const feedbackText = document.getElementById('feedbackText').value;
+  const feedbackStatus = document.getElementById('feedbackStatus');
+  const statusText = document.getElementById('statusText');
+  
+  if (feedbackText.trim() === '') {
+    alert('Please enter your feedback before submitting.');
+    return;
+  }
+  
+  // Simulate submission
+  statusText.textContent = `Thank you! Your ${selectedFeedback === 'up' ? 'positive' : 'constructive'} feedback has been recorded.`;
+  feedbackStatus.style.display = 'block';
+  feedbackStatus.style.animation = 'fadeInUp 0.5s ease';
+  
+  // Reset form after 3 seconds
+  setTimeout(() => {
+    resetFeedback();
+  }, 3000);
+}
+
+function resetFeedback() {
+  selectedFeedback = null;
+  document.getElementById('feedbackForm').style.display = 'none';
+  document.getElementById('feedbackStatus').style.display = 'none';
+  document.getElementById('feedbackText').value = '';
+  
+  // Reset button states
+  const thumbsUpBtn = document.getElementById('thumbsUp');
+  const thumbsDownBtn = document.getElementById('thumbsDown');
+  thumbsUpBtn.style.transform = '';
+  thumbsUpBtn.style.animation = '';
+  thumbsUpBtn.style.boxShadow = '0 4px 15px rgba(76, 175, 80, 0.4)';
+  thumbsDownBtn.style.transform = '';
+  thumbsDownBtn.style.animation = '';
+  thumbsDownBtn.style.boxShadow = '0 4px 15px rgba(244, 67, 54, 0.4)';
+}
+
+function toggleDataView() {
+  const dataContainer = document.getElementById('dataContainer');
+  const toggleText = document.getElementById('toggleText');
+  const toggleArrow = document.querySelector('.toggle-arrow');
+  
+  if (dataContainer.style.display === 'none' || dataContainer.style.display === '') {
+    dataContainer.style.display = 'block';
+    dataContainer.style.animation = 'fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    dataContainer.style.transform = 'translateY(0)';
+    dataContainer.style.opacity = '1';
+    toggleText.textContent = 'Hide Response Data';
+    toggleArrow.style.transform = 'rotate(180deg)';
+  } else {
+    dataContainer.style.display = 'none';
+    dataContainer.style.transform = 'translateY(-20px)';
+    dataContainer.style.opacity = '0';
+    toggleText.textContent = 'View Response Data';
+    toggleArrow.style.transform = 'rotate(0deg)';
+  }
+}
+
+function hideLoadingOverlay() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 300);
+  }
+}
+
+function refreshData() {
+  const iframe = document.getElementById('dataIframe');
+  const overlay = document.getElementById('loadingOverlay');
+  
+  if (overlay) {
+    overlay.style.display = 'flex';
+    overlay.style.opacity = '1';
+  }
+  
+  // Force iframe refresh
+  iframe.src = iframe.src;
+  
+  // Update timestamp
+  const lastUpdated = document.getElementById('lastUpdated');
+  if (lastUpdated) {
+    lastUpdated.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  }
+}
+
+// Auto-refresh data every 5 minutes
+setInterval(refreshData, 300000);
+</script>

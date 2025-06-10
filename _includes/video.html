@@ -1,0 +1,51 @@
+<div class="section-container" style="padding: 1.5rem; margin-bottom: 2rem; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7F7FD5 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden; animation: fadeIn 0.6s ease-in-out forwards;">
+  <!-- Decorative elements for futuristic look -->
+  <div style="position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%; filter: blur(15px);"></div>
+  <div style="position: absolute; bottom: -30px; left: -10px; width: 100px; height: 100px; background: rgba(255,255,255,0.07); border-radius: 50%; filter: blur(10px);"></div>
+  
+  <h2 style="color: white; font-weight: 700; display: flex; align-items: center; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-bottom: 1.5rem;">
+    <span style="background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; justify-content: center; align-items: center; margin-right: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+      <span style="font-size: 1.5rem; color: white;">📽️</span>
+    </span> 
+    <span>Watch & Learn</span>
+  </h2>
+  
+  <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.2);">
+    <!-- Glowing border effect -->
+    <div style="position: absolute; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%); animation: shine 2s linear forwards; pointer-events: none; z-index: 1;"></div>
+    
+    <!-- Video container with improved styling -->
+    <div style="position: relative; width: 100%; padding-top: 56.25%; background-color: #111;">
+      <iframe 
+        src="https://www.youtube.com/embed/{{ page.video_url | split: 'v=' | last }}" 
+        title="Lesson Video" 
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;"
+        allowfullscreen 
+        frameborder="0">
+      </iframe>
+    </div>
+    
+    <!-- Control bar styling -->
+    <div style="background-color: rgba(17, 17, 17, 0.75); display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+      <div style="display: flex; align-items: center;">
+        <span style="background: linear-gradient(90deg, #FF512F 0%, #F09819 100%); padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 500; color: white; margin-right: 0.5rem;">HD</span>
+        <small style="color: white; margin-left: 0.5rem; font-size: 0.85rem;">Expand your knowledge</small>
+      </div>
+      <div style="text-align: right;">
+        <small style="color: white; opacity: 0.75; font-size: 0.85rem;"></small>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes shine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+  </style>
+</div>
