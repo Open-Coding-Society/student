@@ -1,9 +1,9 @@
-title: Open Coding 
+title: CSPeople
 description: "Class of 2026"
-owner_name: John Mortensen
-github_username: jm1021 
-github_repo: "student" 
-baseurl: "/student" 
+owner_name: Evan Svetina
+github_username: EvanSvetina 
+github_repo: "CSPeople" 
+baseurl: "/CSPeople" 
 future: true
 remote_theme: jekyll/minima
 minima:

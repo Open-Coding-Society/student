@@ -1,6 +1,6 @@
 # Configuration, override port with usage: make PORT=4610
 PORT ?= 4600
-REPO_NAME ?= student
+REPO_NAME ?= CSPeople
 LOG_FILE = /tmp/jekyll$(PORT).log
 
 SHELL = /bin/bash -c
