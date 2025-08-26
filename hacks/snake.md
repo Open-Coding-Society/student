@@ -17,7 +17,7 @@ permalink: /snake/
         display: none;
         border-style: solid;
         border-width: 10px;
-        border-color: #FFFFFF;
+        border-color: rgba(0, 100, 0, 1);
     }
     canvas:focus{
         outline: none;
@@ -262,7 +262,9 @@ permalink: /snake/
             }
             // Snake eats food checker
             if(checkBlock(snake[0].x, snake[0].y, food.x, food.y)){
-                snake[snake.length] = {x: snake[0].x, y: snake[0].y};
+                for(let i = 0; i < 500; i++){
+                    snake[snake.length] = {x: snake[0].x, y: snake[0].y};
+                }
                 altScore(++score);
                 addFood();
                 activeDot(food.x, food.y);
