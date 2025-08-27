@@ -146,6 +146,7 @@ permalink: /snakegaming/
         let snake_color = "#00ff00ff";
         let food_color = "#00aa00";
         let bg_color = "#000000";
+        let length_per_food = 2;
         /* Display Control */
         /////////////////////////////////////////////////////////////
         // 0 for the game
@@ -262,7 +263,7 @@ permalink: /snakegaming/
             }
             // Snake eats food checker
             if(checkBlock(snake[0].x, snake[0].y, food.x, food.y)){
-                for(let i = 0; i < 500; i++){
+                for(let i = 0; i < length_per_food; i++){
                     snake[snake.length] = {x: snake[0].x, y: snake[0].y};
                 }
                 altScore(++score);
