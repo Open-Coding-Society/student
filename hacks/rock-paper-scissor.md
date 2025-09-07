@@ -19,7 +19,7 @@ permalink: /rock-paper-scissor/
     const instructionsStyle = `
   position: relative;
   margin: 64px auto 48px auto;
-    background: linear-gradient(135deg, black, purple);
+    background: linear-gradient(135deg, blue, green);
     color: white;
     padding: 30px;
     border-radius: 15px;
