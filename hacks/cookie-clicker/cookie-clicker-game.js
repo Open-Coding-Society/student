@@ -350,7 +350,7 @@ shop.addItemForSale(grandma);
 shop.addItemForSale(factory);
 shop.addItemForSale(mangotemple)
 shop.addItemForSale(bank);
-//gameLoop.fetchSavedData();
+gameLoop.fetchSavedData();
 cookie.fetchStoredCookies();
 cookieButton.addEventListener("click", () => {
   console.log("COOKIE");
