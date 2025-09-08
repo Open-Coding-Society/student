@@ -63,6 +63,11 @@ const shop = {
             forSaleItemInfo.multiplier,
           );
 
+          if(forSaleItemInfo.itemEffected == "cps"){
+              gameLoop.autoClickCookie()
+
+          }
+
           shopButton.remove();
         });
       }
@@ -148,6 +153,16 @@ const gameLoop = {
     const purchased = shopItems.find(it => it.name === itemName);
     if (purchased) emojiBuddies.spawnEmoji(purchased.emoji);
 
+  },
+  autoClickCookie(){
+    console.log("Auto CLicker Request")
+    if (this.intervalId > 0) {
+      clearInterval(this.intervalId);
+      this.intervalId = 0;
+    }
+    this.intervalId = setInterval(() => {
+      cookie.addCookies(cookie.cookieMulti);
+    }, 100);
   },
   updateCookieMulti(itemName, amt) {
     this.upgrades[itemName] = amt;
@@ -273,6 +288,7 @@ const emojiBuddies = {
   },
 };
 
+// Shop Items Data
 const grandma = {
   name: "Grandma",
   emoji: "👵",
@@ -319,13 +335,22 @@ const x2Click = {
   itemEffected: "click",
   multiplier: 2,
 };
+const AutoClicker = {
+  name: "+Auto Clicker",
+  emoji: "🖱",
+  price: 1,
+  itemEffected: "cps",
+  multiplier: 5,
+};
 shop.upgrades.push(x2Click);
+shop.upgrades.push(AutoClicker)
+
 
 shop.addItemForSale(grandma);
 shop.addItemForSale(factory);
 shop.addItemForSale(mangotemple)
 shop.addItemForSale(bank);
-gameLoop.fetchSavedData();
+//gameLoop.fetchSavedData();
 cookie.fetchStoredCookies();
 cookieButton.addEventListener("click", () => {
   console.log("COOKIE");
