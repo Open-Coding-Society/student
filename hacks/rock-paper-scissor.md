@@ -371,12 +371,12 @@ permalink: /rock-paper-scissor/
 
   // --- inspect-learning alerts (unchanged) ---
   document.getElementById("rock-btn").addEventListener("click", () => {
-    alert("🪨 Try in the console:\n\nrock.setBorder('4px solid lime');");
+    alert("🪨 Try in the console:\n\nrock.rotate(45);");
   });
   document.getElementById("paper-btn").addEventListener("click", () => {
-    alert("📄 Try in the console:\n\npaper.rotate(15);");
+    alert("📄 Try in the console:\n\npaper.setBorder('6px solid pink');");
   });
   document.getElementById("scissors-btn").addEventListener("click", () => {
-    alert("✂️ Try in the console:\n\nscissors.setWidth(150);");
+    alert("✂️ Try in the console:\n\nscissors.reset();");
   });
 </script>
