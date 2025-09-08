@@ -77,7 +77,7 @@ const shop = {
 
         const shopButton = document.createElement("button");
         shopButton.className = `bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 mb-2`;
-        shopButton.innerHTML = `${forSaleItemInfo.emoji} ${forSaleItemInfo.name} (${forSaleItemInfo.price} 🍪)`;
+        shopButton.innerHTML = `${forSaleItemInfo.emoji} ${forSaleItemInfo.name} (${forSaleItemInfo.price} 🏺)`;
         shopContainer.appendChild(shopButton);
 
         shopButton.addEventListener("click", () => {
