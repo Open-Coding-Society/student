@@ -48,7 +48,7 @@ const shop = {
 
         const shopButton = document.createElement("button");
         shopButton.className = `bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 mb-2`;
-        shopButton.innerHTML = `${forSaleItemInfo.emoji} ${forSaleItemInfo.name} (${forSaleItemInfo.price} 🍪)`;
+        shopButton.innerHTML = `${forSaleItemInfo.emoji} ${forSaleItemInfo.name} (${forSaleItemInfo.price} 🏺)`;
         shopContainer.appendChild(shopButton);
 
         shopButton.addEventListener("click", () => {
@@ -65,9 +65,7 @@ const shop = {
 
           if(forSaleItemInfo.itemEffected == "cps"){
               gameLoop.autoClickCookie()
-
           }
-
           shopButton.remove();
         });
       }
@@ -365,3 +363,40 @@ cookieButton.addEventListener("click", () => {
   gameLoop.getAmount("MangoTemple");
   gameLoop.getAmount("Bank");
 });
+
+function placeImageRandomly() {
+    // Create the image element
+    const img = document.createElement('img');
+    img.src = '/CSPeople/hacks/cookie-clicker/assets/image.png';
+    img.style.position = 'absolute';
+    img.style.width = '100px';
+    img.style.height = '100px';
+
+    // Get viewport size
+    const maxX = window.innerWidth - 100; // image width
+    const maxY = window.innerHeight - 100; // image height
+
+    // Random position
+    const randomX = Math.floor(Math.random() * maxX);
+    const randomY = Math.floor(Math.random() * maxY);
+
+    // Set position
+    img.style.left = randomX + 'px';
+    img.style.top = randomY + 'px';
+
+    // Add image to the page
+    document.body.appendChild(img);
+        img.addEventListener('click', () => {
+        console.log('Power Up CLicked clicked!');
+        alert('You clicked the power-up!');
+        // Optional: remove the image after click
+        img.remove();
+        cookie.addCookies(cookie.cookies * 1.7)
+              setTimeout(() => {
+            placeImageRandomly();
+        }, 60000); 
+    });
+}
+
+// Run once page is loaded
+window.addEventListener('load', placeImageRandomly);
