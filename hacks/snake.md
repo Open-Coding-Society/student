@@ -1,7 +1,7 @@
 ---
 layout: base
 title: Snake Game
-permalink: /snake/
+permalink: /snake
 ---
 
 <style>
@@ -17,7 +17,7 @@ permalink: /snake/
         display: none;
         border-style: solid;
         border-width: 10px;
-        border-color: #FFFFFF;
+        border-color: #001100;
     }
     canvas:focus{
         outline: none;
@@ -144,6 +144,10 @@ permalink: /snake/
         let food = {x: 0, y: 0};
         let score;
         let wall;
+        let snake_color = "#00FF00";
+        let background_color = "#003300";
+        let border_color = "#001100"
+        canvas.style.border_color = border_color;
         /* Display Control */
         /////////////////////////////////////////////////////////////
         // 0 for the game
@@ -267,7 +271,7 @@ permalink: /snake/
             }
             // Repaint canvas
             ctx.beginPath();
-            ctx.fillStyle = "royalblue";
+            ctx.fillStyle = background_color;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             // Paint snake
             for(let i = 0; i < snake.length; i++){
@@ -327,7 +331,7 @@ permalink: /snake/
         /* Dot for Food or Snake part */
         /////////////////////////////////////////////////////////////
         let activeDot = function(x, y){
-            ctx.fillStyle = "#FFFFFF";
+            ctx.fillStyle = snake_color;
             ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
         }
         /* Random food placement */
