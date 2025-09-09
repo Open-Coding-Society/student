@@ -1,7 +1,7 @@
 ---
 layout: base
 title: Snake Game
-permalink: /snake
+permalink: /snakegaming/
 ---
 
 <style>
@@ -17,7 +17,7 @@ permalink: /snake
         display: none;
         border-style: solid;
         border-width: 10px;
-        border-color: #001100;
+        border-color: rgba(0, 100, 0, 1);
     }
     canvas:focus{
         outline: none;
@@ -71,7 +71,6 @@ permalink: /snake
 <h2>Snake</h2>
 <div class="container">
     <p class="fs-4">Score: <span id="score_value">0</span></p>
-
     <div class="container bg-secondary" style="text-align:center;">
         <!-- Main Menu -->
         <div id="menu" class="py-4 text-light">
@@ -99,6 +98,8 @@ permalink: /snake
                 <label for="speed2">Normal</label>
                 <input id="speed3" type="radio" name="speed" value="35"/>
                 <label for="speed3">Fast</label>
+                <input id="speed4" type="radio" name="speed" value="25"/>
+                <label for="speed4">Ultra Fast</label>
             </p>
             <p>Wall:
                 <input id="wallon" type="radio" name="wall" value="1" checked/>
@@ -144,10 +145,10 @@ permalink: /snake
         let food = {x: 0, y: 0};
         let score;
         let wall;
-        let snake_color = "#00FF00";
-        let background_color = "#003300";
-        let border_color = "#001100"
-        canvas.style.border_color = border_color;
+        let snake_color = "#00ff00ff";
+        let food_color = "#00aa00";
+        let bg_color = "#000000";
+        let length_per_food = 2;
         /* Display Control */
         /////////////////////////////////////////////////////////////
         // 0 for the game
@@ -187,7 +188,7 @@ permalink: /snake
             button_setting_menu.onclick = function(){showScreen(SCREEN_SETTING);};
             button_setting_menu1.onclick = function(){showScreen(SCREEN_SETTING);};
             // speed
-            setSnakeSpeed(150);
+            setSnakeSpeed(100);
             for(let i = 0; i < speed_setting.length; i++){
                 speed_setting[i].addEventListener("click", function(){
                     for(let i = 0; i < speed_setting.length; i++){
@@ -264,14 +265,16 @@ permalink: /snake
             }
             // Snake eats food checker
             if(checkBlock(snake[0].x, snake[0].y, food.x, food.y)){
-                snake[snake.length] = {x: snake[0].x, y: snake[0].y};
+                for(let i = 0; i < length_per_food; i++){
+                    snake[snake.length] = {x: snake[0].x, y: snake[0].y};
+                }
                 altScore(++score);
                 addFood();
                 activeDot(food.x, food.y);
             }
             // Repaint canvas
             ctx.beginPath();
-            ctx.fillStyle = background_color;
+            ctx.fillStyle = bg_color;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             // Paint snake
             for(let i = 0; i < snake.length; i++){
@@ -301,7 +304,7 @@ permalink: /snake
             addFood();
             // activate canvas event
             canvas.onkeydown = function(evt) {
-                changeDir(evt.keyCode);
+                changeDir(evt.key);
             }
             mainLoop();
         }
@@ -310,19 +313,19 @@ permalink: /snake
         let changeDir = function(key){
             // test key and switch direction
             switch(key) {
-                case 37:    // left arrow
+                case 'a':    // left arrow
                     if (snake_dir !== 1)    // not right
                         snake_next_dir = 3; // then switch left
                     break;
-                case 38:    // up arrow
+                case 'w':    // up arrow
                     if (snake_dir !== 2)    // not down
                         snake_next_dir = 0; // then switch up
                     break;
-                case 39:    // right arrow
+                case 'd':    // right arrow
                     if (snake_dir !== 3)    // not left
                         snake_next_dir = 1; // then switch right
                     break;
-                case 40:    // down arrow
+                case 's':    // down arrow
                     if (snake_dir !== 0)    // not up
                         snake_next_dir = 2; // then switch down
                     break;
