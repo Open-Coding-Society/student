@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+            background-color: #f7f7f7;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+        }
+        .cell {
+            background-color: #fff;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #scoreboard {
+            margin-top: 10px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 8px 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tic-Tac-Toe</h1>
+    <div id="board"></div>
+    <div id="status"></div>
+    <div id="scoreboard"></div>
+    <button id="reset">Reset Game</button>
+
+    <script>
+        class Player {
+            constructor(name, symbol) {
+                this.name = name;
+                this.symbol = symbol;
+                this.wins = 0;
+            }
+            addWin() {
+                this.wins++;
+            }
+        }
+
+        class Board {
+            constructor() {
+                this.grid = Array(9).fill("");
+            }
+            reset() {
+                this.grid.fill("");
+            }
+            makeMove(index, symbol) {
+                if (this.grid[index] === "") {
+                    this.grid[index] = symbol;
+                    return true;
+                }
+                return false;
+            }
+            checkWinner(symbol) {
+                const combos = [
+                    [0,1,2],[3,4,5],[6,7,8],
+                    [0,3,6],[1,4,7],[2,5,8],
+                    [0,4,8],[2,4,6]
+                ];
+                return combos.some(combo => combo.every(i => this.grid[i] === symbol));
+            }
+            isFull() {
+                return this.grid.every(cell => cell !== "");
+            }
+        }
+
+        class TicTacToe {
+            constructor(player1, player2) {
+                this.board = new Board();
+                this.players = [player1, player2];
+                this.currentPlayer = player1;
+                this.gameOver = false; // Track if game is finished
+            }
+
+            switchPlayer() {
+                this.currentPlayer = this.currentPlayer === this.players[0] ? this.players[1] : this.players[0];
+            }
+
+            play(index) {
+                if (this.gameOver) return; // Prevent clicks if game over
+                if (this.board.makeMove(index, this.currentPlayer.symbol)) {
+                    updateBoard();
+                    if (this.board.checkWinner(this.currentPlayer.symbol)) {
+                        document.getElementById("status").innerText = `${this.currentPlayer.name} wins!`;
+                        this.currentPlayer.addWin();
+                        updateScoreboard();
+                        this.gameOver = true;
+                        return true;
+                    } else if (this.board.isFull()) {
+                        document.getElementById("status").innerText = "It's a tie!";
+                        this.gameOver = true;
+                        return true;
+                    }
+                    this.switchPlayer();
+                    document.getElementById("status").innerText = `Turn: ${this.currentPlayer.name}`;
+                }
+                return false;
+            }
+
+            resetGame() {
+                this.board.reset();
+                this.currentPlayer = this.players[0];
+                this.gameOver = false; // Allow clicks again
+                updateBoard();
+                document.getElementById("status").innerText = `Turn: ${this.currentPlayer.name}`;
+            }
+        }
+
+        // Initialize players and game
+        const player1 = new Player("Alice", "X");
+        const player2 = new Player("Bob", "O");
+        const game = new TicTacToe(player1, player2);
+
+        // Build board in HTML
+        const boardDiv = document.getElementById("board");
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.dataset.index = i;
+            cell.addEventListener("click", () => {
+                game.play(i);
+            });
+            boardDiv.appendChild(cell);
+        }
+
+        function updateBoard() {
+            document.querySelectorAll(".cell").forEach((cell, i) => {
+                cell.innerText = game.board.grid[i];
+            });
+        }
+
+        function updateScoreboard() {
+            document.getElementById("scoreboard").innerText = `${player1.name}: ${player1.wins} | ${player2.name}: ${player2.wins}`;
+        }
+
+        document.getElementById("reset").addEventListener("click", () => {
+            game.resetGame();
+            updateScoreboard();
+        });
+
+        // Initial display
+        updateBoard();
+        updateScoreboard();
+        document.getElementById("status").innerText = `Turn: ${game.currentPlayer.name}`;
+    </script>
+</body>
+</html>
