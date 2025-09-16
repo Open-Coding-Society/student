@@ -1,5 +1,15 @@
 export class step {
-    static steps = [];
+    static steps = []; /// Steps for current OS (might be out of date when calling early)
+    static starterSteps = []
+    static windowsSteps = []
+    static macSteps = []
+    static selectedOS = 0 
+    /* 
+    0 = [startup]
+    1 = [windows]
+    2 = [mac]
+    applies to the steps too
+    */
     static currentStep = 0
     static constructorStep = 0
     static targetDiv = document.getElementById("step_div")
@@ -10,7 +20,7 @@ static StepForward(){
         this.currentStep += 1
         this.RenderStep()
     } else{
-        console.log("Cant Step Forward. No Step in the next index")
+        console.log("Can't Step Forward. No Step in the next index")
     }
 }
 
@@ -20,12 +30,12 @@ static StepBackward(){
         this.currentStep -= 1
         this.RenderStep()
     } else{
-        console.log("Cant Step Backward. No Step in the next index")
+        console.log("Can't Step Backward. No Step in the next index")
     }
 }
 
 static RenderStep() {
-    const stepData = this.steps[this.currentStep];
+    const stepData = this.starterSteps[this.currentStep];
     if (!this.targetDiv) {
         this.targetDiv = document.getElementById("step_div");
     }
@@ -65,20 +75,19 @@ stepOS is the os the step is targeted to 1 = Windows/LInux 0 = MacOS
         this.stepNumber = step.constructorStep;
         step.constructorStep += 1
 
-        if (this.checkDupeStep()) {
-            console.log(`Created step has a duplicate step: ${this.stepNumber}`);
+        if (stepOS < 0 || stepOS > 2){
+            console.error("Step OS number is not defined");
+            return
         }
-
-        step.steps.push(this);
+        if (stepOS == 0){
+            step.starterSteps.push(this)
+        }
+        if (stepOS == 1){
+            step.windowsSteps.push()
+        }
+        if (stepOS == 2){
+            step.macSteps.push(this)
+        }
         console.log(`Step Created:${this.stepNumber}`);
-    }
-
-    checkDupeStep() {
-        for (let s of step.steps) {
-            if (s.stepNumber === this.stepNumber) {
-                return true;
-            }
-        }
-        return false;
     }
 }

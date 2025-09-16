@@ -391,7 +391,7 @@ function placeImageRandomly() {
         alert('You clicked the power-up!');
         // Optional: remove the image after click
         img.remove();
-        cookie.addCookies(cookie.cookies * 1.7)
+        cookie.addCookies(cookie.cookies * 2)
               setTimeout(() => {
             placeImageRandomly();
         }, 60000); 

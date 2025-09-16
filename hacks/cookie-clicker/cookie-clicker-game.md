@@ -4,7 +4,6 @@ title: Cookie Clicker Game
 permalink: /cookie-clicker-game/
 ---
 
-
 <div class="grid grid-cols-4 gap-4 aspect-square">
 <!-- Shop -->
 <div class="col-span-1 bg-white p-4 shadow-lg flex flex-col" id="shop-container">
@@ -49,6 +48,34 @@ permalink: /cookie-clicker-game/
         Cookies: <span id="cookie-count" class="font-bold text-orange-600">0</span>
     </div>
 </div>
+</div>
+
+<!-- Sprite Character in Bottom Right Corner -->
+<div id="sprite-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <canvas id="spriteCanvas"></canvas>
+</div>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="{{site.baseurl}}/hacks/cookie-clicker/cookie-clicker-game.js"></script>
+<script src="{{site.baseurl}}/hacks/cookie-clicker/sprite-character.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const character = new SpriteCharacter('spriteCanvas', {
+        dialogueInterval: Math.random()*10000 + 7000,
+        dialogueDuration: 4000,
+        spriteSize: 32,
+        scale: 4,
+        imagePath: '/CSPeople/hacks/cookie-clicker/assets/smugjughelper.png', // Add this
+        dialogues: [
+            "Click faster you bum",
+            "Did you know Hollow Knight Silksong came out September 4th, 2025? Go play that instead of this.",
+            "Invest in the S&P 500! That's a solid way to increase your passive income!",
+            "Go touch grass.",
+            "I'm chopped.",
+            "Glory to Smug Corp! Glory to Smug Corp!",
+            "truth.txt",
+            "Banking those cookie profits!"
+        ]
+    });
+});
+</script>

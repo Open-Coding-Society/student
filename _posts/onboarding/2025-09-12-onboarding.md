@@ -3,7 +3,7 @@ title: Tools Onboarding
 comments: true
 layout: post
 permalink: /onboarding/tools-steps
-description: An interactive onboarding experience to help set up tools more smoothly
+description: An interactive onboarding experience to help you set up tools more smoothly
 author: Evan S, West S, Ethan W, Nico D, William W, Shay M
 ---
 <style>
@@ -78,11 +78,14 @@ author: Evan S, West S, Ethan W, Nico D, William W, Shay M
 import { step as Step } from "/CSPeople/assets/js/onboarding/step.js";
 
 // Create steps
-new Step("Welcome to onboarding! Here's some info.", "Introduction", 1);
-new Step("Install VS Code and set it up.", "VS Code Setup", 1);
-new Step("Install Git and authenticate.", "Git Setup", 1);
-new Step("Clone your repo.", "Cloning", 1);
-new Step("Congrats, you're ready!", "Finish", 1);
+new Step("Welcome to onboarding! Here's some info.", "Introduction", 0)
+new Step("Install VS Code and set it up.", "VS Code Setup", 0)
+new Step("Install Git and authenticate.", "Git Setup", 0)
+new Step("Clone your repo.", "Cloning", 0)
+new Step("Congrats, you're ready!", "Finish", 0)
+
+
+
 
 // Initial render
 Step.RenderStep();
