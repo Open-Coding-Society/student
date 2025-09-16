@@ -1,13 +1,13 @@
 ---
 layout: post 
 title: Breakout Blocks
-author: Nikhil, Rohan, Pranav, Aditya, Shriya, Samhita
+author: Nikhil, Rohan, Pranav, Aditya, Shriya, Samhita, West
 permalink: functionalbreakoutgame
 ---
 
 <style>
   canvas {
-    background: #eee;
+    background: #000000ff;
     display: block;
     margin: 0 auto;
     border: 1px solid #333;
@@ -93,12 +93,12 @@ permalink: functionalbreakoutgame
 
   // --- Levels / pause ---
   let level = 1;
-  const levelSpeedScale = 1.12; // ball speed multiplier each level
+  let levelSpeedScale = 1.12; // ball speed multiplier each level
   let paused = false;
 
   // Paddle
-  let paddleHeight = 10;
-  let basePaddleWidth = 75;
+  let paddleHeight = 20;
+  let basePaddleWidth = 100;
   let paddleWidth = basePaddleWidth;
   let paddleX = (canvas.width - paddleWidth) / 2;
 
@@ -106,7 +106,7 @@ permalink: functionalbreakoutgame
   let leftPressed = false;
 
   // Ball
-  let ballRadius = 8;
+  let ballRadius = 6;
   let x = canvas.width / 2;
   let y = canvas.height - 30;
   let dx = 2;
@@ -114,7 +114,7 @@ permalink: functionalbreakoutgame
 
   // Score and Lives
   let score = 0;
-  let lives = 3;
+  let lives = 2;
 
   // Blocks
   let brickRowCount = 4;       // CHANGED: let (so we can increase rows)
@@ -184,7 +184,8 @@ permalink: functionalbreakoutgame
             y > b.y &&
             y < b.y + brickHeight
           ) {
-            dy = -dy;
+            dy = -dy*1.1;
+            dx = dx*1.1
             b.status = 0;
 
             score++;
@@ -290,7 +291,7 @@ permalink: functionalbreakoutgame
   function drawBall() {
     ctx.beginPath();
     ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "rgba(0, 255, 0, 1)";
     ctx.fill();
     ctx.closePath();
   }
@@ -298,7 +299,7 @@ permalink: functionalbreakoutgame
   function drawPaddle() {
     ctx.beginPath();
     ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "rgb(0, 127, 0)";
     ctx.fill();
     ctx.closePath();
   }
@@ -321,7 +322,7 @@ permalink: functionalbreakoutgame
             ctx.shadowColor = "orange";
             ctx.shadowBlur = 10;
           } else {
-            ctx.fillStyle = "#0095DD";
+            ctx.fillStyle = "rgb(0, 255, 0)";
             ctx.shadowBlur = 0;
           }
 
@@ -373,14 +374,14 @@ permalink: functionalbreakoutgame
   nextLevelBtn.addEventListener("click", nextLevel);
 
   function drawScore() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
+    ctx.font = "16px Papyrus";
+    ctx.fillStyle = "rgb(0, 255, 0)";
     ctx.fillText("Score: " + score, 8, 20);
   }
 
   function drawLives() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
+    ctx.font = "16px Papyrus";
+    ctx.fillStyle = "rgb(0, 255, 0)";
     ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
   }
 
