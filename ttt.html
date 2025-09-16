@@ -8,48 +8,105 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #00ff00;
+            font-family: "Courier New", monospace;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        /* SIDEBAR FIX */
+        #sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+            border-right: 2px solid #00ff00;
+            min-width: 140px;
+            height: 100vh; /* Full height sidebar */
+            background-color: #000;
+            box-shadow: 2px 0 10px #00ff00;
+        }
+
+        #main-content {
+            display: flex;
             flex-direction: column;
             align-items: center;
-            margin-top: 50px;
-            background-color: #f7f7f7;
+            flex: 1; /* Take remaining space */
+            padding: 20px;
         }
+
         h1 {
             margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 8px #00ff00, 0 0 15px #0f0;
         }
+
         #board {
             display: grid;
             grid-template-columns: repeat(3, 100px);
             grid-template-rows: repeat(3, 100px);
             gap: 5px;
         }
+
         .cell {
-            background-color: #fff;
-            border: 2px solid #333;
+            background-color: #001a00;
+            border: 2px solid #00ff00;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2em;
             cursor: pointer;
+            color: #00ff00;
+            transition: background 0.2s;
         }
-        #status {
-            margin-top: 20px;
+
+        .cell:hover {
+            background-color: #003300;
+        }
+
+        #status, #scoreboard {
+            margin-top: 15px;
             font-weight: bold;
+            text-shadow: 0 0 6px #00ff00;
         }
-        #scoreboard {
-            margin-top: 10px;
-        }
+
         button {
             margin-top: 15px;
             padding: 8px 15px;
+            background-color: #001a00;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #003300;
         }
     </style>
 </head>
 <body>
-    <h1>Tic-Tac-Toe</h1>
-    <div id="board"></div>
-    <div id="status"></div>
-    <div id="scoreboard"></div>
-    <button id="reset">Reset Game</button>
+    <!-- FIXED SIDEBAR -->
+    <div id="sidebar">
+        <button id="placeholder-btn1">Go 1</button>
+        <button id="placeholder-btn2">Go 2</button>
+        <button id="placeholder-btn3">Go 3</button>
+    </div>
+
+    <div id="main-content">
+        <h1>Tic-Tac-Toe</h1>
+        <div id="board"></div>
+        <div id="status"></div>
+        <div id="scoreboard"></div>
+        <button id="reset">Reset Game</button>
+    </div>
 
     <script>
         class Player {
@@ -62,7 +119,7 @@
                 this.wins++;
             }
         }
-
+    
         class Board {
             constructor() {
                 this.grid = Array(9).fill("");
@@ -89,21 +146,21 @@
                 return this.grid.every(cell => cell !== "");
             }
         }
-
+    
         class TicTacToe {
             constructor(player1, player2) {
                 this.board = new Board();
                 this.players = [player1, player2];
-                this.currentPlayer = player1;
-                this.gameOver = false; // Track if game is finished
+                this.currentPlayer = Math.random() < 0.5 ? player1 : player2; // 🔥 Randomize first player
+                this.gameOver = false;
             }
-
+    
             switchPlayer() {
                 this.currentPlayer = this.currentPlayer === this.players[0] ? this.players[1] : this.players[0];
             }
-
+    
             play(index) {
-                if (this.gameOver) return; // Prevent clicks if game over
+                if (this.gameOver) return;
                 if (this.board.makeMove(index, this.currentPlayer.symbol)) {
                     updateBoard();
                     if (this.board.checkWinner(this.currentPlayer.symbol)) {
@@ -122,22 +179,20 @@
                 }
                 return false;
             }
-
+    
             resetGame() {
                 this.board.reset();
-                this.currentPlayer = this.players[0];
-                this.gameOver = false; // Allow clicks again
+                this.currentPlayer = Math.random() < 0.5 ? this.players[0] : this.players[1]; // 🔥 Randomize again on reset
+                this.gameOver = false;
                 updateBoard();
                 document.getElementById("status").innerText = `Turn: ${this.currentPlayer.name}`;
             }
         }
-
-        // Initialize players and game
-        const player1 = new Player("Alice", "X");
-        const player2 = new Player("Bob", "O");
+    
+        const player1 = new Player("The Smugger Juggers", "X");
+        const player2 = new Player("Mr. Mortensen", "O");
         const game = new TicTacToe(player1, player2);
-
-        // Build board in HTML
+    
         const boardDiv = document.getElementById("board");
         for (let i = 0; i < 9; i++) {
             const cell = document.createElement("div");
@@ -148,23 +203,32 @@
             });
             boardDiv.appendChild(cell);
         }
-
+    
         function updateBoard() {
             document.querySelectorAll(".cell").forEach((cell, i) => {
                 cell.innerText = game.board.grid[i];
             });
         }
-
+    
         function updateScoreboard() {
             document.getElementById("scoreboard").innerText = `${player1.name}: ${player1.wins} | ${player2.name}: ${player2.wins}`;
         }
-
+    
         document.getElementById("reset").addEventListener("click", () => {
             game.resetGame();
             updateScoreboard();
         });
-
-        // Initial display
+    
+        document.getElementById("placeholder-btn1").addEventListener("click", () => {
+            alert("Placeholder Button 1 clicked! (Link coming soon)");
+        });
+        document.getElementById("placeholder-btn2").addEventListener("click", () => {
+            alert("Placeholder Button 2 clicked! (Link coming soon)");
+        });
+        document.getElementById("placeholder-btn3").addEventListener("click", () => {
+            alert("Placeholder Button 3 clicked! (Link coming soon)");
+        });
+    
         updateBoard();
         updateScoreboard();
         document.getElementById("status").innerText = `Turn: ${game.currentPlayer.name}`;
