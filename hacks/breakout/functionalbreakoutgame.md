@@ -109,6 +109,7 @@ permalink: functionalbreakoutgame
   let ballRadius = 6;
   let x = canvas.width / 2;
   let y = canvas.height - 30;
+  let poweredUp = false
   let dx = 2;
   let dy = -2;
 
@@ -192,6 +193,7 @@ permalink: functionalbreakoutgame
 
             if (b.powerUp) {
               powerUps.push({ x: b.x + brickWidth / 2, y: b.y, active: true });
+              poweredUp = true
             }
           }
         }
@@ -434,8 +436,8 @@ permalink: functionalbreakoutgame
       paddleX -= 7;
     }
 
-    x += dx;
-    y += dy;
+    x += dx * (activePowerUp == null? 1:2);
+    y += dy * (activePowerUp == null? 1:2);
 
     if (!paused) requestAnimationFrame(draw);
   }
