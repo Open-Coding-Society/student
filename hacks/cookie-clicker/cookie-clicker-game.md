@@ -45,7 +45,7 @@ permalink: /cookie-clicker-game/
     </div>
     <!-- Counter -->
     <div id="counter" class="mt-6 text-2xl font-semibold text-brown-900 bg-white/80 px-6 py-3 rounded-lg shadow-md">
-        Cookies: <span id="cookie-count" class="font-bold text-orange-600">0</span>
+        Jugs: <span id="cookie-count" class="font-bold text-orange-600">0</span>
     </div>
 </div>
 </div>
