@@ -214,8 +214,12 @@ permalink: /rock-paper-scissor/
   // --- continuous render loop (always runs) ---
   function render(){
   ctx.clearRect(0,0,battleCanvas.width,battleCanvas.height);
-  bg.update();  bg.draw(ctx);
-  // Draw 'Animated Battle: OOP' text (smaller)
+
+  // --- update and draw background ---
+  bg.update();
+  bg.draw(ctx);
+
+  // --- Battle title ---
   ctx.save();
   ctx.font = "bold 14px 'Press Start 2P', cursive";
   ctx.fillStyle = "cyan";
@@ -223,54 +227,65 @@ permalink: /rock-paper-scissor/
   ctx.fillText("Animated Battle: OOP", battleCanvas.width/2, 24);
   ctx.restore();
 
-    if(battle.active){
-      const t = battle.frames / battle.max; // 0..1
+  if(battle.active){
+    const t = battle.frames / battle.max; // progress 0..1
 
-      if(battle.tie){
-        const wobble = Math.sin(battle.frames*0.3)*4;
-        sprites[battle.tie].rotation = wobble * Math.PI/180;
-      } else {
-        // winner punch-in / pulse
-        const w = sprites[battle.winner];
-        const l = sprites[battle.loser];
+    if(battle.tie){
+      // Tie animation: wobble + pulse
+      const wobble = Math.sin(battle.frames*0.3)*10; // rotation wobble
+      const pulse  = 1 + 0.2 * Math.sin(battle.frames*0.5); // scale pulse
+      const s = sprites[battle.tie];
+      s.rotation = wobble * Math.PI/180;
+      s.scale = pulse;
+    } else {
+      const winnerSprite = sprites[battle.winner];
+      const loserSprite  = sprites[battle.loser];
 
-        // winner pulse scale up then down
-        const pulse = (battle.frames < battle.max/2)
-          ? 1 + (battle.frames/(battle.max/2))*0.2
-          : 1.2 - ((battle.frames - battle.max/2)/(battle.max/2))*0.2;
-        w.scale = pulse;
+      // Winner: pulse + jump
+      const pulse = 1 + 0.2 * Math.sin(t * Math.PI*2); // pulse scale
+      winnerSprite.scale = pulse;
+      winnerSprite.y = winnerSprite.homeY - Math.sin(t * Math.PI) * 20; // jump
 
-        // loser fades & shrinks
-        l.opacity = Math.max(0.15, 1 - t*0.85);
-        l.scale   = Math.max(0.6, 1 - t*0.4);
+      // Loser: fade + spin + shrink
+      loserSprite.opacity = Math.max(0.15, 1 - t*0.85);
+      loserSprite.scale   = Math.max(0.6, 1 - t*0.4);
+      loserSprite.rotation = t * Math.PI; // spin full circle
 
-        // matchup-specific flair
-        if(battle.winner === "rock" && battle.loser === "scissors"){
-          l.rotation = -t * (Math.PI/4);
-        }
-        if(battle.winner === "paper" && battle.loser === "rock"){
-          // paper "covers" rock by moving slightly past center
-          w.targetX = l.homeX - 6; w.targetY = l.homeY - 6;
-        }
-        if(battle.winner === "scissors" && battle.loser === "paper"){
-          w.rotation =  t * (Math.PI/10);
-          l.rotation = -t * (Math.PI/10);
-        }
+      // Small winner flair per matchup (optional)
+      if(battle.winner === "paper" && battle.loser === "rock"){
+        winnerSprite.targetX = loserSprite.homeX - 6;
+        winnerSprite.targetY = loserSprite.homeY - 6;
       }
-
-      battle.frames++;
-      if(battle.frames >= battle.max){
-        battle.active = false;
-        Object.values(sprites).forEach(s=>{ s.resetVisuals(); s.animating = false; });
+      if(battle.winner === "scissors" && battle.loser === "paper"){
+        winnerSprite.rotation += t * Math.PI/10;
+        loserSprite.rotation  -= t * Math.PI/10;
+      }
+      if(battle.winner === "rock" && battle.loser === "scissors"){
+        loserSprite.rotation = -t * (Math.PI/4);
       }
     }
 
-    // update/draw sprites every frame
-    Object.values(sprites).forEach(s=>{ s.update(); s.draw(ctx); });
-
-    requestAnimationFrame(render);
+    battle.frames++;
+    if(battle.frames >= battle.max){
+      battle.active = false;
+      // Reset positions and visuals
+      Object.values(sprites).forEach(s=>{
+        s.resetVisuals();
+        s.resetPosition();
+      });
+    }
   }
-  render(); // kick off the engine once
+
+  // Update and draw all sprites
+  Object.values(sprites).forEach(s=>{
+    s.update();
+    s.draw(ctx);
+  });
+
+  requestAnimationFrame(render);
+}
+render(); // kick off the engine once
+
 
   // --- game logic + console entry point ---
   window.playRPS = function(playerChoice){
