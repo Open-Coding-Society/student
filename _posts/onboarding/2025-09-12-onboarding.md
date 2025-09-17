@@ -88,5 +88,6 @@ new Step("Congrats, you're ready!", "Finish", 0)
 
 
 // Initial render
+step.selectOS(0)
 Step.RenderStep();
 </script>

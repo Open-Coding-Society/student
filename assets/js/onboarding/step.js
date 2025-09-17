@@ -34,6 +34,24 @@ static StepBackward(){
     }
 }
 
+
+static selectOS(stepOS){
+        if (stepOS < 0 || stepOS > 2){
+            console.error("Step OS number is not defined");
+            return
+        }
+        if (stepOS == 0){
+            step.steps = step.starterSteps
+        }
+        if (stepOS == 1){
+            step.steps = step.windowsSteps
+        }
+        if (stepOS == 2){
+            step.steps = step.macSteps
+        }
+        console.log("OS Selected")
+}
+
 static RenderStep() {
     const stepData = this.starterSteps[this.currentStep];
     if (!this.targetDiv) {
