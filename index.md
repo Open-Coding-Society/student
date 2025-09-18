@@ -1,8 +1,8 @@
 ---
 layout: base
 title: CSPeople
-author: Evan Svetina, Ethan Wong, West Stefany, Nico Diaz
+author: Evan S, Ethan W, West S, Nico D, William W, Shay M.
 hide: true
 ---
 
-## We are a team of 4 to make lessons and other things for CSP Tri 1.
+## Glory to Smug Corp!
