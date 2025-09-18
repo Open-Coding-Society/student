@@ -148,7 +148,7 @@ permalink: functionalbreakoutgame
   // Active powerup state
   let activePowerUp = null;
   let powerUpTimer = 0;
-  const powerUpDuration = 5000; // 5 seconds
+  const powerUpDuration = 10000; // 10seconds
 
   // Input handling
   document.addEventListener("keydown", keyDownHandler);
@@ -184,8 +184,8 @@ permalink: functionalbreakoutgame
             y > b.y &&
             y < b.y + brickHeight
           ) {
-            dy = -dy*1.1;
-            dx = dx*1.1
+            dy = Math.sign(dx)*-0.1 - dy
+            dx = Math.sign(dx)*0.1 + dx
             b.status = 0;
 
             score++;
@@ -420,7 +420,7 @@ permalink: functionalbreakoutgame
         } else {
           x = canvas.width/2; 
           y = canvas.height - 30;
-          dx = 2 * Math.sign(dx);
+          dx = 2 * Math.sign(dx)
           dy = -2;
           paddleX = (canvas.width - paddleWidth) / 2;
         }
