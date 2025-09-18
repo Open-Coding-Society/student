@@ -76,18 +76,21 @@ author: Evan S, West S, Ethan W, Nico D, William W, Shay M
 
 <script type="module">
 import { step as Step } from "/CSPeople/assets/js/onboarding/step.js";
-
+console.log("Loaded js in md")
 // Create steps
-new Step("Welcome to onboarding! Here's some info.", "Introduction", 0)
-new Step("Install VS Code and set it up.", "VS Code Setup", 0)
-new Step("Install Git and authenticate.", "Git Setup", 0)
-new Step("Clone your repo.", "Cloning", 0)
-new Step("Congrats, you're ready!", "Finish", 0)
+new Step("HTML for example.", "Intro Example 1", 0)
+new Step("HTML for example.", "Intro Example 2 ", 0)
+new Step("HTML for example.", "Intro Example 3", 0)
 
+new Step("HTML for example.", "Windows Example 1", 1)
+new Step("HTML for example.", "Windows Example 2", 1)
+new Step("HTML for example.", "Windows Example 3", 1)
 
-
+new Step("HTML for example.", "Mac Example 1", 2)
+new Step("HTML for example.", "Mac Example 2", 2)
+new Step("HTML for example.", "Mac Example 3", 2)
 
 // Initial render
-step.selectOS(0)
+Step.selectOS(0)
 Step.RenderStep();
 </script>
