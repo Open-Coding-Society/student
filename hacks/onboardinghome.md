@@ -36,7 +36,7 @@ lxdData:
       Description: "desc"
       Categories: ["Python", "Game Coding", "Console"]
       Game: /onboarding/ttt-hack
-      Lessons: /onboarding/home ## Needs Lesson Page
+      Lessons: /onboarding/ttt-lesson
       Image: /images/onboarding/tic-tac-toe-grid.png
       Alt: "tic-tac-toe-grid"
     - Title: "Breakout Hack"
