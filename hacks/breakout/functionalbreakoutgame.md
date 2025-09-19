@@ -27,6 +27,11 @@ permalink: functionalbreakoutgame
   Next Level ▶
 </button>
 
+## Changes:
+ - Colors changed
+ - Font changed
+ - Ball now speeds up every time a block is hit. We did this by incrementing the speed every hit
+
 <div id="hack1" style="max-width:600px;margin:8px auto;font-family:system-ui,Arial;">
 <!-- Hack #1: 90% hack section -->
 <div id="hack1-90" style="max-width:600px;margin:8px auto;font-family:system-ui,Arial;">
