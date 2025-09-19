@@ -45,7 +45,7 @@ lxdData:
       Description: "desc"
       Categories: ["JavaScript", "Game Coding", "OOP"]
       Game: /functionalbreakoutgame
-      Lessons: /onboarding/home ## Needs Lesson Page
+      Lessons: /onboarding/breakout-lesson
       Image: /images/onboarding/breakout-gameplay.png
       Alt: "breakout-gameplay.png"
 ---
