@@ -4,9 +4,7 @@ import Prompt from "./Prompt.js";
 class Npc extends Character {
     constructor(data = null) {
         super(data);
-        this.quiz = data?.quiz?.title; // Quiz title
-        this.questions = data?.quiz?.questions || [];
-        this.currentQuestionIndex = 0; // Start from the first question
+        // Keep NPC lightweight: quizzes removed. Keep an alert timeout and bind interaction keys.
         this.alertTimeout = null;
         this.bindEventListeners();
     }
@@ -32,7 +30,16 @@ class Npc extends Character {
         switch (key) {
             case 'e': // Player 1 interaction
             case 'u': // Player 2 interaction
-                this.shareQuizQuestion();
+                // Open the generic prompt panel for this NPC if player is nearby
+                try {
+                    const players = GameEnv.gameObjects.filter(obj => obj.state.collisionEvents.includes(this.spriteData.id));
+                    if (players.length > 0 && !Prompt.isOpen) {
+                        Prompt.currentNpc = this;
+                        Prompt.openPromptPanel(this);
+                    }
+                } catch (err) {
+                    console.error('Error opening prompt for NPC interaction', err);
+                }
                 break;
         }
     }
@@ -47,32 +54,6 @@ class Npc extends Character {
                 clearTimeout(this.alertTimeout);
                 this.alertTimeout = null;
             }
-        }
-    }
-    /**
-     * Get the next question in the shuffled array.
-     * @returns {string} - The next quiz question.
-     */
-    getNextQuestion() {
-        const question = this.questions[this.currentQuestionIndex];
-        this.currentQuestionIndex = (this.currentQuestionIndex + 1) % this.questions.length; // Cycle through questions
-        return question;
-    }
-    /**
-     * Handle proximity interaction and share a quiz question.
-     */
-    shareQuizQuestion() {
-        const players = GameEnv.gameObjects.filter(obj => obj.state.collisionEvents.includes(this.spriteData.id));
-        const hasQuestions = this.questions.length > 0;
-        if (players.length > 0 && hasQuestions) {
-            players.forEach(player => {
-                if (!Prompt.isOpen) {
-                    // Assign this NPC as the current NPC in the Prompt system
-                    Prompt.currentNpc = this;
-                    // Open the Prompt panel with this NPC's details
-                    Prompt.openPromptPanel(this);
-                }
-            });
         }
     }
 }

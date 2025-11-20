@@ -1,7 +1,7 @@
 import GameEnv from './GameEnv.js';
-import GameLevelWater from './GameLevelWater.js';
 import GameLevelBasement from './GameLevelBasement.js';
 import { getStats } from "./StatsManager.js";
+import Inventory from './Inventory.js';
 
 
 
@@ -50,7 +50,9 @@ const GameControl = {
 
     start: function(path) {
         GameEnv.create();
-        this.levelClasses = [GameLevelBasement, GameLevelWater];
+        // Initialize inventory UI (flexible; persists to localStorage for now)
+        try { Inventory.init(); } catch (e) { console.error('Inventory init failed', e); }
+        this.levelClasses = [GameLevelBasement];
         this.currentLevelIndex = 0;
         this.path = path;
         this.addExitKeyListener();
@@ -267,5 +269,14 @@ const GameControl = {
 
 // Detect window resize events and call the resize function.
 window.addEventListener('resize', GameControl.resize.bind(GameControl));
+
+
+// Auto-start the game when the module loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Compute the base path for assets (strip trailing slash if present)
+    let baseurl = document.body.getAttribute('data-baseurl') || '';
+    if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
+    GameControl.start(baseurl);
+});
 
 export default GameControl;

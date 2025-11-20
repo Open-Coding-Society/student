@@ -58,8 +58,25 @@ class GameEnv {
         this.setCanvas();
         this.setTop();
         this.setBottom();
-        this.innerWidth = window.innerWidth;
-        this.innerHeight = window.innerHeight - this.top - this.bottom;
+        // Use the container's size for scaling
+        const container = document.getElementById('gameContainer');
+        if (container) {
+            const rect = container.getBoundingClientRect();
+            // Maintain 16:9 aspect ratio
+            let width = rect.width;
+            let height = rect.height;
+            const aspect = 16 / 9;
+            if (width / height > aspect) {
+                width = height * aspect;
+            } else {
+                height = width / aspect;
+            }
+            this.innerWidth = Math.floor(width);
+            this.innerHeight = Math.floor(height);
+        } else {
+            this.innerWidth = window.innerWidth;
+            this.innerHeight = window.innerHeight - this.top - this.bottom;
+        }
         this.size();
     }
 
@@ -103,9 +120,11 @@ class GameEnv {
         this.canvas.height = this.innerHeight;
         this.canvas.style.width = `${this.innerWidth}px`;
         this.canvas.style.height = `${this.innerHeight}px`;
-        this.canvas.style.position = 'absolute';
+        this.canvas.style.position = 'relative';
         this.canvas.style.left = '0px';
-        this.canvas.style.top = `${this.top}px`;
+        this.canvas.style.top = '0px';
+        this.canvas.style.margin = 'auto';
+        this.canvas.style.display = 'block';
     }
 
     /**

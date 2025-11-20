@@ -1,5 +1,6 @@
 import GameEnv from './GameEnv.js';
 import Character from './Character.js';
+import Inventory from './Inventory.js';
 
 // Define non-mutable constants as defaults
 const SCALE_FACTOR = 25; // 1/nth of the height of the canvas
@@ -26,6 +27,15 @@ class Player extends Character {
         super(data);
         this.keypress = data?.keypress || {up: 87, left: 65, down: 83, right: 68};
         this.bindEventListeners();
+        // Link this player to the global Inventory so inventory belongs to the player instance
+        try {
+            Inventory.setOwner(this);
+            // ensure the player has an `inventory` property referencing current items
+            this.inventory = Inventory.getItems();
+        } catch (e) {
+            console.error('Could not attach Inventory to Player', e);
+            this.inventory = this.inventory || [];
+        }
     }
 
 

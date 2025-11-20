@@ -81,42 +81,54 @@ const Prompt = {
 
     updatePromptTable() {
         const table = this.createPromptDisplayTable();
-        // Use `currentNpc` to populate questions
-        if (this.currentNpc && this.currentNpc.questions) {
+        // If the NPC provides questions (legacy), show them; otherwise show a simple interaction input.
+        if (this.currentNpc && this.currentNpc.questions && this.currentNpc.questions.length > 0) {
             this.currentNpc.questions.forEach((question, index) => {
                 const row = document.createElement("tr");
-                // Question cell
                 const questionCell = document.createElement("td");
                 questionCell.innerText = `${index + 1}. ${question}`;
                 row.appendChild(questionCell);
-                // Input cell
                 const inputCell = document.createElement("td");
                 const input = document.createElement("input");
                 input.type = "text";
                 input.placeholder = "Your answer here...";
-                input.dataset.questionIndex = index; // Tag input with the question index
+                input.dataset.questionIndex = index;
                 inputCell.appendChild(input);
                 row.appendChild(inputCell);
                 table.appendChild(row);
             });
-            // Add submit button
             const submitRow = document.createElement("tr");
             const submitCell = document.createElement("td");
             submitCell.colSpan = 2;
             submitCell.style.textAlign = "center";
             const submitButton = document.createElement("button");
             submitButton.innerText = "Submit";
-            submitButton.addEventListener("click", this.handleSubmit.bind(this)); // Attach submission handler
+            submitButton.addEventListener("click", this.handleSubmit.bind(this));
             submitCell.appendChild(submitButton);
             submitRow.appendChild(submitCell);
             table.appendChild(submitRow);
         } else {
+            // Simple interaction: single textarea and submit
             const row = document.createElement("tr");
-            const noQuestionsCell = document.createElement("td");
-            noQuestionsCell.colSpan = 2;
-            noQuestionsCell.innerText = "No questions available.";
-            row.appendChild(noQuestionsCell);
+            const inputCell = document.createElement("td");
+            inputCell.colSpan = 2;
+            const textarea = document.createElement("textarea");
+            textarea.placeholder = "Say something to this NPC...";
+            textarea.style.width = "100%";
+            textarea.style.height = "8vh";
+            inputCell.appendChild(textarea);
+            row.appendChild(inputCell);
             table.appendChild(row);
+            const submitRow = document.createElement("tr");
+            const submitCell = document.createElement("td");
+            submitCell.colSpan = 2;
+            submitCell.style.textAlign = "center";
+            const submitButton = document.createElement("button");
+            submitButton.innerText = "Submit";
+            submitButton.addEventListener("click", this.handleSubmit.bind(this));
+            submitCell.appendChild(submitButton);
+            submitRow.appendChild(submitCell);
+            table.appendChild(submitRow);
         }
         // Wrap the table in a scrollable container
         const container = document.createElement("div");
@@ -130,92 +142,89 @@ const Prompt = {
         
     handleSubmit() {
         // Collect all answers
+        // Try to read text inputs first (legacy quizzes)
         const inputs = document.querySelectorAll("input[type='text']");
-        const answers = Array.from(inputs).map(input => ({
-            questionIndex: parseInt(input.dataset.questionIndex),
-            answer: input.value.trim()
-        }));
-        
+        let answers = [];
+        if (inputs && inputs.length > 0) {
+            answers = Array.from(inputs).map(input => ({
+                questionIndex: parseInt(input.dataset.questionIndex),
+                answer: input.value.trim()
+            }));
+        } else {
+            // If no inputs, read textarea (simple interaction)
+            const ta = document.querySelector('textarea');
+            if (ta) answers = [{ questionIndex: 0, answer: ta.value.trim() }];
+        }
+
         console.log("Submitted Answers:", answers);
-        
-        // Check if this is IShowGreen's quiz (for game ending)
-        if (this.currentNpc && this.currentNpc.spriteData.id === 'IShowGreen') {
-            // Check if the player answered "yes" to the first question
-            if (answers.length > 0 && 
-                answers[0].questionIndex === 0 && 
-                this.normalizeAnswer(answers[0].answer).toLowerCase() === "yes") {
-                
-                // Check player's balance
-                const playerBalance = window.playerBalance || 0;
-                
-                if (playerBalance >= 250) {
-                    // Player has enough money to escape - trigger victory
-                    import('./winnerScreen.js')
-                        .then(module => {
-                            module.showVictoryScreen();
-                        })
-                        .catch(err => {
-                            console.error("Error showing victory screen:", err);
-                            alert("You've escaped the basement! (But there was an error showing the victory screen)");
-                        });
-                } else {
-                    // Not enough money
-                    alert(`"Not so fast! You need 250 money bucks to escape, but you only have ${playerBalance}. Keep hustling!"`);
+
+        // Handle IShowGreen: check player's crypto and allow escape if enough
+        const npcId = this.currentNpc?.spriteData?.id;
+        const playerCrypto = window.playerCrypto ?? window.playerBalance ?? 0;
+        let dialogue = '';
+        let speaker = npcId || 'NPC';
+        if (npcId === 'IShowGreen') {
+            if (playerCrypto >= 250) {
+                dialogue = "You've escaped the basement! Congratulations — freedom is yours.";
+                if (window.GameControl && typeof window.GameControl.stopTimer === 'function') {
+                    window.GameControl.stopTimer();
                 }
             } else {
-                // Player didn't answer "yes"
-                alert("Come back when you're ready to leave... and have the money!");
+                dialogue = `Not so fast! You need 250 Crypto to escape, but you only have ${playerCrypto}. Keep hustling!`;
+            }
+        } else {
+            // Generic handling for other NPCs: optionally award a small interaction reward
+            const reward = Math.floor(Math.random() * 3); // small chance reward
+            if (reward > 0) {
+                const newBal = updateBalance(reward);
+                dialogue = `You earned ${reward} Crypto. Total: ${newBal}`;
+            } else {
+                dialogue = 'Interaction recorded.';
             }
         }
-        // Check if this is Computer2's quiz
-        else if (this.currentNpc && this.currentNpc.spriteData.id === 'Computer2') {
-            // Import the computer2answers for grading
-            import('./computer2answers.js')
-                .then(module => {
-                    const correctAnswers = module.default;
-                    let correctCount = 0;
-                    let userAnswers = [];
-                    
-                    // Compare user answers with correct answers
-                    answers.forEach(answer => {
-                        const questionIndex = answer.questionIndex;
-                        userAnswers[questionIndex] = answer.answer;
-                        
-                        if (questionIndex < correctAnswers.length) {
-                            // Compare the answers (case-sensitive for exact matches)
-                            if (this.normalizeAnswer(answer.answer) === this.normalizeAnswer(correctAnswers[questionIndex])) {
-                                correctCount++;
-                            }
-                        }
-                    });
-                    
-                    // Save user answers for stats tracking (optional)
-                    if (typeof window.savePlayerAnswers === 'function') {
-                        window.savePlayerAnswers(userAnswers);
-                    }
-                    
-                    // Award points based on correct answers
-                    const pointsPerCorrectAnswer = Math.floor(Math.random()*5) + 10; // temp
-                    const totalPoints = correctCount * pointsPerCorrectAnswer;
-                    
-                    // Update the balance using StatsManager function
-                    const newBalance = updateBalance(totalPoints);
-                    
-                    // Show feedback to the player
-                    alert(`Well done. You got ${correctCount} out of ${correctAnswers.length} correct.\nYou earned ${totalPoints} dollars!\nYour total money is now ${newBalance}.`);
-                })
-                .catch(err => {
-                    console.error("Error grading quiz:", err);
-                    alert("There was an error grading your quiz. Please try again.");
-                });
-        } else {
-            // For other NPCs, just show a generic message
-            alert("Answers submitted!");
-        }
-        
-        // Close the prompt
-        this.isOpen = false;
-        this.backgroundDim.remove();
+        // Show the dialogue popup
+        Prompt.showDialoguePopup(speaker, dialogue, () => {
+            // On close, close the prompt and remove dim
+            Prompt.isOpen = false;
+            Prompt.backgroundDim.remove();
+        });
+    },
+
+    showDialoguePopup(speaker, text, onClose) {
+        // Remove any existing popup
+        let popup = document.getElementById('dialoguePopup');
+        if (popup) popup.remove();
+        popup = document.createElement('div');
+        popup.id = 'dialoguePopup';
+        popup.style.position = 'fixed';
+        popup.style.left = '50%';
+        popup.style.top = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+        popup.style.background = 'rgba(24,24,24,0.98)';
+        popup.style.color = '#fff';
+        popup.style.padding = '32px 24px 18px 24px';
+        popup.style.borderRadius = '12px';
+        popup.style.boxShadow = '0 8px 32px rgba(0,0,0,0.25)';
+        popup.style.zIndex = '10001';
+        popup.style.minWidth = '260px';
+        popup.style.maxWidth = '90vw';
+        popup.style.textAlign = 'center';
+        popup.innerHTML = `<div style="font-weight:700;font-size:1.2em;margin-bottom:0.5em;">${speaker}</div><div style="margin-bottom:1.2em;">${text}</div>`;
+        const closeBtn = document.createElement('button');
+        closeBtn.innerText = 'Close';
+        closeBtn.style.padding = '8px 18px';
+        closeBtn.style.borderRadius = '6px';
+        closeBtn.style.background = '#222';
+        closeBtn.style.color = '#fff';
+        closeBtn.style.border = 'none';
+        closeBtn.style.fontWeight = 'bold';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.onclick = () => {
+            popup.remove();
+            if (typeof onClose === 'function') onClose();
+        };
+        popup.appendChild(closeBtn);
+        document.body.appendChild(popup);
     },
     updatePromptDisplay() {
         const table = document.getElementsByClassName("table scores")[0]
@@ -275,8 +284,8 @@ const Prompt = {
         
         promptTitle.style.display = "block";
 
-        // Add the new title
-        promptTitle.innerHTML = npc.quiz.title || "Questions";
+        // Add the new title (use NPC id or a generic label)
+        promptTitle.innerHTML = npc?.spriteData?.id || "Interaction";
         promptDropDown.appendChild(promptTitle);
     
         // Display the new questions
