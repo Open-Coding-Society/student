@@ -107,8 +107,8 @@ class GameEnv {
      * @static
      */
     static setTop() {
-        const header = document.querySelector('header');
-        this.top = header ? header.offsetHeight : 0;
+        // In fullscreen mode, we don't need header offset
+        this.top = 0;
     }
 
     /**
@@ -117,8 +117,8 @@ class GameEnv {
      * @static
      */
     static setBottom() {
-        const footer = document.querySelector('footer');
-        this.bottom = footer ? footer.offsetHeight : 0;
+        // In fullscreen mode, we don't need footer offset
+        this.bottom = 0;
     }
 
     /**

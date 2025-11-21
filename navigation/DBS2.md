@@ -21,33 +21,43 @@ permalink: /DBS2
 </script>
 
 <style>
-html, body {
-  height: 100%;
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 /* Make the game container full-bleed so it fits any laptop viewport */
 #gameContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   background: #181818;
-  margin: 0;
-  border-radius: 0;
-  box-shadow: none;
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
-/* Make the canvas fill the container */
+
+/* Make the canvas fill available space while maintaining aspect ratio */
 #gameCanvas {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   display: block;
   background: #111;
-  border-radius: 0;
+}
+
+/* Hide any page elements that might interfere */
+header, footer, nav {
+  display: none !important;
 }
 </style>
 
