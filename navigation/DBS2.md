@@ -6,7 +6,7 @@ permalink: /DBS2
 
 
 <div id="gameContainer">
-  <canvas id="gameCanvas"></canvas>
+  <canvas id="gameCanvas" style="image-rendering: pixelated;"></canvas>
 </div>
 
 <script type="module">

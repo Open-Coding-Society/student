@@ -130,6 +130,7 @@ class Character extends GameObject {
             this.canvas.style.position = 'absolute';
             this.canvas.style.left = `${this.position.x}px`;
             this.canvas.style.top = `${GameEnv.top + this.position.y}px`;
+            this.canvas.style.imageRendering = "pixelated";
     
             // Clear the canvas before drawing
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

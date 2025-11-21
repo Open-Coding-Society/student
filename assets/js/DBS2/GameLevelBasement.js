@@ -36,12 +36,12 @@ class GameLevelBasement {
       // Slow down animation updates so movement appears very relaxed
       ANIMATION_RATE: 60,
         INIT_POSITION: { x: 0, y: height - (height/CHILLGUY_SCALE_FACTOR) }, 
-        pixels: {height: 384, width: 512}, //change these to alter dimensinos
-        orientation: {rows: 3, columns: 4 }, //change these to fit spritesheet properly.
-        down: {row: 0, start: 0, columns: 3 },
-        left: {row: 2, start: 0, columns: 3 },
-        right: {row: 1, start: 0, columns: 3 },
-        up: {row: 3, start: 0, columns: 3 },
+        pixels: {height: 128, width: 128}, //change these to alter dimensinos
+        orientation: {rows: 4, columns: 4 }, //change these to fit spritesheet properly.
+        down: {row: 0, start: 0, columns: 4 },
+        left: {row: 2, start: 0, columns: 4 },
+        right: {row: 1, start: 0, columns: 4 },
+        up: {row: 3, start: 0, columns: 4 },
         hitbox: { widthPercentage: 0.45, heightPercentage: 0.2 },
       keypress: { up: 87, left: 65, down: 83, right: 68 }, // W, A, S, D. A is 65, B is 66, etc...
       // Placeholder for future inventory system and player's crypto balance
