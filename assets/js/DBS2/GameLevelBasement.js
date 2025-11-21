@@ -32,7 +32,7 @@ class GameLevelBasement {
         src: sprite_src_chillguy,
         SCALE_FACTOR: CHILLGUY_SCALE_FACTOR,
       // Reduced movement speed for Chill Guy — much slower
-      STEP_FACTOR: 10,
+      STEP_FACTOR: 1000,
       // Slow down animation updates so movement appears very relaxed
       ANIMATION_RATE: 60,
         INIT_POSITION: { x: 0, y: height - (height/CHILLGUY_SCALE_FACTOR) }, 
