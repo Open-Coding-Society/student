@@ -21,30 +21,26 @@ permalink: /DBS2
 </script>
 
 <style>
-* {
+html, body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-html, body {
   width: 100%;
   height: 100%;
-  overflow: hidden;
 }
 
-/* Make the game container full-bleed so it fits any laptop viewport */
+/* Make the game container fill viewport minus header */
 #gameContainer {
   position: fixed;
-  top: 0;
+  top: var(--header-height, 60px); /* Adjust based on your header height */
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - var(--header-height, 60px));
   background: #181818;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 999; /* Below header z-index */
 }
 
 /* Make the canvas fill available space while maintaining aspect ratio */
@@ -55,10 +51,34 @@ html, body {
   background: #111;
 }
 
-/* Hide any page elements that might interfere */
-header, footer, nav {
+/* Ensure header/nav stay on top */
+header, nav {
+  position: relative;
+  z-index: 1000;
+}
+
+/* Hide footer to maximize game space */
+footer {
   display: none !important;
 }
+
+/* Calculate and set header height dynamically */
+@media screen {
+  :root {
+    --header-height: 60px; /* Default, will be overridden by JS if needed */
+  }
+}
 </style>
+
+<script>
+  // Dynamically calculate header height and set CSS variable
+  window.addEventListener('DOMContentLoaded', () => {
+    const header = document.querySelector('header');
+    if (header) {
+      const headerHeight = header.offsetHeight;
+      document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+    }
+  });
+</script>
 
 <!-- The game will render inside #gameContainer. -->

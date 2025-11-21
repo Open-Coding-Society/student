@@ -25,16 +25,16 @@ class GameLevelBasement {
 
     // Player data for Chillguy
     const sprite_src_chillguy = path + "/images/DBS2/chillguy.png";
-    const CHILLGUY_SCALE_FACTOR = 3; //smaller = bigger chillguy.
+    const CHILLGUY_SCALE_FACTOR = 5; //smaller = bigger chillguy.
     const sprite_data_chillguy = {
         id: 'Chill Guy',
         greeting: "I am Chill Guy, the desert wanderer. I am looking for wisdom and adventure!",
         src: sprite_src_chillguy,
         SCALE_FACTOR: CHILLGUY_SCALE_FACTOR,
       // Reduced movement speed for Chill Guy — much slower
-      STEP_FACTOR: 30,
+      STEP_FACTOR: 10,
       // Slow down animation updates so movement appears very relaxed
-      ANIMATION_RATE: 240,
+      ANIMATION_RATE: 60,
         INIT_POSITION: { x: 0, y: height - (height/CHILLGUY_SCALE_FACTOR) }, 
         pixels: {height: 384, width: 512}, //change these to alter dimensinos
         orientation: {rows: 3, columns: 4 }, //change these to fit spritesheet properly.
