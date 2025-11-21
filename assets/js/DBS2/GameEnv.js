@@ -58,25 +58,36 @@ class GameEnv {
         this.setCanvas();
         this.setTop();
         this.setBottom();
-        // Use the container's size for scaling
+        // Base sizing primarily off the window (viewport) size, then constrain to container if present.
+        const aspect = 16 / 9;
+        const availWidth = window.innerWidth;
+        const availHeight = Math.max(100, window.innerHeight - this.top - this.bottom);
+
+        // Start from the available viewport size
+        let targetWidth = availWidth;
+        let targetHeight = availHeight;
+
+        // Respect the container max width if present (keeps site layout intact)
         const container = document.getElementById('gameContainer');
         if (container) {
             const rect = container.getBoundingClientRect();
-            // Maintain 16:9 aspect ratio
-            let width = rect.width;
-            let height = rect.height;
-            const aspect = 16 / 9;
-            if (width / height > aspect) {
-                width = height * aspect;
-            } else {
-                height = width / aspect;
-            }
-            this.innerWidth = Math.floor(width);
-            this.innerHeight = Math.floor(height);
-        } else {
-            this.innerWidth = window.innerWidth;
-            this.innerHeight = window.innerHeight - this.top - this.bottom;
+            // allow the container to be a limiting factor but do not exceed viewport
+            targetWidth = Math.min(rect.width || availWidth, availWidth * 0.98);
+            // If the container provides an explicit height (via aspect-ratio), use that as guidance
+            if (rect.height && rect.height > 0) targetHeight = Math.min(rect.height, availHeight * 0.98);
         }
+
+        // Maintain aspect ratio within the available box
+        if (targetWidth / targetHeight > aspect) {
+            targetWidth = Math.floor(targetHeight * aspect);
+        } else {
+            targetHeight = Math.floor(targetWidth / aspect);
+        }
+
+        // Store computed CSS pixel dimensions (used by size())
+        this.innerWidth = Math.max(1, Math.floor(targetWidth));
+        this.innerHeight = Math.max(1, Math.floor(targetHeight));
+
         this.size();
     }
 
@@ -116,15 +127,33 @@ class GameEnv {
      * @static
      */
     static size() {
-        this.canvas.width = this.innerWidth;
-        this.canvas.height = this.innerHeight;
-        this.canvas.style.width = `${this.innerWidth}px`;
-        this.canvas.style.height = `${this.innerHeight}px`;
-        this.canvas.style.position = 'relative';
-        this.canvas.style.left = '0px';
-        this.canvas.style.top = '0px';
-        this.canvas.style.margin = 'auto';
+        // Use devicePixelRatio to make canvas crisp on high-DPI displays
+        const dpr = window.devicePixelRatio || 1;
+        // If container exists, measure it to compute CSS size
+        const container = document.getElementById('gameContainer');
+        let cssWidth = this.innerWidth;
+        let cssHeight = this.innerHeight;
+        if (container) {
+            const rect = container.getBoundingClientRect();
+            cssWidth = Math.floor(rect.width);
+            cssHeight = Math.floor(rect.height);
+        }
+
+        // Set CSS size
+        this.canvas.style.width = `${cssWidth}px`;
+        this.canvas.style.height = `${cssHeight}px`;
         this.canvas.style.display = 'block';
+        this.canvas.style.position = 'relative';
+
+        // Set internal resolution according to DPR
+        this.canvas.width = Math.max(1, Math.floor(cssWidth * dpr));
+        this.canvas.height = Math.max(1, Math.floor(cssHeight * dpr));
+
+        // Scale the drawing context so drawing coordinates match CSS pixels
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // Update stored values
+        this.innerWidth = cssWidth;
+        this.innerHeight = cssHeight;
     }
 
     /**

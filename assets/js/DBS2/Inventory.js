@@ -1,3 +1,4 @@
+import Prompt from './Prompt.js';
 // Lightweight Inventory manager and UI
 // Designed to be backend-friendly later: uses a simple data model and localStorage persistence for now.
 
@@ -122,11 +123,13 @@ const Inventory = {
     slotClicked(index) {
         const item = this.items[index];
         if (item) {
-            if (confirm(`Use or remove '${item.name}'? Press OK to remove.`)) {
-                this.removeItem(index);
+            try {
+                Prompt.showConfirm('Inventory', `Use or remove '${item.name}'?`, () => { this.removeItem(index); }, () => {});
+            } catch (e) {
+                if (confirm(`Use or remove '${item.name}'? Press OK to remove.`)) this.removeItem(index);
             }
         } else {
-            alert('Empty slot. Items will appear here when collected.');
+            try { Prompt.showDialoguePopup('Inventory', 'Empty slot. Items will appear here when collected.'); } catch (e) { console.warn('Empty slot. Items will appear here when collected.'); }
         }
     },
 
@@ -157,7 +160,7 @@ const Inventory = {
                 return i;
             }
         }
-        alert('Inventory full');
+        try { Prompt.showDialoguePopup('Inventory', 'Inventory full'); } catch (e) { console.warn('Inventory full'); }
         return -1;
     },
 

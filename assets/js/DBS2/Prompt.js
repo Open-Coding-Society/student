@@ -226,6 +226,52 @@ const Prompt = {
         popup.appendChild(closeBtn);
         document.body.appendChild(popup);
     },
+    showConfirm(speaker, text, onConfirm, onCancel) {
+        // Remove any existing popup
+        let popup = document.getElementById('dialoguePopup');
+        if (popup) popup.remove();
+        popup = document.createElement('div');
+        popup.id = 'dialoguePopup';
+        popup.style.position = 'fixed';
+        popup.style.left = '50%';
+        popup.style.top = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+        popup.style.background = 'rgba(24,24,24,0.98)';
+        popup.style.color = '#fff';
+        popup.style.padding = '24px';
+        popup.style.borderRadius = '10px';
+        popup.style.boxShadow = '0 8px 32px rgba(0,0,0,0.25)';
+        popup.style.zIndex = '10001';
+        popup.style.minWidth = '260px';
+        popup.style.maxWidth = '90vw';
+        popup.style.textAlign = 'center';
+        popup.innerHTML = `<div style="font-weight:700;margin-bottom:0.5em;">${speaker}</div><div style="margin-bottom:1em;">${text}</div>`;
+        const btnRow = document.createElement('div');
+        btnRow.style.display = 'flex';
+        btnRow.style.justifyContent = 'center';
+        btnRow.style.gap = '12px';
+
+        const ok = document.createElement('button');
+        ok.innerText = 'OK';
+        ok.style.padding = '8px 16px';
+        ok.style.borderRadius = '6px';
+        ok.style.border = 'none';
+        ok.style.cursor = 'pointer';
+        ok.onclick = () => { popup.remove(); if (typeof onConfirm === 'function') onConfirm(); };
+
+        const cancel = document.createElement('button');
+        cancel.innerText = 'Cancel';
+        cancel.style.padding = '8px 16px';
+        cancel.style.borderRadius = '6px';
+        cancel.style.border = 'none';
+        cancel.style.cursor = 'pointer';
+        cancel.onclick = () => { popup.remove(); if (typeof onCancel === 'function') onCancel(); };
+
+        btnRow.appendChild(ok);
+        btnRow.appendChild(cancel);
+        popup.appendChild(btnRow);
+        document.body.appendChild(popup);
+    },
     updatePromptDisplay() {
         const table = document.getElementsByClassName("table scores")[0]
         const detailToggleSection = document.getElementById("detail-toggle-section")

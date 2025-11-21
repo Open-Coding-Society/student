@@ -1,4 +1,5 @@
 import GameLevelBasement from './GameLevelBasement.js';
+import Prompt from './Prompt.js';
 
 let currentKey = "";
 let nextKeyChange = 0;
@@ -26,11 +27,11 @@ headers: { 'content-type':'application/json' },
 body: JSON.stringify({ hits: count })
 });
 const data = await res.json();
-if(data.finished){
-alert(data.message);
-} else {
-document.getElementById('progress').textContent = data.progress;
-}
+	if(data.finished){
+		try { Prompt.showDialoguePopup('Miner', data.message); } catch (e) { console.warn(data.message); }
+	} else {
+		document.getElementById('progress').textContent = data.progress;
+	}
 }
 
 

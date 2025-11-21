@@ -2,6 +2,7 @@ import GameEnv from './GameEnv.js';
 import GameLevelBasement from './GameLevelBasement.js';
 import { getStats } from "./StatsManager.js";
 import Inventory from './Inventory.js';
+import Prompt from './Prompt.js';
 
 
 
@@ -103,7 +104,7 @@ const GameControl = {
     handleLevelStart: function() {
         // First time message for level 0, delay 10 passes
         if (this.currentLevelIndex === 0 && this.currentPass === 10) {
-            alert("Start Level.");
+            try { Prompt.showDialoguePopup('System', 'Start Level.'); } catch(e){ console.warn('Prompt not available', e); }
         }
         // Recursion tracker
         this.currentPass++;
@@ -112,9 +113,9 @@ const GameControl = {
     handleLevelEnd: function() {
         // More levels to play 
         if (this.currentLevelIndex < this.levelClasses.length - 1) {
-            alert("Level ended.");
+            try { Prompt.showDialoguePopup('System', 'Level ended.'); } catch(e){ console.warn('Prompt not available', e); }
         } else { // All levels completed
-            alert("Game over. All levels completed.");
+            try { Prompt.showDialoguePopup('System', 'Game over. All levels completed.'); } catch(e){ console.warn('Prompt not available', e); }
         }
         // Tear down the game environment
         for (let index = GameEnv.gameObjects.length - 1; index >= 0; index--) {

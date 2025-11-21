@@ -31,8 +31,10 @@ class GameLevelBasement {
         greeting: "I am Chill Guy, the desert wanderer. I am looking for wisdom and adventure!",
         src: sprite_src_chillguy,
         SCALE_FACTOR: CHILLGUY_SCALE_FACTOR,
-        STEP_FACTOR: 1000,
-        ANIMATION_RATE: 120,
+      // Reduced movement speed for Chill Guy — much slower
+      STEP_FACTOR: 30,
+      // Slow down animation updates so movement appears very relaxed
+      ANIMATION_RATE: 240,
         INIT_POSITION: { x: 0, y: height - (height/CHILLGUY_SCALE_FACTOR) }, 
         pixels: {height: 384, width: 512}, //change these to alter dimensinos
         orientation: {rows: 3, columns: 4 }, //change these to fit spritesheet properly.

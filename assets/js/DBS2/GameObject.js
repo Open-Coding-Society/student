@@ -1,4 +1,5 @@
 import GameEnv from './GameEnv.js';
+import Prompt from './Prompt.js';
 
 /**
  * The GameObject class serves as a base class for all game objects.
@@ -162,11 +163,20 @@ class GameObject {
         if (!this.state.collisionEvents.includes(objectID)) {
             // add the collisionType to the collisions array, making it the current collision
             this.state.collisionEvents.push(objectID);
-            if(objectGreet[0] == "$list$"){
-                alert(objectGreet[Math.ceil(1+Math.random()*(objectGreet.length-2))]);
-            }else{
-                alert(objectGreet);
+            // Build message
+            let message = '';
+            try {
+                if (Array.isArray(objectGreet) && objectGreet[0] === "$list$") {
+                    message = objectGreet[Math.ceil(1 + Math.random() * (objectGreet.length - 2))];
+                } else {
+                    message = objectGreet;
+                }
+            } catch (e) {
+                message = objectGreet || '';
             }
+            // Speaker name from the other object if available
+            const speaker = this.collisionData.touchPoints.other.id || 'NPC';
+            try { Prompt.showDialoguePopup(speaker, message); } catch (e) { console.warn('Prompt not available', e); }
         }
         console.log(objectID);
         this.handleReaction();
