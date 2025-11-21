@@ -109,14 +109,14 @@ class GameLevelBasement {
       };
 
       // Shell NPCs (placeholders for customization)
-      const sprite_src_shell = path + "/images/DBS2/computer2.png";
+      const sprite_src_trace = path + "/images/DBS2/Tracethepage.png";
       const sprite_src_laundry = path + "/images/DBS2/broken-washing-machine-jpeg.jpeg";
 
 
-      const sprite_data_shell1 = {
+      const sprite_data_trace = {
         id: 'ShellNpc1',
         greeting: 'Shell NPC 1 (customize me)',
-        src: sprite_src_shell,
+        src: sprite_src_trace,
         SCALE_FACTOR: 8,
         ANIMATION_RATE: 24,
         pixels: {height: 64, width: 832},
@@ -156,7 +156,7 @@ class GameLevelBasement {
       { class: Npc, data: sprite_data_computer1 },
       { class: Npc, data: sprite_data_computer2 },
       { class: Npc, data: sprite_data_ishowgreen },
-      { class: Npc, data: sprite_data_shell1 },
+      { class: Npc, data: sprite_data_trace },
       { class: Npc, data: sprite_data_shell2 },
       { class: Npc, data: sprite_data_shell3 }
     ];
