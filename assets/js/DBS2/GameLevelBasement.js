@@ -110,6 +110,9 @@ class GameLevelBasement {
 
       // Shell NPCs (placeholders for customization)
       const sprite_src_shell = path + "/images/DBS2/computer2.png";
+      const sprite_src_laundry = path + "/images/DBS2/broken-washing-machine-jpeg.jpeg";
+
+
       const sprite_data_shell1 = {
         id: 'ShellNpc1',
         greeting: 'Shell NPC 1 (customize me)',
@@ -123,9 +126,9 @@ class GameLevelBasement {
         hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
       };
       const sprite_data_shell2 = {
-        id: 'ShellNpc2',
-        greeting: 'Shell NPC 2 (customize me)',
-        src: sprite_src_shell,
+        id: 'laundry',
+        greeting: 'Fix the laundry machine!',
+        src: sprite_src_laundry,
         SCALE_FACTOR: 8,
         ANIMATION_RATE: 24,
         pixels: {height: 64, width: 832},
