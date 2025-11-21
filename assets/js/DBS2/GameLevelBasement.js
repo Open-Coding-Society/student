@@ -54,7 +54,7 @@ class GameLevelBasement {
     const sprite_src_computer1 = path + "/images/DBS2/computer1.png";
     const sprite_data_computer1 = {
       id: 'Computer1',
-      greeting: "Computer 1 (inactive)",
+      greeting: "Computer of Infinite Users",
       src: sprite_src_computer1,
       SCALE_FACTOR: 8,  // Adjust this based on your scaling needs
       ANIMATION_RATE: 24,
@@ -63,7 +63,7 @@ class GameLevelBasement {
       orientation: {rows: 1, columns: 20},
       down: {row: 0, start: 0, columns: 20},  // Adjusted to fit the spritesheet properly
       hitbox: { widthPercentage: 0.1, heightPercentage: 0.2 }
-      };
+    };
       // NPC data for Computer2
       const sprite_src_computer2 = path + "/images/DBS2/computer2.png";
       const sprite_data_computer2 = {
