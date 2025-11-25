@@ -4,7 +4,7 @@ import { getStats } from "./StatsManager.js";
 import Inventory from './Inventory.js';
 import Prompt from './Prompt.js';
 
-
+console.log("GameControl.js loaded!");
 
 const createStatsUI = () => {
     const statsContainer = document.createElement('div');

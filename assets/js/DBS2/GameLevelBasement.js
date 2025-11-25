@@ -112,7 +112,7 @@ class GameLevelBasement {
       const sprite_src_shell = path + "/images/DBS2/computer2.png";
       const sprite_src_laundry = path + "/images/DBS2/broken-washing-machine-jpeg.jpg";
 
-      const sprite_data_trace = {
+      const sprite_data_shell1 = {
         id: 'ShellNpc1',
         greeting: 'Shell NPC 1 (customize me)',
         src: sprite_src_shell,

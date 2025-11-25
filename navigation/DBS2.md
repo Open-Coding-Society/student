@@ -13,10 +13,17 @@ permalink: /DBS2
   import GameControl from "{{ site.baseurl }}/assets/js/DBS2/GameControl.js";
 
   // Start the game with the correct baseurl for asset loading
-  document.addEventListener('DOMContentLoaded', () => {
+   document.addEventListener('DOMContentLoaded', () => {
+    console.log("3. DOM loaded!");
+    
     let baseurl = "{{ site.baseurl }}";
     if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
-    GameControl.start(baseurl);
+    
+    console.log("4. Setting baseurl:", baseurl);
+    document.body.setAttribute('data-baseurl', baseurl);
+    
+    // GameControl will auto-start from its own DOMContentLoaded listener
+    console.log("5. Baseurl set, GameControl should start automatically");
   });
 </script>
 
