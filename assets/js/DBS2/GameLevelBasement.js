@@ -129,13 +129,14 @@ const sprite_data_shell2 = {
   id: 'laundry',
   greeting: 'Fix the laundry machine!',
   src: sprite_src_laundry,
-  SCALE_FACTOR: 8,
-  ANIMATION_RATE: 24,
-  pixels: {height: 64, width: 832},
-  INIT_POSITION: { x: (width * 6 / 12), y: (height * 2 / 5)},
-  orientation: {rows: 1, columns: 13 },
-  down: {row: 0, start: 0, columns: 12 },
-  hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
+  SCALE_FACTOR: 5,
+  ANIMATION_RATE: 0,
+  pixels: {height: 423 , width: 414},
+  INIT_POSITION: { x: (500), y: (200)},
+  orientation: {rows: 1, columns: 1 },
+  down: {row: 0, start: 0, columns: 1 },
+  hitbox: { widthPercentage: 0.3, heightPercentage: 0.3 },
+  stationary: true
 };
 
 const sprite_data_shell3 = {

@@ -433,7 +433,7 @@ function showLaundryMinigame(onComplete) {
         background-position: center;
     `;
     // ADD YOUR PAPER/CODE IMAGE SPRITE HERE (optional)
-    // paperImage.style.backgroundImage = "url('paper-with-code.png')";
+    paperImage.style.backgroundImage = "url('codescrapLaundry.png')";
 
     const codeText = document.createElement('div');
     codeText.innerHTML = `
