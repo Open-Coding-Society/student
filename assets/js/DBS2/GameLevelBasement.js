@@ -115,7 +115,7 @@ class GameLevelBasement {
       const sprite_data_trace = {
         id: 'ShellNpc1',
         greeting: 'Shell NPC 1 (customize me)',
-        src: sprite_src_trace,
+        src: sprite_src_shell,
         SCALE_FACTOR: 8,
         ANIMATION_RATE: 24,
         pixels: {height: 64, width: 832},
@@ -155,7 +155,7 @@ class GameLevelBasement {
       { class: Npc, data: sprite_data_computer1 },
       { class: Npc, data: sprite_data_computer2 },
       { class: Npc, data: sprite_data_ishowgreen },
-      { class: Npc, data: sprite_data_trace },
+      { class: Npc, data: sprite_data_shell1 },
       { class: Npc, data: sprite_data_shell2 },
       { class: Npc, data: sprite_data_shell3 }
     ];
