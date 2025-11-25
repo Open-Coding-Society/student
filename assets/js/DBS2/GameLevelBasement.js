@@ -109,45 +109,47 @@ class GameLevelBasement {
       };
 
       // Shell NPCs (placeholders for customization)
-      const sprite_src_shell = path + "/images/DBS2/computer2.png";
-      const sprite_src_laundry = path + "/images/DBS2/broken-washing-machine-jpeg.jpg";
+const sprite_src_shell = path + "/images/DBS2/computer2.png";
+const sprite_src_laundry = path + "/images/DBS2/broken-washing-machine-jpeg.jpg";
 
-      const sprite_data_shell1 = {
-        id: 'ShellNpc1',
-        greeting: 'Shell NPC 1 (customize me)',
-        src: sprite_src_shell,
-        SCALE_FACTOR: 8,
-        ANIMATION_RATE: 24,
-        pixels: {height: 64, width: 832},
-        INIT_POSITION: { x: (width * 4 / 12), y: (height * 1 / 5)},
-        orientation: {rows: 1, columns: 13 },
-        down: {row: 0, start: 0, columns: 12 },
-        hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
-      };
-      const sprite_data_shell2 = {
-        id: 'laundry',
-        greeting: 'Fix the laundry machine!',
-        src: sprite_src_laundry,
-        SCALE_FACTOR: 8,
-        ANIMATION_RATE: 24,
-        pixels: {height: 64, width: 832},
-        INIT_POSITION: { x: (width * 6 / 12), y: (height * 2 / 5)},
-        orientation: {rows: 1, columns: 13 },
-        down: {row: 0, start: 0, columns: 12 },
-        hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
-      };
-      const sprite_data_shell3 = {
-        id: 'ShellNpc3',
-        greeting: 'Shell NPC 3 (customize me)',
-        src: sprite_src_shell,
-        SCALE_FACTOR: 8,
-        ANIMATION_RATE: 24,
-        pixels: {height: 64, width: 832},
-        INIT_POSITION: { x: (width * 9 / 12), y: (height * 2 / 5)},
-        orientation: {rows: 1, columns: 13 },
-        down: {row: 0, start: 0, columns: 12 },
-        hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
-      };
+const sprite_data_shell1 = {
+  id: 'ShellNpc1',
+  greeting: 'Shell NPC 1 (customize me)',
+  src: sprite_src_shell,
+  SCALE_FACTOR: 8,
+  ANIMATION_RATE: 24,
+  pixels: {height: 64, width: 832},
+  INIT_POSITION: { x: (width * 4 / 12), y: (height * 1 / 5)},
+  orientation: {rows: 1, columns: 13 },
+  down: {row: 0, start: 0, columns: 12 },
+  hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
+};
+
+const sprite_data_shell2 = {
+  id: 'laundry',
+  greeting: 'Fix the laundry machine!',
+  src: sprite_src_laundry,
+  SCALE_FACTOR: 8,
+  ANIMATION_RATE: 24,
+  pixels: {height: 64, width: 832},
+  INIT_POSITION: { x: (width * 6 / 12), y: (height * 2 / 5)},
+  orientation: {rows: 1, columns: 13 },
+  down: {row: 0, start: 0, columns: 12 },
+  hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
+};
+
+const sprite_data_shell3 = {
+  id: 'ShellNpc3',
+  greeting: 'Shell NPC 3 (customize me)',
+  src: sprite_src_shell,
+  SCALE_FACTOR: 8,
+  ANIMATION_RATE: 24,
+  pixels: {height: 64, width: 832},
+  INIT_POSITION: { x: (width * 9 / 12), y: (height * 2 / 5)},
+  orientation: {rows: 1, columns: 13 },
+  down: {row: 0, start: 0, columns: 12 },
+  hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
+};
     // List of objects defnitions for this level
     this.objects = [
       { class: Background, data: image_data_basement },
