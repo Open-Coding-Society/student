@@ -9,11 +9,27 @@ permalink: /DBS2
   <canvas id="gameCanvas" style="image-rendering: pixelated;"></canvas>
 </div>
 
+<script>
+  // Set baseurl immediately (before module loads) to avoid race condition
+  (function() {
+    let baseurl = "{{ site.baseurl }}";
+    if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
+    // Set it on document if body doesn't exist yet
+    if (document.body) {
+      document.body.setAttribute('data-baseurl', baseurl);
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
+        document.body.setAttribute('data-baseurl', baseurl);
+      });
+    }
+  })();
+</script>
+
 <script type="module">
   import GameControl from "{{ site.baseurl }}/assets/js/DBS2/GameControl.js";
 
-  // Start the game with the correct baseurl for asset loading
-   document.addEventListener('DOMContentLoaded', () => {
+  // Ensure baseurl is set and start the game
+  document.addEventListener('DOMContentLoaded', () => {
     console.log("3. DOM loaded!");
     
     let baseurl = "{{ site.baseurl }}";

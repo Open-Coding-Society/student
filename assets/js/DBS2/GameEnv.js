@@ -34,6 +34,8 @@ class GameEnv {
     static timerActive = false;
     static timerInterval = 10;
     static time = 0;
+    static userID = null;
+    static coinScore = 0;
     
     /**
      * Private constructor to prevent instantiation.

@@ -42,7 +42,7 @@ const createStatsUI = () => {
  * @property {function} resize - Resize the canvas and player object when the window is resized.
  */
 const GameControl = {
-    intervalID: null, // Variable to hold the timer interval reference
+    intervalId: null, // Variable to hold the timer interval reference
     localStorageTimeKey: "localTimes",
     currentPass: 0,
     currentLevelIndex: 0,
@@ -148,27 +148,7 @@ const GameControl = {
      * Updates and displays the game timer.
      * @function updateTimer
      * @memberof GameControl
-     */ 
-    saveTime(time, score) {
-        if (time == 0) return;
-        const userID = GameEnv.userID
-        const oldTable = this.getAllTimes()
-
-        const data = {
-            userID: userID,
-            time: time,
-            score: score
-        }
-
-        if (!oldTable) {
-            localStorage.setItem(this.localStorageTimeKey, JSON.stringify([data]))
-            return;
-        }
-
-        oldTable.push(data)
-
-        localStorage.setItem(this.localStorageTimeKey, JSON.stringify(oldTable))
-    },
+     */
     getAllTimes() {
         let timeTable = null;
 
@@ -176,10 +156,18 @@ const GameControl = {
             timeTable = localStorage.getItem(this.localStorageTimeKey);
         }
         catch (e) {
-            return e;
+            return null;
         }
 
-        return JSON.parse(timeTable)
+        if (!timeTable) {
+            return null;
+        }
+
+        try {
+            return JSON.parse(timeTable);
+        } catch (e) {
+            return null;
+        }
     },
     updateTimer() {
         const time = GameEnv.time
@@ -188,13 +176,13 @@ const GameControl = {
             const newTime = time + GameEnv.timerInterval
             GameEnv.time = newTime                
             if (document.getElementById('timeScore')) {
-                document.getElementById('timeScore').textContent = (time/1000).toFixed(2) 
+                document.getElementById('timeScore').textContent = (newTime/1000).toFixed(2) 
             }
-                return newTime
-            }
-            if (document.getElementById('timeScore')) {
-                document.getElementById('timeScore').textContent = (time/1000).toFixed(2) 
-            }
+            return newTime
+        }
+        if (document.getElementById('timeScore')) {
+            document.getElementById('timeScore').textContent = (time/1000).toFixed(2) 
+        }
     },   
     /**
      * Starts the game timer.
@@ -225,26 +213,35 @@ const GameControl = {
         GameEnv.time = 0;
         GameEnv.coinScore = 0;
         this.updateCoinDisplay()
-        clearInterval(this.intervalID)
+        clearInterval(this.intervalId)
     },
 
-    saveTime() {
+    saveTime(time, score) {
+        if (time == 0) return;
+        const userID = GameEnv.userID || 'anonymous';
+        const oldTable = this.getAllTimes()
+
         const data = {
-            userID: GameEnv.userID,
-            time: GameEnv.time - 10,
-            coinScore: GameEnv.coinScore
+            userID: userID,
+            time: time,
+            score: score || GameEnv.coinScore || 0
         }
 
-        const currDataList = JSON.parse(localStorage.getItem(this.localStorageTimeKey))
-
-        if (!currDataList || !Array.isArray(currDataList)) {
+        if (!oldTable || !Array.isArray(oldTable)) {
             localStorage.setItem(this.localStorageTimeKey, JSON.stringify([data]))
             return;
         }
 
-        currDataList.push(data)
-        
-        localStorage.setItem(this.localStorageTimeKey, JSON.stringify(currDataList))
+        oldTable.push(data)
+        localStorage.setItem(this.localStorageTimeKey, JSON.stringify(oldTable))
+    },
+    
+    updateCoinDisplay() {
+        const coins = GameEnv.coinScore || 0;
+        const coinDisplay = document.getElementById('coinScore');
+        if (coinDisplay) {
+            coinDisplay.textContent = coins;
+        }
     },  
 
     // Initialize UI for game stats
