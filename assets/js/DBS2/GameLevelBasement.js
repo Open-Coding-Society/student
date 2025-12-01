@@ -110,6 +110,7 @@ class GameLevelBasement {
       // Shell NPCs (placeholders for customization)
 const sprite_src_shell = path + "/images/DBS2/computer2.png";
 const sprite_src_laundry = path + "/images/DBS2/broken-washing-machine-jpeg.jpg";
+const sprite_src_bookshelf = path + "/images/DBS2/Tracethepage.png";
 
 const sprite_data_shell1 = {
   id: 'ShellNpc1',
@@ -150,6 +151,22 @@ const sprite_data_shell3 = {
   down: {row: 0, start: 0, columns: 12 },
   hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
 };
+
+const sprite_data_bookshelf = {
+  id: 'Bookshelf',
+  greeting: 'A bookshelf filled with coding books and references.',
+  src: sprite_src_bookshelf,
+  // Smaller SCALE_FACTOR = larger on-screen sprite
+  SCALE_FACTOR: 3,
+  ANIMATION_RATE: 0,
+  pixels: {height: 592, width: 592}, // Tracethepage.png dimensions from console
+  // Place the bookshelf near the right wall, but not clipped off-screen
+  INIT_POSITION: { x: (width * 19 / 22), y: (height * 3 / 5)},
+  orientation: {rows: 1, columns: 1 },
+  down: {row: 0, start: 0, columns: 1 },
+  hitbox: { widthPercentage: 0.3, heightPercentage: 0.3 },
+  stationary: true
+};
     // List of objects defnitions for this level
     this.objects = [
       { class: Background, data: image_data_basement },
@@ -159,7 +176,8 @@ const sprite_data_shell3 = {
       { class: Npc, data: sprite_data_ishowgreen },
       { class: Npc, data: sprite_data_shell1 },
       { class: Npc, data: sprite_data_shell2 },
-      { class: Npc, data: sprite_data_shell3 }
+      { class: Npc, data: sprite_data_shell3 },
+      { class: Npc, data: sprite_data_bookshelf }
     ];
   }
 
