@@ -59,7 +59,7 @@ class GameLevelBasement {
       SCALE_FACTOR: 8,  // Adjust this based on your scaling needs
       ANIMATION_RATE: 24,
       pixels: {height: 64, width: 1280},
-      INIT_POSITION: { x: (width * 1 / 4), y: (height * 48 / 400)}, // Swapped position
+      INIT_POSITION: { x: (width * 1 / 4), y: (height * 0.07)}, // Swapped position
       orientation: {rows: 1, columns: 20},
       down: {row: 0, start: 0, columns: 20},  // Adjusted to fit the spritesheet properly
       hitbox: { widthPercentage: 0.1, heightPercentage: 0.2 }
@@ -79,7 +79,7 @@ class GameLevelBasement {
         SCALE_FACTOR: 8,  // Adjust this based on your scaling needs
         ANIMATION_RATE: 24,
         pixels: {height: 64, width: 832},
-        INIT_POSITION: { x: (width * 7 / 12), y: (height / 14)}, // Swapped position
+        INIT_POSITION: { x: (width * 7 / 12), y: (height * 0.01)}, // Swapped position
         orientation: {rows: 1, columns: 13 },
         down: {row: 0, start: 0, columns: 12 },  // This is the stationary npc, down is default 
         hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 },
@@ -119,7 +119,7 @@ const sprite_data_shell1 = {
   SCALE_FACTOR: 8,
   ANIMATION_RATE: 24,
   pixels: {height: 64, width: 832},
-  INIT_POSITION: { x: (width * 4 / 12), y: (height * 1 / 5)},
+  INIT_POSITION: { x: (width * 4 / 12), y: (height * 0.07)},
   orientation: {rows: 1, columns: 13 },
   down: {row: 0, start: 0, columns: 12 },
   hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
