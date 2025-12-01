@@ -2,6 +2,7 @@ import GameEnv from "./GameEnv.js";
 import Character from "./Character.js";
 import Prompt from "./Prompt.js";
 import { showAshTrailMinigame } from "./AshTrailMinigame.js";
+import infiniteUserMinigame from "./InfiniteUserMinigame.js";
 class Npc extends Character {
     constructor(data = null) {
         super(data);
@@ -42,6 +43,8 @@ class Npc extends Character {
                     if (this.spriteData.id === 'Bookshelf') {
                         showAshTrailMinigame();
                         return;
+                    } else if (this.spriteData.id === "Computer1") {
+                        infiniteUserMinigame();
                     }
 
                     // Default behaviour: open generic dialogue prompt
