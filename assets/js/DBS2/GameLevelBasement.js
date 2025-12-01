@@ -70,11 +70,10 @@ class GameLevelBasement {
         id: 'Computer2',
         greeting: [
           "$list$",
-          "Hi, I am Computer2! I am the GitHub code code code code code code code code code code code code code code code code code code code code code code code code code code code code code code code code collaboration mascot, except I'm not. That's Octocat.",
-          "Initializing CS Examination...",
+          "Hi, I am Computer2! I am the GitHub code code code code code code code code code code code code code code code code code code code code code code code code code code code code code code",
           "Wait, you're not IShowGreen? Finally, someone with proper sanitation!",
           "Psst! Don't tell IShowGreen, but I keep deleting his NFTs...",
-          "Finally, someone without Dorito dust on their fingers. Take this quiz!"
+          "Finally, someone without Dorito dust on their fingers."
         ],
         src: sprite_src_computer2,
         SCALE_FACTOR: 8,  // Adjust this based on your scaling needs
