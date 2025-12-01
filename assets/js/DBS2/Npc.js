@@ -3,7 +3,6 @@ import Character from "./Character.js";
 import Prompt from "./Prompt.js";
 import { showAshTrailMinigame } from "./AshTrailMinigame.js";
 import infiniteUserMinigame from "./InfiniteUserMinigame.js";
-
 class Npc extends Character {
     constructor(data = null) {
         super(data);
@@ -46,21 +45,6 @@ class Npc extends Character {
                         return;
                     } else if (this.spriteData.id === "Computer1") {
                         infiniteUserMinigame();
-                        return;
-                    } else if (this.spriteData.id === 'laundry') {
-                        // Laundry machine minigame
-                        if (typeof window.showLaundryMinigame === 'function') {
-                            window.showLaundryMinigame(() => {
-                                console.log('Player completed laundry minigame!');
-                                // TODO: Add code to player's inventory or update game state
-                                // Example: GameEnv.player.addCode('4729');
-                                alert('You discovered the code: 4-7-2-9!');
-                            });
-                        } else {
-                            console.error('Laundry minigame not loaded!');
-                            alert('Fix the laundry machine! (Minigame not loaded)');
-                        }
-                        return;
                     }
 
                     // Default behaviour: open generic dialogue prompt
