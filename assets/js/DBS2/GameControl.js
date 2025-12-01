@@ -3,6 +3,7 @@ import GameLevelBasement from './GameLevelBasement.js';
 import { getStats } from "./StatsManager.js";
 import Inventory from './Inventory.js';
 import Prompt from './Prompt.js';
+import Leaderboard from './Leaderboard.js';
 
 console.log("GameControl.js loaded!");
 
@@ -48,6 +49,7 @@ const GameControl = {
     currentLevelIndex: 0,
     levelClasses: [],
     path: '',
+    leaderboard: null,
 
     start: function(path) {
         GameEnv.create();
@@ -75,6 +77,7 @@ const GameControl = {
     
     loadLevelObjects: function(gameInstance) {
         this.initStatsUI();
+        this.initLeaderboard();
         // Instantiate the game objects
         for (let object of gameInstance.objects) {
             if (!object.data) object.data = {};
@@ -261,6 +264,14 @@ const GameControl = {
             <div>Questions Answered: <span id="questionsAnswered">0</span></div>
         `;
         document.body.appendChild(statsContainer);
+    },
+
+    // Initialize leaderboard UI
+    initLeaderboard: function() {
+        if (!this.leaderboard) {
+            this.leaderboard = new Leaderboard();
+        }
+        this.leaderboard.init();
     },
 
 };

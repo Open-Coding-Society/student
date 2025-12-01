@@ -1,11 +1,4 @@
-// AshTrail Memory Minigame (Frontend‑only)
-// ---------------------------------------
-// This file implements a self‑contained popup minigame with no real backend calls.
-// All "API" interactions are stubbed with in‑memory data so the flow can be
-// demonstrated to teachers and classmates. Later, these stubs can be replaced
-// with real fetch() calls to your backend.
 
-// --- Path grid + generators (stubbed "database") ---------------------------
 
 // Logical grid that everything lives on (player + path).
 // Higher numbers = smoother curves and more room for complex shapes.
