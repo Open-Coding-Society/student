@@ -47,8 +47,9 @@ function buildHeartPath() {
   const pts = [];
   const cx = GRID_COLS / 2;
   const cy = GRID_ROWS * 0.55;
-  const scale = GRID_ROWS * 0.22;
-  const steps = 80;
+  // Make the main heart larger so it fills more of the arena
+  const scale = GRID_ROWS * 0.30;
+  const steps = 220; // more samples = longer, smoother path
 
   for (let i = 0; i <= steps; i++) {
     const t = (i / steps) * Math.PI * 2;
@@ -63,6 +64,22 @@ function buildHeartPath() {
     const y = cy - (yh / 18) * scale;
     pts.push({ x, y });
   }
+
+  // Add an outer petal loop *outside* the heart to make it harder / longer
+  const outerRadiusBase = GRID_ROWS * 0.40; // clearly outside main heart
+  const outerSteps = 120;
+  for (let i = 0; i <= outerSteps; i++) {
+    const t = (i / outerSteps) * Math.PI * 2;
+    const angle = t;
+    // slightly wavy lotus‑petal ring around the heart
+    const radius =
+      outerRadiusBase *
+      (0.9 + 0.2 * Math.sin(3 * t));
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    pts.push({ x, y });
+  }
+
   return pts;
 }
 
@@ -95,30 +112,33 @@ const BOOKS = [
   {
     id: "defi_grimoire",
     title: "DeFi Grimoire",
-    difficulty: 2,
+    difficulty: 1,
+    rating: "3/10",
     requiredScore: 80,
     description:
-      "Early DeFi scrolls that describe liquidity pools, yield farming, and cursed APYs.",
+      "A gentle warm‑up. The trail wiggles a bit, but you can mostly cruise and get used to how the game feels.",
     // Smooth wave across the whole arena
     path: buildWavePath(),
   },
   {
     id: "lost_ledger",
     title: "Lost Ledger",
-    difficulty: 3,
+    difficulty: 2,
+    rating: "6/10",
     requiredScore: 80,
     description:
-      "Pages that track every transaction of Ishowgreen’s questionable memecoins.",
+      "Now it starts to fight back. The path crosses over itself and turns more often, so you actually have to focus.",
     // Cross‑corridor, four‑arm shape
     path: buildCrossPath(),
   },
   {
     id: "proof_of_burn",
     title: "Proof‑of‑Burn Almanac",
-    difficulty: 4,
+    difficulty: 3,
+    rating: "9.5/10",
     requiredScore: 80,
     description:
-      "Advanced pages explaining why burning tokens sometimes feels like burning homework.",
+      "Full try‑hard mode. Long, curvy, and easy to lose track of—if you zone out for half a second, your score will show it.",
     // Heart / petal loop wrapped around the center
     path: buildHeartPath(),
   },
@@ -482,7 +502,7 @@ function renderBookSelectScene() {
 
   const subtitle = createEl("p", {
     textContent:
-      "Each book is a level. Higher flames mean trickier paths. Start with something spicy, not lethal.",
+      "Each book is a different route. Start with the chill one and work your way up to the sweaty 9.5/10 run.",
     style: {
       margin: "4px 0 0",
       fontSize: "12px",
@@ -507,7 +527,7 @@ function renderBookSelectScene() {
   let firstBook = null;
 
   BOOKS.forEach((book, index) => {
-    const flames = "🔥".repeat(book.difficulty);
+    const ratingLabel = book.rating || "—/10";
     const card = createEl("button", {
       type: "button",
       style: {
@@ -535,7 +555,7 @@ function renderBookSelectScene() {
     });
     const t = createEl("span", { textContent: book.title });
     const d = createEl("span", {
-      textContent: flames,
+      textContent: ratingLabel,
       style: { fontSize: "13px" },
     });
     titleRow.appendChild(t);
@@ -617,9 +637,7 @@ function renderBookDetailScene(book) {
     style: { margin: "0", fontSize: "18px" },
   });
   const meta = createEl("div", {
-    textContent: `Difficulty: ${"🔥".repeat(book.difficulty)} · Required score: ${
-      book.requiredScore
-    }%`,
+    textContent: `Difficulty: ${book.rating || "—/10"} · Required score: ${book.requiredScore}%`,
     style: { fontSize: "12px", color: "#9ca3af" },
   });
   const desc = createEl("p", {
@@ -843,6 +861,12 @@ function playPathPreview(path, onComplete) {
   const cellH = canvas.height / GRID_ROWS;
   let i = 0;
 
+  // Dynamic speed: longer paths draw faster per‑point so total time stays reasonable
+  const baseDelay = 160;
+  const minDelay = 60;
+  const delay =
+    Math.max(minDelay, baseDelay - Math.min(80, (path.length - 80) * 0.3));
+
   const step = () => {
     if (!ctx) return;
 
@@ -894,8 +918,7 @@ function playPathPreview(path, onComplete) {
 
     i++;
     if (i < path.length) {
-      // faster preview animation
-      setTimeout(step, 120);
+      setTimeout(step, delay);
     } else {
       // brief linger then clear
       setTimeout(() => {
@@ -1180,16 +1203,29 @@ function computeScore(trueP, playerP) {
     return 0;
   }
 
+  // 1) How accurately did the player stay near the trail?
   let goodSamples = 0;
-  const total = playerP.length;
+  const totalSamples = playerP.length;
   const MAX_DIST = 1.2; // in grid units – how far from the trail still counts
 
   for (const p of playerP) {
     const d = distanceToPath(p, trueP);
     if (d <= MAX_DIST) goodSamples++;
   }
+  const proximityFrac = goodSamples / totalSamples;
 
-  const score = Math.round((goodSamples / total) * 100);
+  // 2) How much of the trail did they actually cover?
+  let coveredPoints = 0;
+  for (const tp of trueP) {
+    const d = distanceToPath(tp, playerP);
+    if (d <= MAX_DIST) coveredPoints++;
+  }
+  const coverageFrac = coveredPoints / trueP.length;
+
+  // Combine both: you only get 100% if you stay close AND cover most of the path.
+  const rawScore = 0.4 * proximityFrac + 0.6 * coverageFrac;
+
+  const score = Math.round(rawScore * 100);
   return Math.max(0, Math.min(100, score));
 }
 
