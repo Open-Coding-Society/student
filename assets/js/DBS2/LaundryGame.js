@@ -130,10 +130,10 @@ function showLaundryMinigame(onComplete) {
 
     // Create parts with individual sprites
     const partsList = [
-        { name: 'Motor', type: 'motor', sprite: 'motor.png' },
-        { name: 'Belt', type: 'belt', sprite: 'belt.png' },
-        { name: 'Pump', type: 'pump', sprite: 'pump.jpg' },
-        { name: 'Hose', type: 'hose', sprite: 'hose.png' }
+        { name: 'Motor', type: 'motor', sprite: '/assets/images/DBS2/motor.png' },
+        { name: 'Belt', type: 'belt', sprite: '/assets/images/DBS2/belt.png' },
+        { name: 'Pump', type: 'pump', sprite: 'assets/images/DBS2/pump.jpg' },
+        { name: 'Hose', type: 'hose', sprite: '/assets/images/DBS2/hose.png' }
     ];
 
     const parts = [];
@@ -206,7 +206,7 @@ function showLaundryMinigame(onComplete) {
         transition: transform 0.1s;
     `;
     // Washing machine sprite
-    machineContainer.style.backgroundImage = "url('broken-washing-machine-jpeg.jpeg')";
+    machineContainer.style.backgroundImage = "url('/assets/images/DBS2/broken-washing-machine-jpeg.jpeg')";
 
     // Create drop zones
     const zones = [
@@ -311,11 +311,11 @@ function showLaundryMinigame(onComplete) {
 
     // Create laundry items with individual sprites
     const laundryList = [
-        { name: 'Shirt', type: 'shirt', sprite: 'shirt.png' },
-        { name: 'Pants', type: 'pants', sprite: 'pants.png' },
-        { name: 'Socks', type: 'socks', sprite: 'socks.png' },
-        { name: 'Towel', type: 'towel', sprite: 'towel.png' },
-        { name: 'Jacket', type: 'jacket', sprite: 'jacket.png' }
+        { name: 'Shirt', type: 'shirt', sprite: '/assets/images/DBS2/shirt.png' },
+        { name: 'Pants', type: 'pants', sprite: '/assets/images/DBS2/pants.png' },
+        { name: 'Socks', type: 'socks', sprite: '/assets/images/DBS2/socks.png' },
+        { name: 'Towel', type: 'towel', sprite: '/assets/images/DBS2/towel.png' },
+        { name: 'Jacket', type: 'jacket', sprite: '/assets/images/DBS2/jacket.png' }
     ];
 
     const laundryItems = [];
@@ -433,7 +433,7 @@ function showLaundryMinigame(onComplete) {
         background-position: center;
     `;
     // ADD YOUR PAPER/CODE IMAGE SPRITE HERE (optional)
-    paperImage.style.backgroundImage = "url('codescrapLaundry.png')";
+    paperImage.style.backgroundImage = "url('/assets/images/DBS2/codescrapLaundry.png')";
 
     const codeText = document.createElement('div');
     codeText.innerHTML = `
