@@ -1,6 +1,7 @@
 import GameEnv from "./GameEnv.js";
 import Character from "./Character.js";
 import Prompt from "./Prompt.js";
+import { showAshTrailMinigame } from "./AshTrailMinigame.js";
 class Npc extends Character {
     constructor(data = null) {
         super(data);
@@ -30,15 +31,26 @@ class Npc extends Character {
         switch (key) {
             case 'e': // Player 1 interaction
             case 'u': // Player 2 interaction
-                // Open the generic prompt panel for this NPC if player is nearby
                 try {
-                    const players = GameEnv.gameObjects.filter(obj => obj.state.collisionEvents.includes(this.spriteData.id));
-                    if (players.length > 0 && !Prompt.isOpen) {
+                    // Only react if a player is colliding with this NPC
+                    const players = GameEnv.gameObjects.filter(
+                        obj => obj.state?.collisionEvents?.includes(this.spriteData.id)
+                    );
+                    if (players.length === 0) return;
+
+                    // Special case: bookshelf opens the Ash Trail minigame popup
+                    if (this.spriteData.id === 'Bookshelf') {
+                        showAshTrailMinigame();
+                        return;
+                    }
+
+                    // Default behaviour: open generic dialogue prompt
+                    if (!Prompt.isOpen) {
                         Prompt.currentNpc = this;
                         Prompt.openPromptPanel(this);
                     }
                 } catch (err) {
-                    console.error('Error opening prompt for NPC interaction', err);
+                    console.error('Error handling NPC interaction', err);
                 }
                 break;
         }

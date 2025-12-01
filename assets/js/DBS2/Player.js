@@ -50,22 +50,27 @@ class Player extends Character {
         addEventListener('keyup', this.handleKeyUp.bind(this));
     }
 
-    handleKeyDown({ keyCode }) {
+    handleKeyDown(event) {
+        // Disable movement while Ash Trail minigame overlay is active
+        if (window.ashTrailActive) return;
+        const keyCode = event.keyCode || event.which;
+        if (!keyCode) return; // Skip if no keyCode available
+        
         switch (keyCode) {
             case this.keypress.up:
-                this.velocity.y = -5//this.yVelocity;
+                this.velocity.y = -5;
                 this.direction = 'up';
                 break;
             case this.keypress.left:
-                this.velocity.x = -5//this.xVelocity;
+                this.velocity.x = -5;
                 this.direction = 'left';
                 break;
             case this.keypress.down:
-                this.velocity.y = 5//this.yVelocity;
+                this.velocity.y = 5;
                 this.direction = 'down';
                 break;
             case this.keypress.right:
-                this.velocity.x = 5//this.xVelocity;
+                this.velocity.x = 5;
                 this.direction = 'right';
                 break;
         }
@@ -78,7 +83,12 @@ class Player extends Character {
      * 
      * @param {Object} event - The keyup event object.
      */
-    handleKeyUp({ keyCode }) {
+    handleKeyUp(event) {
+        // Disable movement while Ash Trail minigame overlay is active
+        if (window.ashTrailActive) return;
+        const keyCode = event.keyCode || event.which;
+        if (!keyCode) return; // Skip if no keyCode available
+        
         switch (keyCode) {
             case this.keypress.up:
                 this.velocity.y = 0;
