@@ -12,6 +12,31 @@ permalink: /DBS2
   <canvas id="gameCanvas" style="image-rendering: pixelated;"></canvas>
 </div>
 
+<!-- IMPORTANT: Load laundry minigame FIRST as a regular script (not module) -->
+<script src="{{ site.baseurl }}/assets/js/DBS2/LaundryGame.js"></script>
+
+<script type="module">
+  console.log("1. Script starting...");
+  console.log("2. Checking if laundry minigame loaded:", typeof window.showLaundryMinigame);
+  
+  import GameControl from "{{ site.baseurl }}/assets/js/DBS2-Frontend/GameControl.js";
+  
+  console.log("3. GameControl imported:", GameControl);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("4. DOM loaded!");
+    console.log("5. Laundry minigame function available:", typeof window.showLaundryMinigame);
+    
+    let baseurl = "{{ site.baseurl }}";
+    if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
+    
+    console.log("6. Setting baseurl:", baseurl);
+    document.body.setAttribute('data-baseurl', baseurl);
+    
+    console.log("7. Baseurl set, GameControl should start automatically");
+  });
+</script>
+
 <script>
   // Set baseurl immediately (before module loads) to avoid race condition
   (function() {
