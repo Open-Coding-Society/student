@@ -13,6 +13,7 @@ function convertToAlphaNumeric(str){
     let newString = "";
     for (let i = 0; i < str.length; i++){
         newString += str.charCodeAt(i) - 96;
+        newString += "/"
     }
     return newString;
 }
@@ -40,29 +41,19 @@ export default function infiniteUserMinigame(){
                 quizWindow.remove();
                 quizzing = false;
             }else if(event.key == "Enter" || event.key == "Return"){
-                // let passed = true;
-                // requirement.requiredChars.forEach(character => {
-                //     if(!typebox.innerText.includes(character)){
-                //         passed = false;
-                //         console.log(character + " is not included!");
-                //     }
-                // });
-                // if(passed && typebox.innerText.length < requirement.maxChars && typebox.innerText.length > requirement.minChars){
-                //     let moneyGiven = (requirement.minChars + requirement.requiredChars.length)*2;
-                //     quizWindow.innerText = `Password approved. You have been rewarded $${moneyGiven}`;
-                //     this.window.playerBalance += moneyGiven;
-                //     quizzing = false;
-                //     quizWindow.remove();
+                if(typebox.innerText == selectedPassword){
+                    quizWindow.innerText = `Password approved. You May now create a new user password`;
+                    quizzing = false;
+                    quizWindow.remove();
 
-                // }else{
-                //     console.log(`pw is ${typebox.innerText.length} chars long`);
-                //     typebox.style.color = "red";
-                //     typebox.innerText = ">TRY AGAIN";
-                //     setTimeout(() => {
-                //         typebox.innerText = ">";
-                //         typebox.style.color = "rgb(0, 255, 0)";
-                //     }, 1000);
-                // }
+                }else{
+                    typebox.style.color = "red";
+                    typebox.innerText = ">TRY AGAIN";
+                    setTimeout(() => {
+                        typebox.innerText = ">";
+                        typebox.style.color = "rgb(0, 255, 0)";
+                    }, 1000);
+                }
             }else if(event.key.length == 1 && typebox.innerText.length < 20){
                 typebox.innerText += event.key.toLowerCase();
             }
