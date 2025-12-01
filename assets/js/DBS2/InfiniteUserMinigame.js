@@ -47,6 +47,7 @@ export default function infiniteUserMinigame(){
                     quizWindow.remove();
 
                 }else{
+                    console.log(typebox.innerHTML, selectedPassword);
                     typebox.style.color = "red";
                     typebox.innerText = ">TRY AGAIN";
                     setTimeout(() => {
