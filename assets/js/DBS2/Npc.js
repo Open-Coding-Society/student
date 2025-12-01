@@ -3,6 +3,8 @@ import Character from "./Character.js";
 import Prompt from "./Prompt.js";
 import { showAshTrailMinigame } from "./AshTrailMinigame.js";
 import infiniteUserMinigame from "./InfiniteUserMinigame.js";
+import cryptoMinerMinigame from "./cryptoMinerMinigame.js";
+
 class Npc extends Character {
     constructor(data = null) {
         super(data);
@@ -45,6 +47,10 @@ class Npc extends Character {
                         return;
                     } else if (this.spriteData.id === "Computer1") {
                         infiniteUserMinigame();
+                        return;
+                    } else if (this.spriteData.id === "Computer2") {
+                        cryptoMinerMinigame();
+                        return;
                     }
 
                     // Default behaviour: open generic dialogue prompt
