@@ -9,6 +9,18 @@ const ANIMATION_RATE = 1; // 1/nth of the frame rate
 const INIT_POSITION = { x: 0, y: 0 };
 
 /**
+ * Helper function to check if any minigame or dialogue is active
+ */
+function isMinigameOrDialogueActive() {
+    return window.minigameActive || 
+           window.ashTrailActive || 
+           window.cryptoMinerActive || 
+           window.laundryMinigameActive ||
+           window.infiniteUserActive ||
+           window.dialogueActive;
+}
+
+/**
  * Player is a dynamic class that manages the data and events for objects like a player 
  * 
  * This class uses a classic Java class pattern which is nice for managing object data and events.
@@ -51,8 +63,9 @@ class Player extends Character {
     }
 
     handleKeyDown(event) {
-        // Disable movement while Ash Trail minigame overlay is active
-        if (window.ashTrailActive) return;
+        // Disable movement while any minigame or dialogue is active
+        if (isMinigameOrDialogueActive()) return;
+        
         const keyCode = event.keyCode || event.which;
         if (!keyCode) return; // Skip if no keyCode available
         
@@ -84,8 +97,9 @@ class Player extends Character {
      * @param {Object} event - The keyup event object.
      */
     handleKeyUp(event) {
-        // Disable movement while Ash Trail minigame overlay is active
-        if (window.ashTrailActive) return;
+        // Disable movement while any minigame or dialogue is active
+        if (isMinigameOrDialogueActive()) return;
+        
         const keyCode = event.keyCode || event.which;
         if (!keyCode) return; // Skip if no keyCode available
         

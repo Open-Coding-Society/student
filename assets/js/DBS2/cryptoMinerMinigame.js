@@ -6,6 +6,7 @@ function cryptoMinerMinigame() {
     // Check if already running
     if (window.cryptoMinerActive) return;
     window.cryptoMinerActive = true;
+    window.minigameActive = true;
     
     // Create the UI that mimics the original DOM structure
     const minerUI = document.createElement('div');
@@ -35,7 +36,10 @@ function cryptoMinerMinigame() {
             Press: <span id="key" style="text-shadow: 0 0 10px #0f0;">-</span>
         </div>
         <div style="font-size: 24px; margin: 20px 0;">
-            Progress: <span id="progress">0</span> / 100
+            Progress: <span id="progress">0</span> / 50
+        </div>
+        <div style="font-size: 12px; color: #888; margin-bottom: 15px;">
+            (Tap keys - holding won't work!)
         </div>
         <button onclick="window.exitCryptoMiner()" style="background: #f00; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px;">EXIT (ESC)</button>
     `;
@@ -47,8 +51,12 @@ function cryptoMinerMinigame() {
     let nextKeyChange = 0;
     let isActive = true;
     
+    // Key hold prevention - track which keys are currently held down
+    let heldKeys = new Set();
+    
     // Local fallback data
     let playerProgress = 0;
+    const targetProgress = 50; // Reduced from 100 to 50
     const coins = ["BASEMENT", "ISHOWGREEN", "CHILLGUY", "DORITO", "NFTBRO"];
     let activeCoin = coins[0];
     let percentChange = 0;
@@ -136,8 +144,8 @@ function cryptoMinerMinigame() {
         const progressEl = document.getElementById('progress');
         if (progressEl) progressEl.textContent = playerProgress;
         
-        // Check if finished (100 progress = finished)
-        if (playerProgress >= 100) {
+        // Check if finished (50 progress = finished)
+        if (playerProgress >= targetProgress) {
             isActive = false;
             
             // Calculate reward based on progress
@@ -170,10 +178,32 @@ function cryptoMinerMinigame() {
         requestAnimationFrame(loop);
     }
     
-    // Original key handler - exactly the same
-    const keyHandler = (e) => {
+    // Key down handler - only register if key wasn't already held
+    const keyDownHandler = (e) => {
         if (!isActive) return;
-        if (e.key.toUpperCase() === currentKey) {
+        
+        const key = e.key.toUpperCase();
+        
+        // ESC to exit
+        if (e.key === 'Escape') {
+            window.exitCryptoMiner();
+            return;
+        }
+        
+        // Prevent default to stop any game movement
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Only count the key press if this key wasn't already held down
+        if (heldKeys.has(key)) {
+            return; // Key is being held, ignore
+        }
+        
+        // Mark this key as held
+        heldKeys.add(key);
+        
+        // Check if it's the correct key
+        if (key === currentKey) {
             sendHits(1);
             
             // Visual feedback
@@ -185,19 +215,26 @@ function cryptoMinerMinigame() {
                 }, 100);
             }
         }
-        // ESC to exit
-        if (e.key === 'Escape') {
-            window.exitCryptoMiner();
-        }
+    };
+    
+    // Key up handler - mark key as released
+    const keyUpHandler = (e) => {
+        const key = e.key.toUpperCase();
+        heldKeys.delete(key);
+        
+        // Prevent default to stop any game movement
+        e.preventDefault();
+        e.stopPropagation();
     };
     
     // Exit function
     window.exitCryptoMiner = function() {
         isActive = false;
         window.cryptoMinerActive = false;
+        window.minigameActive = false;
         
         // Award any remaining progress as crypto (local fallback)
-        if (playerProgress > 0) {
+        if (playerProgress > 0 && playerProgress < targetProgress) {
             const reward = Math.floor(playerProgress / 5);
             if (reward > 0) updateCrypto(reward);
         }
@@ -206,12 +243,15 @@ function cryptoMinerMinigame() {
         if (minerUI && minerUI.parentNode) {
             minerUI.remove();
         }
-        window.removeEventListener('keydown', keyHandler);
+        window.removeEventListener('keydown', keyDownHandler, true);
+        window.removeEventListener('keyup', keyUpHandler, true);
+        heldKeys.clear();
         delete window.exitCryptoMiner;
     };
     
-    // Start the game - exactly like original
-    window.addEventListener('keydown', keyHandler);
+    // Start the game - use capture phase to intercept keys before game
+    window.addEventListener('keydown', keyDownHandler, true);
+    window.addEventListener('keyup', keyUpHandler, true);
     
     // Original initialization
     setInterval(updateState, 2000);

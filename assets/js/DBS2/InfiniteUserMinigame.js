@@ -21,12 +21,17 @@ function convertToAlphaNumeric(str){
 export default function infiniteUserMinigame(){
     if(!quizzing){
         quizzing = true;
+        // Set minigame active flags
+        window.infiniteUserActive = true;
+        window.minigameActive = true;
+        
         let creatingNew = false;
         const selectedPassword = passwords[Math.floor(Math.random()*passwords.length)];
         let quizWindow = document.createElement("div");
-        quizWindow.style = 'position: absolute; width: 50%; height: 50%; top: 25%; left: 25%; z-index: 999; background-color: black; border-width: 10px; border-style: solid; border-color: rgb(50, 50, 50) text-align: center; vertical-align: center; color: rgb(0, 255, 0); font-size: 3vh; font-family: "Sixtyfour", sans-serif; border-radius: 3vh;';
+        quizWindow.style = 'position: fixed; width: 50%; height: 50%; top: 25%; left: 25%; z-index: 10000; background-color: black; border-width: 10px; border-style: solid; border-color: rgb(50, 50, 50); text-align: center; vertical-align: center; color: rgb(0, 255, 0); font-size: 3vh; font-family: "Sixtyfour", monospace; border-radius: 3vh;';
         quizWindow.id = "quizWindow";
-        document.getElementById("gameContainer").appendChild(quizWindow);
+        document.body.appendChild(quizWindow);
+        
         // messageDiv holds the changing text so replacing it doesn't remove other children
         let messageDiv = document.createElement("div");
         messageDiv.style = 'width: 100%; height: 60%; padding-top: 2vh; color: rgb(0, 255, 0);';
@@ -34,27 +39,42 @@ export default function infiniteUserMinigame(){
         quizWindow.appendChild(messageDiv);
 
         let typebox = document.createElement("div");
-        typebox.style = 'position: absolute; width: 100%; height: 20%; bottom: 15%; background-color: black; font-size: auto; font-family: "Sixtyfour", sans-serif; font-size: 5vh; text-align: center; vertical-align: center; color: rgb(0, 255, 0);';
+        typebox.style = 'position: absolute; width: 100%; height: 20%; bottom: 15%; background-color: black; font-size: auto; font-family: "Sixtyfour", monospace; font-size: 5vh; text-align: center; vertical-align: center; color: rgb(0, 255, 0);';
         typebox.innerText = ">";
         quizWindow.appendChild(typebox);
+        
+        // Close button
+        let closeBtn = document.createElement("button");
+        closeBtn.innerText = "✕ Close (ESC)";
+        closeBtn.style = 'position: absolute; top: 10px; right: 10px; background: #f00; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px;';
+        closeBtn.onclick = closeMinigame;
+        quizWindow.appendChild(closeBtn);
+        
+        function closeMinigame() {
+            quizWindow.remove();
+            quizzing = false;
+            window.infiniteUserActive = false;
+            window.minigameActive = false;
+            window.removeEventListener("keydown", keyHandler, true);
+        }
 
-        let clicklistener = window.addEventListener("keydown", function(event){
+        function keyHandler(event) {
+            // Prevent event from reaching game
+            event.preventDefault();
+            event.stopPropagation();
+            
             if(event.key == 'Backspace' && typebox.innerText.length > 1){
                 typebox.innerText = typebox.innerText.slice(0, -1);
                 console.log(typebox.innerText.length);
             }else if(event.key == "Escape"){
-                quizWindow.remove();
-                quizzing = false;
-                this.window.removeEventListener("keydown", clicklistener);
+                closeMinigame();
             }else if(event.key == "Enter" || event.key == "Return"){
                 if(creatingNew){
                     messageDiv.innerText = `New user password created. Goodbye!`;
                     passwords.push(typebox.innerText.slice(1, typebox.innerText.length));
                     passwords.splice(0, 1);
                     setTimeout(() => {
-                        this.window.removeEventListener("keydown", clicklistener);
-                        quizWindow.remove();
-                        quizzing = false;
+                        closeMinigame();
                     }, 1000);
                 }else{
                     if(typebox.innerText.slice(1, typebox.innerText.length) == selectedPassword){
@@ -77,6 +97,9 @@ export default function infiniteUserMinigame(){
             }else if(event.key.length == 1 && typebox.innerText.length < 20 && /^[a-z]$/i.test(event.key[0])){
                 typebox.innerText += event.key.toLowerCase();
             }
-        });
+        }
+        
+        // Use capture phase to intercept keys before game
+        window.addEventListener("keydown", keyHandler, true);
     }
 }

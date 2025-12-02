@@ -28,6 +28,38 @@ class Npc extends Character {
         addEventListener('keyup', this.handleKeyUp.bind(this));
     }
     /**
+     * Close all currently open dialogue boxes and prompts
+     */
+    closeAllDialogues() {
+        // Close dialogue popup if exists
+        const dialoguePopup = document.getElementById('dialoguePopup');
+        if (dialoguePopup) {
+            dialoguePopup.remove();
+        }
+        
+        // Close prompt panel if open
+        if (Prompt.isOpen) {
+            Prompt.backgroundDim.remove();
+        }
+        
+        // Close dim overlay if exists
+        const dimDiv = document.getElementById('dim');
+        if (dimDiv) {
+            dimDiv.remove();
+        }
+        
+        // Close prompt dropdown if visible
+        const promptDropDown = document.querySelector('.promptDropDown');
+        if (promptDropDown) {
+            promptDropDown.style.display = 'none';
+        }
+        
+        // Reset flags
+        window.dialogueActive = false;
+        Prompt.isOpen = false;
+    }
+    
+    /**
      * Handle keydown events for interaction.
      * @param {Object} event - The keydown event.
      */
@@ -41,6 +73,9 @@ class Npc extends Character {
                         obj => obj.state?.collisionEvents?.includes(this.spriteData.id)
                     );
                     if (players.length === 0) return;
+
+                    // Close all existing dialogues before opening new interaction
+                    this.closeAllDialogues();
 
                     const npcId = this.spriteData.id;
 
@@ -68,10 +103,8 @@ class Npc extends Character {
 
                         case 'IShowGreen':
                             // IShowGreen has special escape logic - use prompt panel for interaction
-                            if (!Prompt.isOpen) {
-                                Prompt.currentNpc = this;
-                                Prompt.openPromptPanel(this);
-                            }
+                            Prompt.currentNpc = this;
+                            Prompt.openPromptPanel(this);
                             return;
 
                         case 'ShellNpc1':
@@ -85,10 +118,8 @@ class Npc extends Character {
 
                         default:
                             // Default behaviour: open generic dialogue prompt for NPCs with interactions
-                            if (!Prompt.isOpen) {
-                                Prompt.currentNpc = this;
-                                Prompt.openPromptPanel(this);
-                            }
+                            Prompt.currentNpc = this;
+                            Prompt.openPromptPanel(this);
                             return;
                     }
                 } catch (err) {

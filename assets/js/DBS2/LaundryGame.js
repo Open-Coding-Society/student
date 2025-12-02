@@ -2,6 +2,10 @@
 // Call showLaundryMinigame() to display the popup
 
 export function showLaundryMinigame(onComplete) {
+    // Set minigame active flags
+    window.laundryMinigameActive = true;
+    window.minigameActive = true;
+    
     // Game state
     let partsPlaced = 0;
     const totalParts = 4;
@@ -65,6 +69,8 @@ export function showLaundryMinigame(onComplete) {
     closeBtn.onmouseover = () => closeBtn.style.background = '#cc0000';
     closeBtn.onmouseout = () => closeBtn.style.background = '#ff4444';
     closeBtn.onclick = () => {
+        window.laundryMinigameActive = false;
+        window.minigameActive = false;
         document.body.removeChild(overlay);
     };
 
@@ -696,6 +702,8 @@ export function showLaundryMinigame(onComplete) {
 
     // Continue button to finish minigame
     continueBtn.onclick = () => {
+        window.laundryMinigameActive = false;
+        window.minigameActive = false;
         document.body.removeChild(overlay);
         if (onComplete) onComplete();
     };

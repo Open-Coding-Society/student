@@ -95,6 +95,7 @@ const Prompt = {
                 dimDiv.remove();
             }
             Prompt.isOpen = false;
+            window.dialogueActive = false;
             const promptTitle = document.getElementById("promptTitle");
             if (promptTitle) {
                 promptTitle.style.display = "none";
@@ -289,10 +290,19 @@ const Prompt = {
     },
 
     showDialoguePopup(speaker, text, onClose) {
-        // Remove any existing popup
-        let popup = document.getElementById('dialoguePopup');
-        if (popup) popup.remove();
-        popup = document.createElement('div');
+        // Auto-close any existing popup/dialogue
+        let existingPopup = document.getElementById('dialoguePopup');
+        if (existingPopup) existingPopup.remove();
+        
+        // Also close prompt panel if open
+        if (this.isOpen) {
+            this.backgroundDim.remove();
+        }
+        
+        // Set dialogue active flag
+        window.dialogueActive = true;
+        
+        let popup = document.createElement('div');
         popup.id = 'dialoguePopup';
         popup.style.position = 'fixed';
         popup.style.left = '50%';
@@ -319,16 +329,26 @@ const Prompt = {
         closeBtn.style.cursor = 'pointer';
         closeBtn.onclick = () => {
             popup.remove();
+            window.dialogueActive = false;
             if (typeof onClose === 'function') onClose();
         };
         popup.appendChild(closeBtn);
         document.body.appendChild(popup);
     },
     showConfirm(speaker, text, onConfirm, onCancel) {
-        // Remove any existing popup
-        let popup = document.getElementById('dialoguePopup');
-        if (popup) popup.remove();
-        popup = document.createElement('div');
+        // Auto-close any existing popup/dialogue
+        let existingPopup = document.getElementById('dialoguePopup');
+        if (existingPopup) existingPopup.remove();
+        
+        // Also close prompt panel if open
+        if (this.isOpen) {
+            this.backgroundDim.remove();
+        }
+        
+        // Set dialogue active flag
+        window.dialogueActive = true;
+        
+        let popup = document.createElement('div');
         popup.id = 'dialoguePopup';
         popup.style.position = 'fixed';
         popup.style.left = '50%';
@@ -355,7 +375,7 @@ const Prompt = {
         ok.style.borderRadius = '6px';
         ok.style.border = 'none';
         ok.style.cursor = 'pointer';
-        ok.onclick = () => { popup.remove(); if (typeof onConfirm === 'function') onConfirm(); };
+        ok.onclick = () => { popup.remove(); window.dialogueActive = false; if (typeof onConfirm === 'function') onConfirm(); };
 
         const cancel = document.createElement('button');
         cancel.innerText = 'Cancel';
@@ -363,7 +383,7 @@ const Prompt = {
         cancel.style.borderRadius = '6px';
         cancel.style.border = 'none';
         cancel.style.cursor = 'pointer';
-        cancel.onclick = () => { popup.remove(); if (typeof onCancel === 'function') onCancel(); };
+        cancel.onclick = () => { popup.remove(); window.dialogueActive = false; if (typeof onCancel === 'function') onCancel(); };
 
         btnRow.appendChild(ok);
         btnRow.appendChild(cancel);
@@ -423,11 +443,21 @@ const Prompt = {
             console.error("Could not create promptDropDown element");
             return;
         }
+        
+        // Auto-close any existing dialogue popup
+        let existingPopup = document.getElementById('dialoguePopup');
+        if (existingPopup) {
+            existingPopup.remove();
+            window.dialogueActive = false;
+        }
     
         // Close any existing prompt before opening a new one
         if (this.isOpen) {
             this.backgroundDim.remove(); // Ensures previous dim is removed
         }
+        
+        // Set dialogue active flag
+        window.dialogueActive = true;
     
         this.currentNpc = npc; // Assign the current NPC when opening the panel
         this.isOpen = true;
