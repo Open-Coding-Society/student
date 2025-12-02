@@ -139,19 +139,6 @@ const sprite_data_shell2 = {
   stationary: true
 };
 
-const sprite_data_shell3 = {
-  id: 'ShellNpc3',
-  greeting: 'Shell NPC 3 (customize me)',
-  src: sprite_src_shell,
-  SCALE_FACTOR: 8,
-  ANIMATION_RATE: 24,
-  pixels: {height: 64, width: 832},
-  INIT_POSITION: { x: (width * 9 / 12), y: (height * 2 / 5)},
-  orientation: {rows: 1, columns: 13 },
-  down: {row: 0, start: 0, columns: 12 },
-  hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
-};
-
 const sprite_data_bookshelf = {
   id: 'Bookshelf',
   greeting: 'A bookshelf filled with coding books and references.',
@@ -176,7 +163,6 @@ const sprite_data_bookshelf = {
       { class: Npc, data: sprite_data_ishowgreen },
       { class: Npc, data: sprite_data_shell1 },
       { class: Npc, data: sprite_data_shell2 },
-      { class: Npc, data: sprite_data_shell3 },
       { class: Npc, data: sprite_data_bookshelf }
     ];
   }

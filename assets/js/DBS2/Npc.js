@@ -109,7 +109,6 @@ class Npc extends Character {
 
                         case 'ShellNpc1':
                         case 'ShellNpc2':
-                        case 'ShellNpc3':
                             // Shell NPCs - just show their greeting, no interaction panel
                             // The greeting is already shown via collision in GameObject.js
                             // So we can either do nothing or show a simple dialogue

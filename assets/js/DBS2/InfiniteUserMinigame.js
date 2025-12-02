@@ -1,3 +1,6 @@
+import { updateCrypto } from './StatsManager.js';
+import Prompt from './Prompt.js';
+
 let quizzing = false;
 
 let passwords = [ // THIS SHOULD PULL FROM THE BACKEND BUT IS CURRENTLY JUST A PLACEHOLDER
@@ -57,6 +60,25 @@ export default function infiniteUserMinigame(){
             window.minigameActive = false;
             window.removeEventListener("keydown", keyHandler, true);
         }
+        
+        function completeWithReward() {
+            // Award crypto for completing the minigame
+            const reward = 15 + Math.floor(Math.random() * 10); // 15-24 crypto
+            updateCrypto(reward);
+            
+            messageDiv.innerText = `New user password created. You earned ${reward} Crypto!`;
+            passwords.push(typebox.innerText.slice(1, typebox.innerText.length));
+            passwords.splice(0, 1);
+            
+            setTimeout(() => {
+                closeMinigame();
+                try {
+                    Prompt.showDialoguePopup('Computer1', `Password system updated! You earned ${reward} Crypto!`);
+                } catch(e) {
+                    console.log(`Earned ${reward} Crypto!`);
+                }
+            }, 1500);
+        }
 
         function keyHandler(event) {
             // Prevent event from reaching game
@@ -70,12 +92,7 @@ export default function infiniteUserMinigame(){
                 closeMinigame();
             }else if(event.key == "Enter" || event.key == "Return"){
                 if(creatingNew){
-                    messageDiv.innerText = `New user password created. Goodbye!`;
-                    passwords.push(typebox.innerText.slice(1, typebox.innerText.length));
-                    passwords.splice(0, 1);
-                    setTimeout(() => {
-                        closeMinigame();
-                    }, 1000);
+                    completeWithReward();
                 }else{
                     if(typebox.innerText.slice(1, typebox.innerText.length) == selectedPassword){
                         messageDiv.innerText = `Password approved. You may now move on.`;
