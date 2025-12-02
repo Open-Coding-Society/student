@@ -1,7 +1,7 @@
 // Laundry Machine Repair Minigame
 // Call showLaundryMinigame() to display the popup
 
-function showLaundryMinigame(onComplete) {
+export function showLaundryMinigame(onComplete) {
     // Game state
     let partsPlaced = 0;
     const totalParts = 4;
@@ -703,10 +703,7 @@ function showLaundryMinigame(onComplete) {
     document.body.appendChild(overlay);
 }
 
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { showLaundryMinigame };
-}
-
-// Make available globally
+// Make available globally for backwards compatibility
 window.showLaundryMinigame = showLaundryMinigame;
+
+export default showLaundryMinigame;

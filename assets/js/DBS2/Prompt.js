@@ -4,6 +4,7 @@ const Prompt = {
     isOpen: false,
     dim: false,
     currentNpc: null,
+    initialized: false,
     
     // Keep this function for other uses, but we won't use it for questions
     shuffleArray(array) {
@@ -21,21 +22,70 @@ const Prompt = {
         if (!answer) return "";
         return answer.trim();
     },
+
+    // Ensure DOM elements exist before using them
+    ensureElements() {
+        // Create promptDropDown if it doesn't exist
+        let promptDropDown = document.querySelector('.promptDropDown');
+        if (!promptDropDown) {
+            promptDropDown = document.createElement('div');
+            promptDropDown.className = 'promptDropDown';
+            promptDropDown.id = 'promptDropDown';
+            promptDropDown.style.cssText = `
+                position: fixed;
+                background: rgba(20, 20, 20, 0.98);
+                color: #fff;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                padding: 20px;
+                display: none;
+                z-index: 9999;
+                max-height: 70vh;
+                overflow-y: auto;
+            `;
+            document.body.appendChild(promptDropDown);
+        }
+
+        // Create promptTitle if it doesn't exist
+        let promptTitle = document.getElementById('promptTitle');
+        if (!promptTitle) {
+            promptTitle = document.createElement('div');
+            promptTitle.id = 'promptTitle';
+            promptTitle.style.cssText = `
+                font-size: 1.4em;
+                font-weight: bold;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                display: none;
+            `;
+            promptDropDown.appendChild(promptTitle);
+        }
+
+        this.initialized = true;
+        return { promptDropDown, promptTitle };
+    },
     
     backgroundDim: {
         create () {
             this.dim = true // sets the dim to be true when the prompt is opened
             console.log("CREATE DIM")
+            // Remove existing dim if any
+            const existingDim = document.getElementById("dim");
+            if (existingDim) existingDim.remove();
+            
             const dimDiv = document.createElement("div");
             dimDiv.id = "dim";
             dimDiv.style.backgroundColor = "black";
             dimDiv.style.width = "100%";
             dimDiv.style.height = "100%";
-            dimDiv.style.position = "absolute";
+            dimDiv.style.position = "fixed";
+            dimDiv.style.top = "0";
+            dimDiv.style.left = "0";
             dimDiv.style.opacity = "0.8";
             document.body.append(dimDiv);
             dimDiv.style.zIndex = "9998"
-            dimDiv.addEventListener("click", Prompt.backgroundDim.remove)
+            dimDiv.addEventListener("click", Prompt.backgroundDim.remove.bind(Prompt.backgroundDim))
         },
         remove () {
             this.dim = false
@@ -51,10 +101,10 @@ const Prompt = {
             }
             const promptDropDown = document.querySelector('.promptDropDown');
             if (promptDropDown) {
+                promptDropDown.style.display = "none";
                 promptDropDown.style.width = "0"; 
                 promptDropDown.style.top = "0";  
                 promptDropDown.style.left = "-100%"; 
-                promptDropDown.style.transition = "all 0.3s ease-in-out";
             }
         },
     },
@@ -62,12 +112,22 @@ const Prompt = {
     createPromptDisplayTable() {
         const table = document.createElement("table");
         table.className = "table prompt";
+        table.style.cssText = `
+            width: 100%;
+            border-collapse: collapse;
+            color: #fff;
+        `;
     
         // Header row for questions
         const header = document.createElement("tr");
         const th = document.createElement("th");
         th.colSpan = 2;
         th.innerText = "Answer the Questions Below:";
+        th.style.cssText = `
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        `;
         header.appendChild(th);
         table.appendChild(header);
     
@@ -87,12 +147,22 @@ const Prompt = {
                 const row = document.createElement("tr");
                 const questionCell = document.createElement("td");
                 questionCell.innerText = `${index + 1}. ${question}`;
+                questionCell.style.padding = "10px";
                 row.appendChild(questionCell);
                 const inputCell = document.createElement("td");
+                inputCell.style.padding = "10px";
                 const input = document.createElement("input");
                 input.type = "text";
                 input.placeholder = "Your answer here...";
                 input.dataset.questionIndex = index;
+                input.style.cssText = `
+                    width: 100%;
+                    padding: 8px;
+                    border-radius: 4px;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    background: rgba(0,0,0,0.3);
+                    color: #fff;
+                `;
                 inputCell.appendChild(input);
                 row.appendChild(inputCell);
                 table.appendChild(row);
@@ -101,8 +171,18 @@ const Prompt = {
             const submitCell = document.createElement("td");
             submitCell.colSpan = 2;
             submitCell.style.textAlign = "center";
+            submitCell.style.padding = "16px";
             const submitButton = document.createElement("button");
             submitButton.innerText = "Submit";
+            submitButton.style.cssText = `
+                padding: 10px 24px;
+                border-radius: 6px;
+                border: none;
+                background: #4a90d9;
+                color: #fff;
+                font-weight: bold;
+                cursor: pointer;
+            `;
             submitButton.addEventListener("click", this.handleSubmit.bind(this));
             submitCell.appendChild(submitButton);
             submitRow.appendChild(submitCell);
@@ -112,10 +192,19 @@ const Prompt = {
             const row = document.createElement("tr");
             const inputCell = document.createElement("td");
             inputCell.colSpan = 2;
+            inputCell.style.padding = "10px";
             const textarea = document.createElement("textarea");
             textarea.placeholder = "Say something to this NPC...";
-            textarea.style.width = "100%";
-            textarea.style.height = "8vh";
+            textarea.style.cssText = `
+                width: 100%;
+                height: 80px;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid rgba(255,255,255,0.2);
+                background: rgba(0,0,0,0.3);
+                color: #fff;
+                resize: vertical;
+            `;
             inputCell.appendChild(textarea);
             row.appendChild(inputCell);
             table.appendChild(row);
@@ -123,8 +212,18 @@ const Prompt = {
             const submitCell = document.createElement("td");
             submitCell.colSpan = 2;
             submitCell.style.textAlign = "center";
+            submitCell.style.padding = "16px";
             const submitButton = document.createElement("button");
             submitButton.innerText = "Submit";
+            submitButton.style.cssText = `
+                padding: 10px 24px;
+                border-radius: 6px;
+                border: none;
+                background: #4a90d9;
+                color: #fff;
+                font-weight: bold;
+                cursor: pointer;
+            `;
             submitButton.addEventListener("click", this.handleSubmit.bind(this));
             submitCell.appendChild(submitButton);
             submitRow.appendChild(submitCell);
@@ -134,7 +233,6 @@ const Prompt = {
         const container = document.createElement("div");
         container.style.maxHeight = "400px"; // Limit height for scrollability
         container.style.overflowY = "auto"; // Enable vertical scrolling
-        container.style.border = "1px solid #ccc"; // Optional: add a border
         container.style.padding = "10px"; // Optional: add some padding
         container.appendChild(table);
         return container;
@@ -152,7 +250,7 @@ const Prompt = {
             }));
         } else {
             // If no inputs, read textarea (simple interaction)
-            const ta = document.querySelector('textarea');
+            const ta = document.querySelector('.promptDropDown textarea');
             if (ta) answers = [{ questionIndex: 0, answer: ta.value.trim() }];
         }
 
@@ -273,6 +371,8 @@ const Prompt = {
         document.body.appendChild(popup);
     },
     updatePromptDisplay() {
+        const { promptDropDown } = this.ensureElements();
+        
         const table = document.getElementsByClassName("table scores")[0]
         const detailToggleSection = document.getElementById("detail-toggle-section")
         const clearButtonRow = document.getElementById("clear-button-row")
@@ -294,7 +394,9 @@ const Prompt = {
             clearButtonRow.remove()
         }
         
-        document.getElementById("promptDropDown").append(this.updatePromptTable()) //update new Prompt
+        if (promptDropDown) {
+            promptDropDown.append(this.updatePromptTable()) //update new Prompt
+        }
     },
 
     backPage() {
@@ -314,8 +416,13 @@ const Prompt = {
     },
 
     openPromptPanel(npc) {
-        const promptDropDown = document.querySelector('.promptDropDown');
-        const promptTitle = document.getElementById("promptTitle");
+        // Ensure DOM elements exist
+        const { promptDropDown, promptTitle } = this.ensureElements();
+        
+        if (!promptDropDown) {
+            console.error("Could not create promptDropDown element");
+            return;
+        }
     
         // Close any existing prompt before opening a new one
         if (this.isOpen) {
@@ -328,11 +435,19 @@ const Prompt = {
         // Ensure the previous content inside promptDropDown is removed
         promptDropDown.innerHTML = ""; 
         
-        promptTitle.style.display = "block";
-
-        // Add the new title (use NPC id or a generic label)
-        promptTitle.innerHTML = npc?.spriteData?.id || "Interaction";
-        promptDropDown.appendChild(promptTitle);
+        // Re-create and add promptTitle since we cleared innerHTML
+        const newTitle = document.createElement('div');
+        newTitle.id = 'promptTitle';
+        newTitle.style.cssText = `
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: block;
+        `;
+        newTitle.innerHTML = npc?.spriteData?.id || "Interaction";
+        promptDropDown.appendChild(newTitle);
     
         // Display the new questions
         promptDropDown.appendChild(this.updatePromptTable());
@@ -340,6 +455,7 @@ const Prompt = {
         // Handle the background dim effect
         this.backgroundDim.create();
     
+        promptDropDown.style.display = "block";
         promptDropDown.style.position = "fixed";
         promptDropDown.style.zIndex = "9999";
         promptDropDown.style.width = "70%"; 
@@ -350,16 +466,8 @@ const Prompt = {
     
     initializePrompt() {
         console.log("Initializing prompt system");
-        const promptTitle = document.createElement("div");
-        promptTitle.id = "promptTitle";
-        
-        const promptDropDown = document.getElementById("promptDropDown");
-        if (promptDropDown) {
-            promptDropDown.appendChild(promptTitle);
-            console.log("Prompt system initialized successfully");
-        } else {
-            console.error("Could not find promptDropDown element");
-        }
+        this.ensureElements();
+        console.log("Prompt system initialized successfully");
     },
 };
 

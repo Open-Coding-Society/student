@@ -113,3 +113,6 @@ minima:
     - navigation/blog.md
     - navigation/search.md
     - navigation/about.md
+exclude:
+- venv
+- venv/**

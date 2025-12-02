@@ -107,7 +107,7 @@ const GameControl = {
     handleLevelStart: function() {
         // First time message for level 0, delay 10 passes
         if (this.currentLevelIndex === 0 && this.currentPass === 10) {
-            try { Prompt.showDialoguePopup('System', 'Start Level.'); } catch(e){ console.warn('Prompt not available', e); }
+            try { Prompt.showDialoguePopup('How To Play', 'Press E to interact with NPCs. WASD to move around. Collect Crypto, appease IShowGreen and escape the basement!.'); } catch(e){ console.warn('Prompt not available', e); }
         }
         // Recursion tracker
         this.currentPass++;

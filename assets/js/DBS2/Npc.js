@@ -3,6 +3,9 @@ import Character from "./Character.js";
 import Prompt from "./Prompt.js";
 import { showAshTrailMinigame } from "./AshTrailMinigame.js";
 import infiniteUserMinigame from "./InfiniteUserMinigame.js";
+import cryptoMinerMinigame from "./cryptoMinerMinigame.js";
+import { showLaundryMinigame } from "./LaundryGame.js";
+
 class Npc extends Character {
     constructor(data = null) {
         super(data);
@@ -39,18 +42,54 @@ class Npc extends Character {
                     );
                     if (players.length === 0) return;
 
-                    // Special case: bookshelf opens the Ash Trail minigame popup
-                    if (this.spriteData.id === 'Bookshelf') {
-                        showAshTrailMinigame();
-                        return;
-                    } else if (this.spriteData.id === "Computer1") {
-                        infiniteUserMinigame();
-                    }
+                    const npcId = this.spriteData.id;
 
-                    // Default behaviour: open generic dialogue prompt
-                    if (!Prompt.isOpen) {
-                        Prompt.currentNpc = this;
-                        Prompt.openPromptPanel(this);
+                    // Route each NPC to their specific minigame
+                    switch (npcId) {
+                        case 'Bookshelf':
+                            // Ash Trail minigame
+                            showAshTrailMinigame();
+                            return;
+
+                        case 'Computer1':
+                            // Infinite User password decryption minigame
+                            infiniteUserMinigame();
+                            return;
+
+                        case 'Computer2':
+                            // Crypto Miner minigame
+                            cryptoMinerMinigame();
+                            return;
+
+                        case 'laundry':
+                            // Laundry Machine Repair minigame
+                            showLaundryMinigame();
+                            return;
+
+                        case 'IShowGreen':
+                            // IShowGreen has special escape logic - use prompt panel for interaction
+                            if (!Prompt.isOpen) {
+                                Prompt.currentNpc = this;
+                                Prompt.openPromptPanel(this);
+                            }
+                            return;
+
+                        case 'ShellNpc1':
+                        case 'ShellNpc2':
+                        case 'ShellNpc3':
+                            // Shell NPCs - just show their greeting, no interaction panel
+                            // The greeting is already shown via collision in GameObject.js
+                            // So we can either do nothing or show a simple dialogue
+                            Prompt.showDialoguePopup(npcId, this.spriteData.greeting || 'Shell NPC (customize me)');
+                            return;
+
+                        default:
+                            // Default behaviour: open generic dialogue prompt for NPCs with interactions
+                            if (!Prompt.isOpen) {
+                                Prompt.currentNpc = this;
+                                Prompt.openPromptPanel(this);
+                            }
+                            return;
                     }
                 } catch (err) {
                     console.error('Error handling NPC interaction', err);

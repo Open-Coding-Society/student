@@ -131,7 +131,7 @@ const BOOKS = [
     rating: "9.5/10",
     requiredScore: 80,
     description:
-      "Full try‑hard mode. Long, curvy, and easy to lose track of—if you zone out for half a second, your score will show it.",
+      "Full try‑hard mode. Long, curvy, and easy to lose track of. If you zone out for half a second, your score will show it.",
     // Heart / petal loop wrapped around the center
     path: buildHeartPath(),
   },
