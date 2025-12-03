@@ -114,5 +114,14 @@ minima:
     - navigation/search.md
     - navigation/about.md
 exclude:
-- venv
-- venv/**
+  - venv
+  - venv/**
+  - vendor
+  - vendor/**
+  - vendor/bundle
+  - vendor/bundle/**
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - tmp
+  - log
