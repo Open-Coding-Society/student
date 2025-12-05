@@ -5,27 +5,18 @@ hide: true
 show_reading_time: false
 ---
 
-Hi! My name is [Your Full Name]
-
-Welcome to My App
-
-<div class="login-section">
-    <input type="text" id="uid" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
-    <div id="result"></div>
-</div>
-
+<!-- Set the baseurl for the game to find assets -->
 <script>
-document.getElementById('loginBtn').addEventListener('click', async () => {
-    const uid = document.getElementById('uid').value;
-    const password = document.getElementById('password').value;
-    
-    const result = await login(uid, password);
-    document.getElementById('result').textContent = JSON.stringify(result, null, 2);
-});
+    document.body.setAttribute('data-baseurl', '{{site.baseurl}}');
 </script>
 
+<!-- Game Container -->
+<div id="game-container" style="width: 100%; height: 600px; position: relative;"></div>
+
+<!-- Load Game Scripts -->
+<script type="module" src="{{site.baseurl}}/assets/js/DBS2/GameControl.js"></script>
+
+<br>
 
 ### Development Environment
 
@@ -73,30 +64,3 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
 > Feel free to reach out if you'd like to collaborate or learn more about our work.
 
 <p style="color: #2A7DB1;">Open Coding Society: <a href="https://opencodingsociety.com" style="color: #2A7DB1; text-decoration: underline;">Socials</a></p>
-
-
-<!-- Game Container -->
-<div id="game-container"></div>
-
-<!-- Load Game Scripts -->
-<script type="module" src="{{site.baseurl}}/assets/js/DBS2/GameControl.js"></script>
-<script type="module" src="{{site.baseurl}}/assets/js/DBS2/GameEnv.js"></script>
-<script type="module" src="{{site.baseurl}}/assets/js/DBS2/Player.js"></script>
-<!-- Add other necessary game files -->
-```
-
-**Key things to note:**
-1. Use `{{site.baseurl}}` before your paths - this is crucial for GitHub Pages deployment
-2. Use `type="module"` if your JS files use ES6 imports/exports
-3. Make sure your main game initialization script is loaded last
-
-**Questions to help me give you the exact fix:**
-
-1. **Which file initializes your game?** Is it `GameControl.js`?
-2. **Do your JS files use `import`/`export` statements?** (ES6 modules)
-3. **Where in the page should the game appear?** Should it replace the login form or appear below it?
-4. **What's your GitHub Pages URL?** (so I can see the actual deployment)
-
-Can you also check your browser console and tell me the **full path** of the 404 error? It will look something like:
-```
-Failed to load resource: https://yourusername.github.io/yourrepo/some/path/file.js 
