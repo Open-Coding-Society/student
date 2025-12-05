@@ -136,10 +136,10 @@ export function showLaundryMinigame(onComplete) {
 
     // Create parts with individual sprites
     const partsList = [
-        { name: 'Motor', type: 'motor', sprite: '/student/images/DBS2/motor.png' },
-        { name: 'Belt', type: 'belt', sprite: '/student/images/DBS2/belt.png' },
-        { name: 'Pump', type: 'pump', sprite: '/student/images/DBS2/pump.jpg' },
-        { name: 'Hose', type: 'hose', sprite: '/student/images/DBS2/hose.png' }
+        { name: 'Motor', type: 'motor', sprite: '/DBS2-Frontend/images/DBS2/motor.png' },
+        { name: 'Belt', type: 'belt', sprite: '/DBS2-Frontend/images/DBS2/belt.png' },
+        { name: 'Pump', type: 'pump', sprite: '/DBS2-Frontend/images/DBS2/pump.jpg' },
+        { name: 'Hose', type: 'hose', sprite: '/DBS2-Frontend/images/DBS2/hose.png' }
     ];
 
     const parts = [];
@@ -317,11 +317,11 @@ export function showLaundryMinigame(onComplete) {
 
     // Create laundry items with individual sprites
     const laundryList = [
-        { name: 'Shirt', type: 'shirt', sprite: '/student/images/DBS2/shirt.png' },
-        { name: 'Pants', type: 'pants', sprite: '/student/images/DBS2/pants.png' },
-        { name: 'Socks', type: 'socks', sprite: '/student/images/DBS2/socks.png' },
-        { name: 'Towel', type: 'towel', sprite: '/student/images/DBS2/towel.png' },
-        { name: 'Jacket', type: 'jacket', sprite: '/student/images/DBS2/jacket.png' }
+        { name: 'Shirt', type: 'shirt', sprite: '/DBS2-Frontend/images/DBS2/shirt.png' },
+        { name: 'Pants', type: 'pants', sprite: '/DBS2-Frontend/images/DBS2/pants.png' },
+        { name: 'Socks', type: 'socks', sprite: '/DBS2-Frontend/images/DBS2/socks.png' },
+        { name: 'Towel', type: 'towel', sprite: '/DBS2-Frontend/images/DBS2/towel.png' },
+        { name: 'Jacket', type: 'jacket', sprite: '/DBS2-Frontend/images/DBS2/jacket.png' }
     ];
 
     const laundryItems = [];
@@ -439,7 +439,7 @@ export function showLaundryMinigame(onComplete) {
         background-position: center;
     `;
     // ADD YOUR PAPER/CODE IMAGE SPRITE HERE (optional)
-    paperImage.style.backgroundImage = "url('/student/images/DBS2/codescrapLaundry.png')";
+    paperImage.style.backgroundImage = "url('/DBS2-Frontend/images/DBS2/codescrapLaundry.png')";
 
     const codeText = document.createElement('div');
     codeText.innerHTML = `
