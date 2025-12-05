@@ -15,30 +15,8 @@ permalink: /DBS2
 <!-- IMPORTANT: Load laundry minigame FIRST as a regular script (not module) -->
 <script src="{{ site.baseurl }}/assets/js/DBS2/LaundryGame.js"></script>
 
-<script type="module">
-  console.log("1. Script starting...");
-  console.log("2. Checking if laundry minigame loaded:", typeof window.showLaundryMinigame);
-  
-  import GameControl from "{{ site.baseurl }}/assets/js/DBS2-Frontend/GameControl.js";
-  
-  console.log("3. GameControl imported:", GameControl);
-
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log("4. DOM loaded!");
-    console.log("5. Laundry minigame function available:", typeof window.showLaundryMinigame);
-    
-    let baseurl = "{{ site.baseurl }}";
-    if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
-    
-    console.log("6. Setting baseurl:", baseurl);
-    document.body.setAttribute('data-baseurl', baseurl);
-    
-    console.log("7. Baseurl set, GameControl should start automatically");
-  });
-</script>
-
+<!-- FIX 1: Set baseurl immediately before any modules load to prevent race conditions -->
 <script>
-  // Set baseurl immediately (before module loads) to avoid race condition
   (function() {
     let baseurl = "{{ site.baseurl }}";
     if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
@@ -53,21 +31,30 @@ permalink: /DBS2
   })();
 </script>
 
+<!-- FIX 2: Changed path from DBS2-Frontend to DBS2 (the folder that actually exists) -->
+<!-- FIX 3: Removed duplicate script blocks - only need ONE module import -->
 <script type="module">
+  console.log("1. Script starting...");
+  console.log("2. Checking if laundry minigame loaded:", typeof window.showLaundryMinigame);
+  
+  // FIX 2: Corrected path - was /DBS2-Frontend/, now /DBS2/
   import GameControl from "{{ site.baseurl }}/assets/js/DBS2/GameControl.js";
+  
+  console.log("3. GameControl imported:", GameControl);
 
-  // Ensure baseurl is set and start the game
   document.addEventListener('DOMContentLoaded', () => {
-    console.log("3. DOM loaded!");
+    console.log("4. DOM loaded!");
+    console.log("5. Laundry minigame function available:", typeof window.showLaundryMinigame);
     
     let baseurl = "{{ site.baseurl }}";
     if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
     
-    console.log("4. Setting baseurl:", baseurl);
+    console.log("6. Setting baseurl:", baseurl);
     document.body.setAttribute('data-baseurl', baseurl);
     
-    // GameControl will auto-start from its own DOMContentLoaded listener
-    console.log("5. Baseurl set, GameControl should start automatically");
+    console.log("7. Baseurl set, GameControl should start automatically");
+    // FIX 4: GameControl.js has its own DOMContentLoaded listener that auto-starts the game
+    // No need to manually call GameControl.start() here
   });
 </script>
 

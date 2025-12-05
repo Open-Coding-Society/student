@@ -19,7 +19,7 @@ description: "Class of 2026"
 owner_name: John Mortensen
 github_username: jm1021 
 github_repo: "student" 
-baseurl: "/student" 
+baseurl: "/DBS2-Frontend" 
 future: true
 
 # Build settings
