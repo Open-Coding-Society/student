@@ -2,6 +2,9 @@
 // Call showLaundryMinigame() to display the popup
 
 export function showLaundryMinigame(onComplete) {
+    // Get baseurl dynamically from the data attribute set by the page
+    const baseurl = document.body.getAttribute('data-baseurl') || '';
+    
     // Set minigame active flags
     window.laundryMinigameActive = true;
     window.minigameActive = true;
@@ -47,8 +50,8 @@ export function showLaundryMinigame(onComplete) {
         background-size: cover;
         background-position: center;
     `;
-    // Background image
-    container.style.backgroundImage = "url('basement.png')";
+    // Background image - FIXED: Added baseurl
+    container.style.backgroundImage = `url('${baseurl}/images/DBS2/basement.png')`;
 
     // Close button
     const closeBtn = document.createElement('button');
@@ -134,12 +137,12 @@ export function showLaundryMinigame(onComplete) {
         gap: 15px;
     `;
 
-    // Create parts with individual sprites
+    // Create parts with individual sprites - FIXED: Added baseurl to all paths
     const partsList = [
-        { name: 'Motor', type: 'motor', sprite: '/DBS2-Frontend/images/DBS2/motor.png' },
-        { name: 'Belt', type: 'belt', sprite: '/DBS2-Frontend/images/DBS2/belt.png' },
-        { name: 'Pump', type: 'pump', sprite: '/DBS2-Frontend/images/DBS2/pump.jpg' },
-        { name: 'Hose', type: 'hose', sprite: '/DBS2-Frontend/images/DBS2/hose.png' }
+        { name: 'Motor', type: 'motor', sprite: `${baseurl}/images/DBS2/motor.png` },
+        { name: 'Belt', type: 'belt', sprite: `${baseurl}/images/DBS2/belt.png` },
+        { name: 'Pump', type: 'pump', sprite: `${baseurl}/images/DBS2/pump.jpg` },
+        { name: 'Hose', type: 'hose', sprite: `${baseurl}/images/DBS2/hose.png` }
     ];
 
     const parts = [];
@@ -211,8 +214,8 @@ export function showLaundryMinigame(onComplete) {
         background-repeat: no-repeat;
         transition: transform 0.1s;
     `;
-    // Washing machine sprite
-    machineContainer.style.backgroundImage = "url('/images/DBS2/broken-washing-machine-jpeg.jpeg')";
+    // Washing machine sprite - FIXED: Added baseurl
+    machineContainer.style.backgroundImage = `url('${baseurl}/images/DBS2/broken-washing-machine-jpeg.jpeg')`;
 
     // Create drop zones
     const zones = [
@@ -315,13 +318,13 @@ export function showLaundryMinigame(onComplete) {
         flex-wrap: wrap;
     `;
 
-    // Create laundry items with individual sprites
+    // Create laundry items with individual sprites - FIXED: Added baseurl to all paths
     const laundryList = [
-        { name: 'Shirt', type: 'shirt', sprite: '/DBS2-Frontend/images/DBS2/shirt.png' },
-        { name: 'Pants', type: 'pants', sprite: '/DBS2-Frontend/images/DBS2/pants.png' },
-        { name: 'Socks', type: 'socks', sprite: '/DBS2-Frontend/images/DBS2/socks.png' },
-        { name: 'Towel', type: 'towel', sprite: '/DBS2-Frontend/images/DBS2/towel.png' },
-        { name: 'Jacket', type: 'jacket', sprite: '/DBS2-Frontend/images/DBS2/jacket.png' }
+        { name: 'Shirt', type: 'shirt', sprite: `${baseurl}/images/DBS2/shirt.png` },
+        { name: 'Pants', type: 'pants', sprite: `${baseurl}/images/DBS2/pants.png` },
+        { name: 'Socks', type: 'socks', sprite: `${baseurl}/images/DBS2/socks.png` },
+        { name: 'Towel', type: 'towel', sprite: `${baseurl}/images/DBS2/towel.png` },
+        { name: 'Jacket', type: 'jacket', sprite: `${baseurl}/images/DBS2/jacket.png` }
     ];
 
     const laundryItems = [];
@@ -438,8 +441,8 @@ export function showLaundryMinigame(onComplete) {
         background-size: cover;
         background-position: center;
     `;
-    // ADD YOUR PAPER/CODE IMAGE SPRITE HERE (optional)
-    paperImage.style.backgroundImage = "url('/DBS2-Frontend/images/DBS2/codescrapLaundry.png')";
+    // ADD YOUR PAPER/CODE IMAGE SPRITE HERE (optional) - FIXED: Added baseurl
+    paperImage.style.backgroundImage = `url('${baseurl}/images/DBS2/codescrapLaundry.png')`;
 
     const codeText = document.createElement('div');
     codeText.innerHTML = `
