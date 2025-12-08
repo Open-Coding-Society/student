@@ -1,5 +1,28 @@
-import { updateCrypto } from './StatsManager.js';
+import { updateCrypto } from './StatsManager.js'
+import { javaURI, pythonURI, fetchOptions } from '../api/config.js';;
 import Prompt from './Prompt.js';
+
+//bckend setup stuff
+//get the URL
+const url = `${pythonURI}/api/jokes`;
+const getURL = url +"/";
+const setURL = url + "set"
+//options for backend communication
+const commOptions = { ...fetchOptions,
+    method: "PUT"
+}
+//fetch stuff
+fetch(getURL, fetchOptions).then(response => {
+    if (response.status != 200) { //stop faulty signals
+        alert("Somebody did a skibidi in the backend lol. The game no longer works.");
+        return;
+    }
+    response.json().then(parsed => {
+        console.log(parsed);
+    })
+}).catch(err => {
+    alert("I did a skibidi in the backend lmao. Ur cooked Here's the error bro:", err);
+})
 
 let quizzing = false;
 
