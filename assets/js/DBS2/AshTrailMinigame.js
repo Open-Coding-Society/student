@@ -1,5 +1,4 @@
-
-
+import DBS2API from './DBS2API.js';
 // Logical grid that everything lives on (player + path).
 // Higher numbers = smoother curves and more room for complex shapes.
 const GRID_COLS = 24;
