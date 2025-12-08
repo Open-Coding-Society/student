@@ -285,7 +285,7 @@ cd
 ```bash
 mkdir -p open
 cd open 
-git clone https://github.com/open-coding-society/student_2025.git
+git clone https://github.com/open-coding-society/DBS2-Frontend_2025.git
 ```
 
 4. **Prepare project prior to opening VS Code:**
@@ -338,7 +338,7 @@ All students are building a GitHub Pages website.  These steps get your website 
 
 1. Open a terminal 
 
-2. Type `cd ~/open/portfolio/student_2025`
+2. Type `cd ~/open/portfolio/DBS2-Frontend_2025`
 
 3. Activate virtual environment `source venv/bin/activate`
 
@@ -419,4 +419,4 @@ All students will be writing and changing code.  These steps allow you to change
 
 4. Update GitHub Pages:
 - GitHub Pages automatically rebuilds your site with the latest changes.
-- Visit your public website at https://<yourGitHubID>.github.io/student_2025 to see the updates.
+- Visit your public website at https://<yourGitHubID>.github.io/DBS2-Frontend_2025 to see the updates.

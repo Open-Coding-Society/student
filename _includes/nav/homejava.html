@@ -31,9 +31,9 @@
                     loginLink.style.display = 'none';
 
                     // Display Toolkits"
-                    calendarLink.innerHTML = `<a href="{{site.baseurl}}/student/calendar">Calendar</a>`;
+                    calendarLink.innerHTML = `<a href="{{site.baseurl}}/DBS2-Frontend/calendar">Calendar</a>`;
                     profileLink.innerHTML = `<a href="{{site.baseurl}}/profile">Profile</a>`;
-                    studentToolkitLink.innerHTML = `<a href="{{site.baseurl}}/student">Student Toolkit</a>`;
+                    studentToolkitLink.innerHTML = `<a href="{{site.baseurl}}/DBS2-Frontend">Student Toolkit</a>`;
                     // Check for teacher role to display "Teacher Toolkit"
                     const isTeacher = data.roles.some(role => role.name === 'ROLE_TEACHER');
                     if (isTeacher) {

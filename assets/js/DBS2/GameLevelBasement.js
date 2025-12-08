@@ -12,7 +12,7 @@ import DBS2API from './DBS2API.js';
  */
 class GameLevelBasement {
   constructor(path = '') {
-    // path should be the base path for assets (e.g. '' or '/student' or location of site)
+    // path should be the base path for assets (e.g. '' or '/DBS2-Frontend' or location of site)
     this.path = path;
 
     // Responsive dimensions provided by GameEnv.create()

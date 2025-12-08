@@ -1,6 +1,6 @@
 ---
 layout: student_toolkit
-permalink: /student
+permalink: /DBS2-Frontend
 ---
 
 <!-- page formatting is fetched from the layout -->

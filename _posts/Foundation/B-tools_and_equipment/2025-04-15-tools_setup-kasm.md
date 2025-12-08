@@ -61,7 +61,7 @@ Open a Terminal
 ```bash
 mkdir opencs
 cd opencs
-git clone https://github.com/Open-Coding-Society/student.git
+git clone https://github.com/Open-Coding-Society/DBS2-Frontend.git
 cd student/
 ./scripts/activate.sh # prompts for Git UID and Personal Email
 ./scripts/venv.sh
@@ -90,7 +90,7 @@ Open a new Terminal
 Each time you open a new Terminal to work, run:
 
 ```bash
-cd opencs/student
+cd opencs/DBS2-Frontend
 source venv/bin/activate # activate Python virtual environment
 code .
 ```

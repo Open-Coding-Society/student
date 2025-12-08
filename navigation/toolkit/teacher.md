@@ -11,7 +11,7 @@ show_reading_time: false
     <div class="student-management glowOnHover"
         onclick="location.href='{{site.baseurl}}/teacher-toolkit/period1';" style="cursor: pointer;">
         <div class="student-management-image">
-            <img src="{{site.baseurl}}/images/toolkit-nav-buttons/studentmanagement.png" alt="student-management" />
+            <img src="{{site.baseurl}}/images/toolkit-nav-buttons/DBS2-Frontendmanagement.png" alt="student-management" />
         </div>
         <div class="student-management-details">
             <h3>Student Management</h3>

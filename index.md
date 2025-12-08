@@ -23,10 +23,10 @@ show_reading_time: false
 > Coding starts with tools, explore these tools and procedures with a click.
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-    <a href="https://github.com/Open-Coding-Society/student">
+    <a href="https://github.com/Open-Coding-Society/DBS2-Frontend">
         <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
     </a>
-    <a href="https://open-coding-society.github.io/student">
+    <a href="https://open-coding-society.github.io/DBS2-Frontend">
         <img src="https://img.shields.io/badge/GitHub%20Pages-327FC7?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Pages">
     </a>
     <a href="https://kasm.opencodingsociety.com/">

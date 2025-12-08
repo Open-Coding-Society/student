@@ -19,13 +19,13 @@ The following commands are universal for all machine types, terminals, and proje
 
 ### Setup a directory for projects
 
-Change **opencs and open-coding-society/student.git** to match the name of your organization and repo.
+Change **opencs and open-coding-society/DBS2-Frontend.git** to match the name of your organization and repo.
 
    ```bash
    cd # move to your home directory
    mkdir -p opencs # use your organization, not opencs
    cd opencs # user your oganization, noot opencs
-   git clone https://github.com/open-coding-society/student.git # clone from your organization, not open-code-society
+   git clone https://github.com/open-coding-society/DBS2-Frontend.git # clone from your organization, not open-code-society
    ```
 
 ### Prepare project prior to opening VS Code
@@ -212,7 +212,7 @@ The SDLC adds the important steps of Make and Test to the workflow. This ensures
 5. Update GitHub Pages:
 
    * GitHub Pages Action automatically rebuilds your site with the latest changes.
-   * Visit your public website at https://<yourGitHubID>.github.io/student to see the updates.
+   * Visit your public website at https://<yourGitHubID>.github.io/DBS2-Frontend to see the updates.
 
 ```mermaid
 flowchart TD

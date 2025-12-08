@@ -2,7 +2,7 @@
 layout: opencs 
 title: Student Toolkit
 description: 
-permalink: /student
+permalink: /DBS2-Frontend
 ---
 
 <div class="toolkit-buttons">
@@ -13,21 +13,21 @@ permalink: /student
       <p>Toolset transforms bathroom passes and restroom management with smart digital passes, real-time occupancy tracking, and seamless feedback options. By enhancing hygiene, accessibility, and comfort, it creates a more efficient and user-friendly bathroom experience.</p>
     </div>
   </a>
-  <a href="{{site.baseurl}}/student/presentations" class="toolkit-button" data-description="Gamify your learning experience with these tools that make studying more interactive and fun. Discover educational games, quizzes, and activities to boost your knowledge while enjoying the process." data-authors="Author: Jane Smith">
+  <a href="{{site.baseurl}}/DBS2-Frontend/presentations" class="toolkit-button" data-description="Gamify your learning experience with these tools that make studying more interactive and fun. Discover educational games, quizzes, and activities to boost your knowledge while enjoying the process." data-authors="Author: Jane Smith">
     <img src="{{site.baseurl}}/images/toolkit-nav-buttons/group-chat.png" alt="ScreenQueue" />
     <span class="button-name">ScreenQueue</span>
     <div class="description">
       <p>Use this sleek presentation system that allows for easier accessibility to screens during live reviews. Queue system is integrated to aid line management.</p>
     </div>
   </a>
-  <a href="{{site.baseurl}}/student/submissions" class="toolkit-button" data-description="Explore collaboration resources that facilitate group work and team projects. Access platforms and tools designed to enhance communication, project management, and collective problem-solving." data-authors="Author: Alex Johnson">
+  <a href="{{site.baseurl}}/DBS2-Frontend/submissions" class="toolkit-button" data-description="Explore collaboration resources that facilitate group work and team projects. Access platforms and tools designed to enhance communication, project management, and collective problem-solving." data-authors="Author: Alex Johnson">
     <img src="{{site.baseurl}}/images/toolkit-nav-buttons/submissions.png" alt="Submissions" />
     <span class="button-name">Assignment Submissions</span>
     <div class="description">
       <p>Submit assignments on this simple and easy-to-use user interface that is fed directly to Mr. Mortensen.</p>
     </div>
   </a>
-  <a href="{{site.baseurl}}/student/calendar" class="toolkit-button" data-description="Never lose track of your assignments again with the Slack Integrated Calendar!">
+  <a href="{{site.baseurl}}/DBS2-Frontend/calendar" class="toolkit-button" data-description="Never lose track of your assignments again with the Slack Integrated Calendar!">
     <img src="{{site.baseurl}}/images/toolkit-nav-buttons/calendar.png" alt="Calendar" />
     <span class="button-name">Calendar</span>
     <div class="description">
@@ -35,7 +35,7 @@ permalink: /student
     </div>
   </a>
   
-  <a href="{{site.baseurl}}/student/calendar" class="toolkit-button" data-description="Never lose track of your assignments again with the Slack Integrated Calendar!">
+  <a href="{{site.baseurl}}/DBS2-Frontend/calendar" class="toolkit-button" data-description="Never lose track of your assignments again with the Slack Integrated Calendar!">
     <img src="{{site.baseurl}}/images/toolkit-nav-buttons/calendar.png" alt="Calendar" />
     <span class="button-name">Calendar</span>
     <div class="description">

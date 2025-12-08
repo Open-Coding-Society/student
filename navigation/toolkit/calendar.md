@@ -1,6 +1,6 @@
 ---
 title: Calendar
-permalink: /student/calendar
+permalink: /DBS2-Frontend/calendar
 layout: openaesthetic
 active_tab: calendar
 ---
