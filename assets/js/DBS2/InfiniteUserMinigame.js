@@ -4,7 +4,7 @@ import Prompt from './Prompt.js';
 
 //bckend setup stuff
 //get the URL
-const url = `${pythonURI}/api/jokes`;
+const url = `${pythonURI}/api/dbs2`;
 const getURL = url +"/";
 const setURL = url + "set"
 //options for backend communication
@@ -22,6 +22,7 @@ fetch(getURL, fetchOptions).then(response => {
     })
 }).catch(err => {
     alert("I did a skibidi in the backend lmao. Ur cooked Here's the error bro:", err);
+    return response.status;
 })
 
 let quizzing = false;

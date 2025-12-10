@@ -4,6 +4,7 @@ import Background from './Background.js';
 import Player from './Player.js';
 import Npc from './Npc.js';
 import DBS2API from './DBS2API.js';
+import startWhackGame from ./WhackA
 
 /**
  * GameLevelBasement
@@ -217,7 +218,7 @@ class GameLevelBasement {
     img.addEventListener('click', async (e) => {
       // dynamic import of whackarat (so it's only loaded when user clicks)
       try {
-        const module = await import('./whackarat.js');
+        // const module = await import('./whackarat.js');
         // create overlay container for the minigame
         let overlay = document.getElementById('whack-overlay');
         if (!overlay) {
