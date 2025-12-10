@@ -1,7 +1,7 @@
 // Laundry Machine Repair Minigame with Backend Integration
 import { updateCrypto, completeMinigame } from './StatsManager.js';
 
-export function showLaundryMinigame(onComplete) {
+export default function showLaundryMinigame(onComplete) {
     const baseurl = document.body.getAttribute('data-baseurl') || '';
     
     window.laundryMinigameActive = true;
@@ -452,4 +452,3 @@ export function showLaundryMinigame(onComplete) {
 }
 
 window.showLaundryMinigame = showLaundryMinigame;
-export default showLaundryMinigame;

@@ -236,7 +236,7 @@ function stopGame() {
 }
 
 // PUBLIC: startWhackGame(overlayElement, basePath)
-export async function startWhackGame(overlayElement, basePath = '/images/DBS2') {
+export default function startWhackGame(overlayElement, basePath = '/images/DBS2') {
   // reset state
   Whack.score = 0;
   Whack.timer = 120000;
@@ -247,7 +247,7 @@ export async function startWhackGame(overlayElement, basePath = '/images/DBS2') 
   Whack.lastFrame = performance.now();
 
   // load assets
-  await loadAssets(basePath);
+  loadAssets(basePath);
 
   // build canvas inside overlay
   const canvas = createCanvasInOverlay(overlayElement);

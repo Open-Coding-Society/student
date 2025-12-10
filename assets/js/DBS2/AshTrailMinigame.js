@@ -1509,6 +1509,7 @@ function renderResultsScene(score) {
 
 // --- Public entry point ----------------------------------------------------
 // Calculate and award crypto based on score
+const score = computeScore(truePath, playerPath)
   let cryptoReward = 0;
   if (score >= 80) {
     // Passed: base reward + difficulty bonus
