@@ -4,7 +4,7 @@ import Background from './Background.js';
 import Player from './Player.js';
 import Npc from './Npc.js';
 import DBS2API from './DBS2API.js';
-import startWhackGame from ./WhackA
+import startWhackGame from "./WhackARat.js";
 
 /**
  * GameLevelBasement
@@ -237,7 +237,7 @@ class GameLevelBasement {
           document.body.appendChild(overlay);
         }
         // call start function from module; it will create its own canvas in overlay
-        module.startWhackGame(overlay, `${this.path}/images/DBS2`);
+        startWhackGame(overlay, `${this.path}/images/DBS2`);
       } catch (err) {
         console.error('Failed to load Whackarat module:', err);
         alert('Could not start Whackarat. See console for details.');
