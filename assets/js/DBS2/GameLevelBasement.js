@@ -3,8 +3,7 @@ import GameEnv from './GameEnv.js';
 import Background from './Background.js';
 import Player from './Player.js';
 import Npc from './Npc.js';
-import DBS2API from './DBS2API.js';
-import startWhackGame from "./WhackARat.js";
+import startWhackGame from './whackarat.js';
 
 /**
  * GameLevelBasement
