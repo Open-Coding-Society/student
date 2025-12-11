@@ -5,7 +5,7 @@ import { showAshTrailMinigame } from "./AshTrailMinigame.js";
 import infiniteUserMinigame from "./InfiniteUserMinigame.js";
 import cryptoMinerMinigame from "./cryptoMinerMinigame.js";
 import { showLaundryMinigame } from "./LaundryGame.js";
-import { startWhackGame } from "./whackarat.js";
+import startWhackGame from "./whackarat.js";
 
 class Npc extends Character {
     constructor(data = null) {

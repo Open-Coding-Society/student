@@ -13,10 +13,14 @@ export function getStats() {
         DBS2API.getCrypto().then(c => {
             crypto = c;
             updateDisplays(crypto);
-        }).catch(() => {});
+        }).catch(() => {
+            // Fallback to local value if API fails
+            updateDisplays(crypto);
+        });
+    } else {
+        // If API not available, use local value
+        updateDisplays(crypto);
     }
-    
-    updateDisplays(crypto);
 }
 
 function updateDisplays(crypto) {
@@ -98,4 +102,18 @@ export async function completeMinigame(gameName) {
         return await DBS2API.completeMinigame(gameName);
     }
     return null;
+}
+
+export async function isMinigameCompleted(gameName) {
+    if (isAPIAvailable()) {
+        try {
+            const result = await DBS2API.isMinigameCompleted(gameName);
+            return result.completed || false;
+        } catch (e) {
+            console.error('Error checking minigame completion:', e);
+            return false;
+        }
+    }
+    // Fallback: assume not completed if API not available
+    return false;
 }
