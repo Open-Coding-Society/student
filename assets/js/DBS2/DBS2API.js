@@ -1,5 +1,3 @@
-// Adjust this path based on where DBS2API.js is located
-// If DBS2API.js is in assets/js/DBS2/, then config.js is at ../api/config.js
 import { pythonURI, fetchOptions } from '../api/config.js';
 
 const DBS2API = {

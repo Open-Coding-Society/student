@@ -1,18 +1,9 @@
-import { updateCrypto, completeMinigame, isMinigameCompleted } from './StatsManager.js';
+import DBS2API from './DBS2API.js';
 // Logical grid that everything lives on (player + path).
 // Higher numbers = smoother curves and more room for complex shapes.
 const GRID_COLS = 24;
 const GRID_ROWS = 24;
-let isFirstCompletion = false;
 
-// Check first completion when minigame opens
-async function checkFirstCompletion() {
-    try {
-        isFirstCompletion = !(await isMinigameCompleted('ash_trail'));
-    } catch (e) {
-        console.log('Could not check completion status:', e);
-    }
-}
 // Utility to append evenly spaced points along a segment
 function pushSegmentPoints(pts, ax, ay, bx, by, steps) {
   for (let i = 0; i <= steps; i++) {
@@ -1282,46 +1273,7 @@ function reactionForScore(score) {
 
 function renderResultsScene(score) {
   const reaction = reactionForScore(score);
-// Calculate and award crypto based on score
-  let cryptoReward = 0;
-  if (score >= 80) {
-    // Passed: base reward + difficulty bonus
-    const difficultyBonus = currentBook ? (currentBook.difficulty * 5) : 0;
-    cryptoReward = 15 + Math.floor(score / 10) + difficultyBonus;
-    
-    // First completion bonus
-    if (isFirstCompletion) {
-      cryptoReward += 20;
-      isFirstCompletion = false; // Only once
-    }
-    
-    // Award crypto
-    updateCrypto(cryptoReward);
-    
-    // Mark minigame complete
-    completeMinigame('ash_trail').catch(e => console.log('Could not save completion:', e));
-  } else if (score >= 50) {
-    // Partial reward for close attempts
-    cryptoReward = Math.floor(score / 20);
-    updateCrypto(cryptoReward);
-  }
-  // Show crypto reward if earned
-  let rewardText = null;
-  if (cryptoReward > 0) {
-    rewardText = createEl("div", {
-      textContent: `+${cryptoReward} Crypto earned!`,
-      style: {
-        fontSize: "16px",
-        fontWeight: "bold",
-        color: "#6ee7b7",
-        marginTop: "8px",
-        padding: "8px 12px",
-        background: "rgba(52, 211, 153, 0.15)",
-        borderRadius: "8px",
-        border: "1px solid rgba(52, 211, 153, 0.4)",
-      },
-    });
-  }
+
   const layout = createEl("div", {
     style: {
       display: "flex",
@@ -1455,9 +1407,7 @@ function renderResultsScene(score) {
   left.appendChild(scoreLabel);
   left.appendChild(scoreValue);
   left.appendChild(badge);
-  if (rewardText) {
-    left.appendChild(rewardText);
-  }
+  left.appendChild(reactionText);
   left.appendChild(buttons);
 
   const right = createEl("div", {
@@ -1533,7 +1483,6 @@ const score = computeScore(truePath, playerPath)
     updateCrypto(cryptoReward);
   }export function showAshTrailMinigame() {
   window.ashTrailActive = true;
-  checkFirstCompletion(); // Check if first time
   openOverlay();
   renderIntroScene();
 }
