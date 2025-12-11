@@ -1,254 +1,264 @@
-// whackarat.js
-// NEW MINIGAME: Click the moving rat 10 times to win 5 crypto!
+/// whackarat.js
+// Ash-Trail style rewrite of Whack-a-rat game
+// Exports: startWhackGame(overlayElement, basePath)
+// overlayElement: DOM element to host the game (we create a canvas inside it)
+// basePath: path to assets (e.g. '/images/DBS2')
 
 const Whack = {
   canvas: null,
   ctx: null,
-  width: 900,
-  height: 700,
+  width: 800,
+  height: 600,
   images: {},
-  mouse: { x: 0, y: 0 },
-  rat: null,
+  mouse: { x: 0, y: 0, down: false },
   score: 0,
-  targetScore: 10,  // Need 10 hits to win
+  timer: 120000,
+  spawnInterval: 1000,
+  lastSpawn: 0,
+  entities: [],
   running: false,
-  moveInterval: null
+  lastFrame: 0
 };
 
 function loadImage(name, src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve({ name, img });
-    img.onerror = () => reject(new Error('Failed to load ' + src));
+    img.onerror = (e) => reject(new Error('Failed to load ' + src));
     img.src = src;
   });
 }
 
 async function loadAssets(basePath) {
   const manifest = [
-    ['rat', `${basePath}/movingrat.gif`]
+    ['basement', `${basePath}/basement.png`],
+    ['pipes', `${basePath}/pipes.png`],
+    ['hammer', `${basePath}/hammer.png`],
+    ['rat', `${basePath}/New Piskel.gif`],
+    ['soda', `${basePath}/sodacan.png`]
   ];
+
   const promises = manifest.map(m => loadImage(m[0], m[1]));
-  const results = await Promise.all(promises);
-  results.forEach(r => Whack.images[r.name] = r.img);
+  const assets = await Promise.all(promises);
+  assets.forEach(a => Whack.images[a.name] = a.img);
 }
 
 function createCanvasInOverlay(overlay) {
+  // remove existing canvas wrapper if present
   const existing = overlay.querySelector('#whack-root');
   if (existing) existing.remove();
 
   const root = document.createElement('div');
   root.id = 'whack-root';
-  root.style.cssText = 'position:relative;width:920px;max-width:96%;height:720px;background:#1a1a1a;border-radius:8px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box';
+  root.style.position = 'relative';
+  root.style.width = '900px';
+  root.style.maxWidth = '95%';
+  root.style.height = '700px';
+  root.style.background = '#000';
+  root.style.borderRadius = '8px';
+  root.style.padding = '12px';
+  root.style.display = 'flex';
+  root.style.flexDirection = 'column';
+  root.style.alignItems = 'center';
+  root.style.justifyContent = 'center';
 
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕';
-  closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:30;font-size:20px;background:#ff4444;border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-weight:bold';
+  closeBtn.style.position = 'absolute';
+  closeBtn.style.top = '8px';
+  closeBtn.style.right = '8px';
+  closeBtn.style.zIndex = 10;
+  closeBtn.style.fontSize = '18px';
+  closeBtn.style.background = 'transparent';
+  closeBtn.style.border = 'none';
+  closeBtn.style.color = 'white';
+  closeBtn.style.cursor = 'pointer';
+
   closeBtn.addEventListener('click', () => {
     stopGame();
-    if (overlay?.parentNode) overlay.parentNode.removeChild(overlay);
+    const parentOverlay = overlay;
+    if (parentOverlay && parentOverlay.parentNode) {
+      parentOverlay.parentNode.removeChild(parentOverlay);
+    }
   });
+
   root.appendChild(closeBtn);
 
   const canvas = document.createElement('canvas');
   canvas.id = 'whack-canvas';
   canvas.width = Whack.width;
   canvas.height = Whack.height;
-  canvas.style.cssText = 'width:100%;height:100%;border:4px solid rgba(255,255,255,0.1);border-radius:6px;display:block;box-sizing:border-box;cursor:crosshair;background:#2a2a2a';
-
-  const info = document.createElement('div');
-  info.style.cssText = 'width:100%;display:flex;justify-content:space-between;align-items:center;color:white;font-family:monospace;margin-bottom:8px;font-size:24px;font-weight:bold';
-
-  const instructionSpan = document.createElement('div');
-  instructionSpan.id = 'whack-instruction';
-  instructionSpan.textContent = 'Click the rat 10 times!';
-  instructionSpan.style.fontSize = '18px';
-
-  const scoreSpan = document.createElement('div');
-  scoreSpan.id = 'whack-score';
-  scoreSpan.textContent = 'Hits: 0/10';
-
-  info.appendChild(instructionSpan);
-  info.appendChild(scoreSpan);
-
-  root.appendChild(info);
+  canvas.style.border = '4px solid rgba(255,255,255,0.06)';
+  canvas.style.borderRadius = '6px';
   root.appendChild(canvas);
-  overlay.appendChild(root);
 
+  overlay.appendChild(root);
   return canvas;
 }
 
 function initGameListeners(canvas) {
-  function updateMouse(e) {
+  canvas.addEventListener('mousemove', e => {
     const r = canvas.getBoundingClientRect();
     Whack.mouse.x = (e.clientX - r.left) * (canvas.width / r.width);
     Whack.mouse.y = (e.clientY - r.top) * (canvas.height / r.height);
-  }
-  
-  canvas.addEventListener('mousemove', updateMouse);
-  canvas.addEventListener('click', handleClick);
+  });
+
+  canvas.addEventListener('mousedown', () => Whack.mouse.down = true);
+  canvas.addEventListener('mouseup', () => Whack.mouse.down = false);
+
+  // prevent right click context on canvas
   canvas.addEventListener('contextmenu', e => e.preventDefault());
 }
 
-function handleClick(e) {
-  if (!Whack.running || !Whack.rat) return;
+function spawnTarget() {
+  const slotsX = [120, 290, 460, 630];
+  const slotsY = [240, 340];
+  const x = slotsX[Math.floor(Math.random() * slotsX.length)];
+  const y = slotsY[Math.floor(Math.random() * slotsY.length)];
 
-  // Check if click is on the rat
-  if (Whack.mouse.x > Whack.rat.x && 
-      Whack.mouse.x < Whack.rat.x + Whack.rat.w &&
-      Whack.mouse.y > Whack.rat.y && 
-      Whack.mouse.y < Whack.rat.y + Whack.rat.h) {
-    
-    Whack.score++;
-    
-    // Flash effect on hit
-    Whack.rat.flash = 5;
-    
-    // Check if won
-    if (Whack.score >= Whack.targetScore) {
-      Whack.running = false;
-      endGame(true);
-    } else {
-      // Move rat to new random position immediately after hit
-      moveRatToRandomPosition();
-    }
+  const isRat = Math.random() < 0.6; // rats more common than soda
+  Whack.entities.push({
+    type: isRat ? 'rat' : 'soda',
+    x: x - 30,
+    y: y - 30,
+    w: 60,
+    h: 60,
+    alive: true,
+    ttl: 800 + Math.random() * 900
+  });
+}
+
+function update(dt) {
+  Whack.timer -= dt;
+  if (Whack.timer <= 0) {
+    Whack.running = false;
   }
-}
 
-function moveRatToRandomPosition() {
-  if (!Whack.rat) return;
-  
-  const padding = 50;
-  Whack.rat.x = padding + Math.random() * (Whack.width - Whack.rat.w - padding * 2);
-  Whack.rat.y = padding + Math.random() * (Whack.height - Whack.rat.h - padding * 2);
-}
+  // spawn rate ramps up slowly
+  Whack.spawnInterval = Math.max(400, Whack.spawnInterval - dt * 0.002);
 
-function initRat() {
-  Whack.rat = {
-    x: Whack.width / 2 - 40,
-    y: Whack.height / 2 - 40,
-    w: 80,
-    h: 80,
-    flash: 0
-  };
-  
-  // Move rat to random position every 800ms (very fast!)
-  Whack.moveInterval = setInterval(() => {
-    if (Whack.running) {
-      moveRatToRandomPosition();
+  if (performance.now() - Whack.lastSpawn > Whack.spawnInterval) {
+    spawnTarget();
+    Whack.lastSpawn = performance.now();
+  }
+
+  // update entities
+  Whack.entities = Whack.entities.filter(e => {
+    e.ttl -= dt;
+    // click detection (simple)
+    if (Whack.mouse.down &&
+        Whack.mouse.x > e.x &&
+        Whack.mouse.x < e.x + e.w &&
+        Whack.mouse.y > e.y &&
+        Whack.mouse.y < e.y + e.h) {
+
+      // clicking consumes the down state until next up to avoid multi-hit
+      Whack.mouse.down = false;
+
+      if (e.type === 'rat') Whack.score += 100;
+      else Whack.score -= 50;
+
+      return false; // remove entity
     }
-  }, 800);
+    return e.ttl > 0;
+  });
 }
 
 function draw() {
   const ctx = Whack.ctx;
+  // clear
   ctx.clearRect(0, 0, Whack.width, Whack.height);
 
-  // Draw simple background
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillRect(0, 0, Whack.width, Whack.height);
+  // background
+  const bg = Whack.images.basement;
+  if (bg) ctx.drawImage(bg, 0, 0, Whack.width, Whack.height);
 
-  // Draw rat
-  if (Whack.rat) {
-    // Flash white when hit
-    if (Whack.rat.flash > 0) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.fillRect(Whack.rat.x - 5, Whack.rat.y - 5, Whack.rat.w + 10, Whack.rat.h + 10);
-      Whack.rat.flash--;
-    }
-    
-    const img = Whack.images.rat;
-    if (img) {
-      ctx.drawImage(img, Whack.rat.x, Whack.rat.y, Whack.rat.w, Whack.rat.h);
-    } else {
-      // Fallback
-      ctx.fillStyle = '#8B4513';
-      ctx.fillRect(Whack.rat.x, Whack.rat.y, Whack.rat.w, Whack.rat.h);
-    }
-  }
+  // pipes (center)
+  const pipes = Whack.images.pipes;
+  if (pipes) ctx.drawImage(pipes, (Whack.width - pipes.width)/2, 150);
 
-  // Update score display
-  const scoreSpan = document.getElementById('whack-score');
-  if (scoreSpan) {
-    scoreSpan.textContent = `Hits: ${Whack.score}/${Whack.targetScore}`;
-  }
+  // entities
+  Whack.entities.forEach(e => {
+    const img = Whack.images[e.type];
+    if (img) ctx.drawImage(img, e.x, e.y, e.w, e.h);
+    else {
+      // fallback box
+      ctx.fillStyle = e.type === 'rat' ? 'brown' : 'cyan';
+      ctx.fillRect(e.x, e.y, e.w, e.h);
+    }
+  });
+
+  // UI
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "20px monospace";
+  ctx.fillText("Score: " + Whack.score, Whack.width - 160, 36);
+  ctx.fillText("Time: " + Math.ceil(Whack.timer / 1000), 20, 36);
+
+  // hammer cursor
+  const hammer = Whack.images.hammer;
+  if (hammer) ctx.drawImage(hammer, Whack.mouse.x - 24, Whack.mouse.y - 24, 48, 48);
 }
 
-function loop() {
+function loop(ts) {
   if (!Whack.running) return;
+  const dt = ts - Whack.lastFrame;
+  Whack.lastFrame = ts;
+
+  update(dt);
   draw();
-  requestAnimationFrame(loop);
+
+  if (Whack.running) requestAnimationFrame(loop);
+  else endGame();
 }
 
-function endGame(won) {
+function endGame() {
+  // simple end: show alert and stop loop
   Whack.running = false;
-  
-  if (Whack.moveInterval) {
-    clearInterval(Whack.moveInterval);
-    Whack.moveInterval = null;
-  }
-
-  if (Whack.ctx) {
-    Whack.ctx.fillStyle = "rgba(0,0,0,0.85)";
+  const canvas = Whack.canvas;
+  if (canvas && Whack.ctx) {
+    Whack.ctx.fillStyle = "rgba(0,0,0,0.6)";
     Whack.ctx.fillRect(0, 0, Whack.width, Whack.height);
-    Whack.ctx.fillStyle = won ? "#4CAF50" : "white";
-    Whack.ctx.font = "48px monospace";
-    Whack.ctx.textAlign = "center";
-    
-    if (won) {
-      Whack.ctx.fillText("YOU WIN! 🎉", Whack.width / 2, Whack.height / 2 - 30);
-      Whack.ctx.font = "32px monospace";
-      Whack.ctx.fillText("+ 5 Crypto Earned!", Whack.width / 2, Whack.height / 2 + 30);
-    } else {
-      Whack.ctx.fillText("GAME OVER", Whack.width / 2, Whack.height / 2);
-    }
+    Whack.ctx.fillStyle = "white";
+    Whack.ctx.font = "28px monospace";
+    Whack.ctx.fillText("Game Over", Whack.width / 2 - 70, Whack.height / 2 - 10);
+    Whack.ctx.fillText("Score: " + Whack.score, Whack.width / 2 - 70, Whack.height / 2 + 28);
   }
-
-  setTimeout(() => {
-    const root = document.getElementById('whack-root');
-    if (root?.parentNode) root.parentNode.removeChild(root);
-    
-    if (typeof Whack._onComplete === 'function') {
-      Whack._onComplete(won ? 5 : 0);  // Award 5 crypto if won
-    }
-    
-    cleanup();
-  }, 2500);
 }
 
 function stopGame() {
   Whack.running = false;
-  if (Whack.moveInterval) {
-    clearInterval(Whack.moveInterval);
-    Whack.moveInterval = null;
+  // remove canvas if desired - caller may remove overlay
+  if (Whack.canvas && Whack.canvas.parentNode) {
+    Whack.canvas.parentNode.removeChild(Whack.canvas);
   }
-  
-  const root = document.getElementById('whack-root');
-  if (root?.parentNode) root.parentNode.removeChild(root);
-  
-  cleanup();
-}
-
-function cleanup() {
   Whack.canvas = null;
   Whack.ctx = null;
-  Whack.rat = null;
-  Whack.score = 0;
 }
 
-export async function startWhackGame(overlayElement, basePath = '/images/DBS2', onComplete = null) {
+// PUBLIC: startWhackGame(overlayElement, basePath)
+export default function startWhackGame(overlayElement, basePath = '/images/DBS2') {
+  // reset state
   Whack.score = 0;
+  Whack.timer = 120000;
+  Whack.spawnInterval = 1000;
+  Whack.entities = [];
   Whack.running = true;
-  Whack._onComplete = onComplete;
+  Whack.lastSpawn = 0;
+  Whack.lastFrame = performance.now();
 
-  await loadAssets(basePath);
-  
+  // load assets
+  loadAssets(basePath);
+
+  // build canvas inside overlay
   const canvas = createCanvasInOverlay(overlayElement);
   Whack.canvas = canvas;
   Whack.ctx = canvas.getContext('2d');
-  
+
   initGameListeners(canvas);
-  initRat();
+
+  // attach canvas to object for cleanup purpose
+  Whack.canvas = canvas;
+
   requestAnimationFrame(loop);
 }
 
