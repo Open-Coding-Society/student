@@ -1,115 +1,3 @@
----
-layout: opencs
-title: Blackjack Card Game
-permalink: /javascript/project/blackjack
----
-
-<style>
-    #game-container {
-        width: 800px;
-        margin: 0 auto;
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .points-list {
-        list-style: none;
-        margin-left: 20px;
-        padding: 0;
-        font-size: 18px;
-        font-weight: bold;
-        color: #333;
-    }
-
-    #message {
-        color: black !important;
-        font-weight: bold;
-    }
-    .player-area {
-        margin-bottom: 20px;
-    }
-
-    .cards-container {
-        display: flex;
-        justify-content: center;
-        min-height: 120px;
-    }
-
-    .card {
-        width: 80px;
-        height: 110px;
-        border: 1px solid #333;
-        border-radius: 5px;
-        margin: 5px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 24px;
-        font-weight: bold;
-        background-color: #fff;
-        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-    }
-
-    #game-controls button {
-        padding: 10px 20px;
-        margin: 10px;
-        font-size: 16px;
-        cursor: pointer;
-    }
-
-    .hand-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .points-list {
-        margin-top: 10px;
-        font-size: 20px;
-        font-weight: bold;
-        color: #333;
-        text-align: center;
-    }
-    
-    @keyframes dealCard {
-        0% { transform: translateX(200px) rotateY(180deg) scale(0.5); opacity: 0; }
-        40% { transform: translateX(80px) rotateY(120deg) scale(0.8); opacity: 0.6; }
-        70% { transform: translateX(20px) rotateY(60deg) scale(1.05); opacity: 1; }
-        100% { transform: translateX(0) rotateY(0deg) scale(1); opacity: 1; }
-    }
-
-    .card { animation: dealCard 0.8s ease-out; transform-style: preserve-3d; }
-</style>
-
-<h2>Blackjack</h2>
-<p>Dealer hits on 16</p>
-
-<div id="game-container">
-    <div id="dealer-area" class="player-area">
-        <h2>Dealer's Hand: <span id="dealer-score">0</span></h2>
-        <div class="hand-container">
-            <div id="dealer-cards" class="cards-container"></div>
-            <div id="dealer-points" class="points-list"></div>
-        </div>
-    </div>
-    <div id="player-area" class="player-area">
-        <h2>Your Hand: <span id="player-score">0</span></h2>
-        <div class="hand-container">
-            <div id="player-cards" class="cards-container"></div>
-            <div id="player-points" class="points-list"></div>
-        </div>
-    </div>
-    <div id="game-controls">
-        <button id="new-game-btn">New Game</button>
-        <button id="hit-btn">Hit</button>
-        <button id="stand-btn">Stand</button>
-    </div>
-    <p id="message"></p>
-</div>
-
 <script>
 const dealerCardsEl = document.getElementById("dealer-cards");
 const playerCardsEl = document.getElementById("player-cards");
@@ -125,6 +13,38 @@ let deck = [];
 let playerHand = [];
 let dealerHand = [];
 let gameOver = false;
+
+// ----- RED ADDITION: SIMPLE MONEY FEATURE -----
+let playerMoney = 100; // starting money
+let currentBet = 0;
+
+const moneyEl = document.createElement("p");
+moneyEl.style.color = "red"; // highlight in red
+moneyEl.textContent = `Money: $${playerMoney}`;
+document.getElementById("game-container").insertBefore(moneyEl, document.getElementById("game-controls"));
+
+const betEl = document.createElement("input");
+betEl.type = "number";
+betEl.min = 1;
+betEl.max = 1000;
+betEl.value = 10; // default bet
+betEl.style.margin = "5px";
+document.getElementById("game-controls").insertBefore(betEl, newGameBtn);
+
+const betBtn = document.createElement("button");
+betBtn.textContent = "Place Bet";
+betBtn.style.color = "red"; // highlight in red
+document.getElementById("game-controls").insertBefore(betBtn, newGameBtn);
+
+betBtn.addEventListener("click", () => {
+    currentBet = parseInt(betEl.value);
+    if (currentBet > playerMoney) {
+        messageEl.textContent = "Not enough money!";
+    } else {
+        messageEl.textContent = `Bet placed: $${currentBet}`;
+    }
+});
+// ----- END RED ADDITION -----
 
 function createDeck() {
     const suits = ["♠", "♥", "♦", "♣"];
@@ -199,6 +119,14 @@ function updateScores() {
     playerScoreEl.textContent = calculateHand(playerHand);
 }
 
+// ----- RED ADDITION: ADJUST MONEY BASED ON WIN/LOSE -----
+function adjustMoney(result) {
+    if (result === "win") playerMoney += currentBet;
+    else if (result === "lose") playerMoney -= currentBet;
+    moneyEl.textContent = `Money: $${playerMoney}`;
+}
+// ----- END RED ADDITION -----
+
 function checkGameOver() {
     const playerValue = calculateHand(playerHand);
     const dealerValue = calculateHand(dealerHand);
@@ -206,17 +134,28 @@ function checkGameOver() {
     if (playerValue > 21) {
         messageEl.textContent = "You busted! Dealer wins.";
         gameOver = true;
+        adjustMoney("lose"); // RED
     } else if (dealerValue > 21) {
         messageEl.textContent = "Dealer busted! You win!";
         gameOver = true;
+        adjustMoney("win"); // RED
     } else if (gameOver) {
-        if (playerValue > dealerValue) messageEl.textContent = "You win!";
-        else if (dealerValue > playerValue) messageEl.textContent = "Dealer wins!";
-        else messageEl.textContent = "It's a tie!";
+        if (playerValue > dealerValue) {
+            messageEl.textContent = "You win!";
+            adjustMoney("win"); // RED
+        } else if (dealerValue > playerValue) {
+            messageEl.textContent = "Dealer wins!";
+            adjustMoney("lose"); // RED
+        } else messageEl.textContent = "It's a tie!";
     }
 }
 
 function newGame() {
+    if (currentBet <= 0 || currentBet > playerMoney) {
+        messageEl.textContent = "Place a valid bet first!";
+        return;
+    }
+
     deck = createDeck();
     playerHand = [deck.pop(), deck.pop()];
     dealerHand = [deck.pop(), deck.pop()];
