@@ -1,4 +1,4 @@
-import { updateBalance } from "./StatsManager.js";
+import { updateCrypto, getCrypto } from "./StatsManager.js";
 
 const Prompt = {
     isOpen: false,
@@ -184,7 +184,7 @@ const Prompt = {
                 font-weight: bold;
                 cursor: pointer;
             `;
-            submitButton.addEventListener("click", this.handleSubmit.bind(this));
+            submitButton.addEventListener("click", () => this.handleSubmit());
             submitCell.appendChild(submitButton);
             submitRow.appendChild(submitCell);
             table.appendChild(submitRow);
@@ -225,7 +225,7 @@ const Prompt = {
                 font-weight: bold;
                 cursor: pointer;
             `;
-            submitButton.addEventListener("click", this.handleSubmit.bind(this));
+            submitButton.addEventListener("click", () => this.handleSubmit());
             submitCell.appendChild(submitButton);
             submitRow.appendChild(submitCell);
             table.appendChild(submitRow);
@@ -239,7 +239,7 @@ const Prompt = {
         return container;
     },
         
-    handleSubmit() {
+    async handleSubmit() {
         // Collect all answers
         // Try to read text inputs first (legacy quizzes)
         const inputs = document.querySelectorAll("input[type='text']");
@@ -259,9 +259,19 @@ const Prompt = {
 
         // Handle IShowGreen: check player's crypto and allow escape if enough
         const npcId = this.currentNpc?.spriteData?.id;
-        const playerCrypto = window.playerCrypto ?? window.playerBalance ?? 0;
+        
+        // Get player's crypto balance from StatsManager
+        let playerCrypto = 0;
+        try {
+            playerCrypto = await getCrypto();
+        } catch (e) {
+            console.log('Could not get crypto balance:', e);
+            playerCrypto = window.playerCrypto ?? window.playerBalance ?? 0;
+        }
+        
         let dialogue = '';
         let speaker = npcId || 'NPC';
+        
         if (npcId === 'IShowGreen') {
             if (playerCrypto >= 250) {
                 dialogue = "You've escaped the basement! Congratulations — freedom is yours.";
@@ -275,12 +285,18 @@ const Prompt = {
             // Generic handling for other NPCs: optionally award a small interaction reward
             const reward = Math.floor(Math.random() * 3); // small chance reward
             if (reward > 0) {
-                const newBal = updateBalance(reward);
-                dialogue = `You earned ${reward} Crypto. Total: ${newBal}`;
+                try {
+                    const newBal = await updateCrypto(reward);
+                    dialogue = `You earned ${reward} Crypto. Total: ${newBal}`;
+                } catch (e) {
+                    console.log('Could not award crypto:', e);
+                    dialogue = `You earned ${reward} Crypto!`;
+                }
             } else {
                 dialogue = 'Interaction recorded.';
             }
         }
+        
         // Show the dialogue popup
         Prompt.showDialoguePopup(speaker, dialogue, () => {
             // On close, close the prompt and remove dim
@@ -335,6 +351,7 @@ const Prompt = {
         popup.appendChild(closeBtn);
         document.body.appendChild(popup);
     },
+
     showConfirm(speaker, text, onConfirm, onCancel) {
         // Auto-close any existing popup/dialogue
         let existingPopup = document.getElementById('dialoguePopup');
@@ -390,6 +407,7 @@ const Prompt = {
         popup.appendChild(btnRow);
         document.body.appendChild(popup);
     },
+
     updatePromptDisplay() {
         const { promptDropDown } = this.ensureElements();
         

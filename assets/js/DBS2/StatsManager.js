@@ -1,4 +1,5 @@
 /**
+ * StatsManager.js
  * Bridges local game state with backend DBS2 API
  * Handles crypto, inventory, scores, and minigame completion tracking
  */
@@ -340,11 +341,15 @@ export async function syncWithServer() {
     }
 }
 
+// Alias for backwards compatibility with Prompt.js
+export const updateBalance = updateCrypto;
+
 // Export default object with all functions for backwards compatibility
 export default {
     getCrypto,
     addCrypto,
     updateCrypto,
+    updateBalance,
     setCrypto,
     getInventory,
     addInventoryItem,
