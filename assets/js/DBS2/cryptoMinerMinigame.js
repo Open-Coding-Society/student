@@ -118,6 +118,7 @@ function cryptoMinerMinigame() {
             isFirstCompletion = !(await isMinigameCompleted('crypto_miner'));
         } catch (e) {
             console.log('Could not check completion status');
+            isFirstCompletion = true; // Default to giving bonus if we can't check
         }
     }
     
@@ -305,7 +306,7 @@ function cryptoMinerMinigame() {
         updateBitcoinUI();
     });
     
-    // Refresh Bitcoin data every 5 minutes (price updates hourly on backend, but we check more often)
+    // Refresh Bitcoin data every 5 minutes
     setInterval(fetchBitcoinData, 5 * 60 * 1000);
     
     loop();
