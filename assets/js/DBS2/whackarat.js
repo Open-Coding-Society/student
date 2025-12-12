@@ -34,7 +34,7 @@ async function loadAssets(basePath) {
     ['basement', `${basePath}/basement.png`],
     ['pipes', `${basePath}/pipes.png`],
     ['hammer', `${basePath}/hammer.png`],
-    ['rat', `${basePath}/New Piskel.gif`],
+    ['rat', `${basePath}/movingrat.gif`],
     ['soda', `${basePath}/sodacan.png`]
   ];
 
