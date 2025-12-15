@@ -239,7 +239,7 @@ function stopGame() {
 export default function startWhackGame(overlayElement, basePath = '/images/DBS2') {
   // reset state
   Whack.score = 0;
-  Whack.timer = 120000;
+  Whack.timer = 45000;
   Whack.spawnInterval = 1000;
   Whack.entities = [];
   Whack.running = true;
