@@ -14,6 +14,9 @@ function cryptoMinerMinigame() {
     let boostMultiplier = 1.0;
     let isFirstCompletion = false;
     
+    // Get baseurl for images
+    const baseurl = document.body.getAttribute('data-baseurl') || '';
+    
     // Create the UI
     const minerUI = document.createElement('div');
     minerUI.id = 'crypto-miner-ui';
@@ -116,6 +119,7 @@ function cryptoMinerMinigame() {
     async function checkFirstCompletion() {
         try {
             isFirstCompletion = !(await isMinigameCompleted('crypto_miner'));
+            console.log('[CryptoMiner] First completion:', isFirstCompletion);
         } catch (e) {
             console.log('Could not check completion status');
             isFirstCompletion = true; // Default to giving bonus if we can't check
@@ -173,6 +177,118 @@ function cryptoMinerMinigame() {
         return keys[Math.floor(Math.random() * keys.length)];
     }
     
+    // Show code scrap popup on first completion
+    function showCodeScrapPopup(finalReward) {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'code-scrap-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10001;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        `;
+        
+        // Create popup container
+        const popup = document.createElement('div');
+        popup.style.cssText = `
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 4px solid #f7931a;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(247, 147, 26, 0.5);
+            animation: popIn 0.5s ease-out;
+        `;
+        
+        // Add animation keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes popIn {
+                0% { transform: scale(0.5); opacity: 0; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            @keyframes glow {
+                0%, 100% { box-shadow: 0 0 20px rgba(247, 147, 26, 0.5); }
+                50% { box-shadow: 0 0 40px rgba(247, 147, 26, 0.8); }
+            }
+            @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        popup.innerHTML = `
+            <h2 style="color: #ffd700; margin: 0 0 10px 0; font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                🎉 FIRST COMPLETION! 🎉
+            </h2>
+            <p style="color: #0f0; font-size: 18px; margin-bottom: 20px;">
+                You earned <span style="color: #ffd700; font-weight: bold;">${finalReward} Crypto!</span>
+            </p>
+            <div style="margin: 20px 0;">
+                <p style="color: #0ff; font-size: 16px; margin-bottom: 15px;">You found a Code Scrap!</p>
+                <div style="animation: float 2s ease-in-out infinite;">
+                    <img src="${baseurl}/images/DBS2/codescrapCrypto.png" 
+                         alt="Crypto Miner Code Scrap" 
+                         style="max-width: 300px; max-height: 200px; border: 3px solid #f7931a; border-radius: 10px; animation: glow 2s ease-in-out infinite;"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display: none; padding: 20px; background: rgba(247, 147, 26, 0.2); border: 2px dashed #f7931a; border-radius: 10px;">
+                        <span style="font-size: 48px;">📜</span>
+                        <p style="color: #f7931a; margin: 10px 0 0 0;">Code Scrap: Crypto Miner</p>
+                    </div>
+                </div>
+            </div>
+            <p style="color: #888; font-size: 14px; margin: 15px 0;">
+                This code scrap has been added to your inventory!
+            </p>
+            <button id="close-scrap-popup" style="
+                background: linear-gradient(135deg, #f7931a 0%, #ff6b00 100%);
+                color: white;
+                border: none;
+                padding: 15px 40px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 18px;
+                font-weight: bold;
+                margin-top: 10px;
+                transition: transform 0.2s, box-shadow 0.2s;
+            ">CONTINUE</button>
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        // Add hover effect to button
+        const closeBtn = document.getElementById('close-scrap-popup');
+        closeBtn.onmouseover = () => {
+            closeBtn.style.transform = 'scale(1.05)';
+            closeBtn.style.boxShadow = '0 5px 20px rgba(247, 147, 26, 0.5)';
+        };
+        closeBtn.onmouseout = () => {
+            closeBtn.style.transform = 'scale(1)';
+            closeBtn.style.boxShadow = 'none';
+        };
+        
+        // Close popup handler
+        closeBtn.onclick = () => {
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.3s';
+            setTimeout(() => {
+                overlay.remove();
+                style.remove();
+                window.exitCryptoMiner();
+            }, 300);
+        };
+    }
+    
     async function sendHits(count) {
         playerProgress += count;
         
@@ -200,30 +316,38 @@ function cryptoMinerMinigame() {
             // Mark minigame complete
             try {
                 await completeMinigame('crypto_miner');
+                console.log('[CryptoMiner] Marked as complete in backend');
             } catch (e) {
                 console.log('Could not save completion:', e);
             }
             
-            // Build completion message
-            let message = `Mining complete!\n\nBase: ${baseReward} Crypto`;
-            if (boostMultiplier !== 1.0) {
-                message += `\nBTC Boost (${boostMultiplier.toFixed(2)}x): ${Math.floor(baseReward * boostMultiplier)} Crypto`;
+            // Hide the miner UI
+            if (minerUI) {
+                minerUI.style.display = 'none';
             }
+            
+            // Show code scrap popup on first completion
             if (isFirstCompletion) {
-                message += `\nFirst Time Bonus: +25 Crypto`;
+                showCodeScrapPopup(finalReward);
+            } else {
+                // Regular completion message
+                let message = `Mining complete!\n\nBase: ${baseReward} Crypto`;
+                if (boostMultiplier !== 1.0) {
+                    message += `\nBTC Boost (${boostMultiplier.toFixed(2)}x): ${Math.floor(baseReward * boostMultiplier)} Crypto`;
+                }
+                message += `\n\nTotal: ${finalReward} Crypto!`;
+                
+                try {
+                    Prompt.showDialoguePopup('Bitcoin Miner', message);
+                } catch (e) {
+                    console.warn(message);
+                    alert(message);
+                }
+                
+                setTimeout(() => {
+                    window.exitCryptoMiner();
+                }, 2000);
             }
-            message += `\n\nTotal: ${finalReward} Crypto!`;
-            
-            try {
-                Prompt.showDialoguePopup('Bitcoin Miner', message);
-            } catch (e) {
-                console.warn(message);
-                alert(message);
-            }
-            
-            setTimeout(() => {
-                window.exitCryptoMiner();
-            }, 2000);
         }
     }
     
@@ -291,6 +415,11 @@ function cryptoMinerMinigame() {
         if (minerUI && minerUI.parentNode) {
             minerUI.remove();
         }
+        
+        // Remove any code scrap overlay if still present
+        const scrapOverlay = document.getElementById('code-scrap-overlay');
+        if (scrapOverlay) scrapOverlay.remove();
+        
         window.removeEventListener('keydown', keyDownHandler, true);
         window.removeEventListener('keyup', keyUpHandler, true);
         heldKeys.clear();
