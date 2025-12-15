@@ -24,6 +24,16 @@ function convertToAlphaNumeric(str){
 
 export default function infiniteUserMinigame(){
     if(!quizzing){
+        // Defensive cleanup in case a previous instance left artifacts
+        const existing = document.getElementById("quizWindow");
+        if (existing) {
+            existing.remove();
+        }
+        if (window._infiniteUserKeyHandler) {
+            try { window.removeEventListener("keydown", window._infiniteUserKeyHandler, true); } catch (e) {}
+            window._infiniteUserKeyHandler = null;
+        }
+
         quizzing = true;
         window.infiniteUserActive = true;
         window.minigameActive = true;
@@ -67,11 +77,17 @@ export default function infiniteUserMinigame(){
         quizWindow.appendChild(closeBtn);
         
         function closeMinigame() {
-            quizWindow.remove();
+            try { quizWindow.remove(); } catch (e) {}
             quizzing = false;
             window.infiniteUserActive = false;
             window.minigameActive = false;
-            window.removeEventListener("keydown", keyHandler, true);
+            // remove the stable handler if present
+            if (window._infiniteUserKeyHandler) {
+                try { window.removeEventListener("keydown", window._infiniteUserKeyHandler, true); } catch (e) {}
+                window._infiniteUserKeyHandler = null;
+            } else {
+                try { window.removeEventListener("keydown", keyHandler, true); } catch (e) {}
+            }
         }
         
         async function completeWithReward() {
@@ -143,7 +159,8 @@ export default function infiniteUserMinigame(){
                 typebox.innerText += event.key.toLowerCase();
             }
         }
-        
-        window.addEventListener("keydown", keyHandler, true);
+        // keep a stable reference on window so removal always matches
+        window._infiniteUserKeyHandler = keyHandler;
+        window.addEventListener("keydown", window._infiniteUserKeyHandler, true);
     }
 }
