@@ -441,21 +441,8 @@ export function showLaundryMinigame(onComplete) {
         background-size: cover;
         background-position: center;
     `;
-    // ADD YOUR PAPER/CODE IMAGE SPRITE HERE (optional) - FIXED: Added baseurl
+    
     paperImage.style.backgroundImage = `url('${baseurl}/images/DBS2/codescrapLaundry.png')`;
-
-    const codeText = document.createElement('div');
-    codeText.innerHTML = `
-        <div style="font-family: 'Courier New', monospace; color: #333; text-align: left; font-size: 14px;">
-            <strong style="text-decoration: underline;">Basement Exit Code:</strong><br><br>
-            <span style="font-size: 20px; font-weight: bold; color: #ff0000;">4 - 7 - 2 - 9</span><br><br>
-            <em style="font-size: 12px;">Don't forget this!</em>
-        </div>
-    `;
-    codeText.style.cssText = `
-        padding: 15px;
-    `;
-    // CUSTOMIZE: Change the code numbers above to match your game!
 
     paperImage.appendChild(codeText);
 
