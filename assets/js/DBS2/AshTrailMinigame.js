@@ -1093,9 +1093,13 @@ function startRunLoop() {
       playerPos.y += vy * dt;
     }
 
-    // clamp inside arena
-    playerPos.x = Math.max(0, Math.min(GRID_COLS - 1, playerPos.x));
-    playerPos.y = Math.max(0, Math.min(GRID_ROWS - 1, playerPos.y));
+    // clamp inside arena - use margin to account for player marker radius (0.2 * cellW)
+    // Player marker is drawn at (playerPos.x + 0.5) * cellW with radius cellW * 0.2
+    // To keep marker fully visible, we need: (playerPos.x + 0.5) * cellW ± 0.2 * cellW to stay within bounds
+    // This means: playerPos.x should be between 0.2 and GRID_COLS - 0.7
+    const MARGIN = 0.7; // Accounts for marker radius (0.2) + some padding
+    playerPos.x = Math.max(MARGIN, Math.min(GRID_COLS - MARGIN, playerPos.x));
+    playerPos.y = Math.max(MARGIN, Math.min(GRID_ROWS - MARGIN, playerPos.y));
 
     // sample path for scoring at ~20 Hz
     sampleAccumulator += dt;
@@ -1195,6 +1199,46 @@ function computeScore(trueP, playerP) {
     return 0;
   }
 
+  // Check if player didn't move at all (very few points or no distance traveled)
+  if (playerP.length < 5) {
+    // Less than 5 samples means they barely moved
+    return 0;
+  }
+
+  // Calculate total distance traveled by player
+  let totalDistanceTraveled = 0;
+  for (let i = 1; i < playerP.length; i++) {
+    const dx = playerP[i].x - playerP[i-1].x;
+    const dy = playerP[i].y - playerP[i-1].y;
+    totalDistanceTraveled += Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Calculate approximate length of true path
+  let truePathLength = 0;
+  for (let i = 1; i < trueP.length; i++) {
+    const dx = trueP[i].x - trueP[i-1].x;
+    const dy = trueP[i].y - trueP[i-1].y;
+    truePathLength += Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // If player traveled less than 10% of the true path length, they didn't move enough
+  if (totalDistanceTraveled < truePathLength * 0.1) {
+    return 0;
+  }
+
+  // Penalty for drawing way too much (coloring entire screen)
+  // If player path is more than 2.5x longer than true path, penalize heavily
+  const pathLengthRatio = totalDistanceTraveled / truePathLength;
+  let excessPenalty = 1.0;
+  if (pathLengthRatio > 2.5) {
+    // Heavy penalty: if you draw 3x the path, you can't get more than 50%
+    // If you draw 4x the path, you can't get more than 25%
+    excessPenalty = Math.max(0.1, 1.0 - (pathLengthRatio - 2.5) * 0.3);
+  } else if (pathLengthRatio > 2.0) {
+    // Moderate penalty: if you draw 2x the path, cap at 80%
+    excessPenalty = Math.max(0.5, 1.0 - (pathLengthRatio - 2.0) * 0.6);
+  }
+
   // 1) How accurately did the player stay near the trail?
   let goodSamples = 0;
   const totalSamples = playerP.length;
@@ -1217,7 +1261,10 @@ function computeScore(trueP, playerP) {
   // Combine both: you only get 100% if you stay close AND cover most of the path.
   const rawScore = 0.4 * proximityFrac + 0.6 * coverageFrac;
 
-  const score = Math.round(rawScore * 100);
+  // Apply excess penalty to prevent coloring entire screen from getting 100%
+  const penalizedScore = rawScore * excessPenalty;
+
+  const score = Math.round(penalizedScore * 100);
   return Math.max(0, Math.min(100, score));
 }
 
