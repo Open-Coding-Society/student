@@ -60,7 +60,12 @@ class Character extends GameObject {
         this.canvas.height = data.pixels?.height || 0;
         this.hitbox = data?.hitbox || {};
         this.ctx = this.canvas.getContext('2d');
-        document.getElementById("gameContainer").appendChild(this.canvas);
+        const gameContainer = document.getElementById("gameContainer");
+        if (!gameContainer) {
+            console.error('Character: gameContainer element not found! Cannot append character canvas.');
+            throw new Error('gameContainer element not found in DOM');
+        }
+        gameContainer.appendChild(this.canvas);
 
         // Set initial object properties 
         this.x = 0;

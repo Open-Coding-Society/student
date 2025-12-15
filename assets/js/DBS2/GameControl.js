@@ -34,14 +34,25 @@ const GameControl = {
     leaderboard: null,
 
     start: function(path) {
-        GameEnv.create();
+        console.log("GameControl.start() called with path:", path);
+        try {
+            console.log("GameControl: Creating GameEnv...");
+            GameEnv.create();
+            console.log("GameControl: GameEnv created successfully");
+            console.log("GameControl: Canvas dimensions:", GameEnv.innerWidth, "x", GameEnv.innerHeight);
+        } catch (error) {
+            console.error("GameControl: Failed to create GameEnv:", error);
+            throw error;
+        }
         // Initialize inventory UI (flexible; persists to localStorage for now)
         try { Inventory.init(); } catch (e) { console.error('Inventory init failed', e); }
         this.levelClasses = [GameLevelBasement];
         this.currentLevelIndex = 0;
         this.path = path;
         this.addExitKeyListener();
+        console.log("GameControl: Loading level...");
         this.loadLevel();
+        console.log("GameControl: Level loaded");
     },
     
     loadLevel: function() {
@@ -58,14 +69,23 @@ const GameControl = {
     },
     
     loadLevelObjects: function(gameInstance) {
+        console.log("GameControl: Initializing stats UI and leaderboard...");
         this.initStatsUI();
         this.initLeaderboard();
+        console.log("GameControl: Creating game objects, count:", gameInstance.objects.length);
         // Instantiate the game objects
         for (let object of gameInstance.objects) {
             if (!object.data) object.data = {};
-            new object.class(object.data);
+            try {
+                console.log("GameControl: Creating object:", object.class.name, "with data:", object.data);
+                new object.class(object.data);
+            } catch (error) {
+                console.error("GameControl: Error creating object:", error, object);
+            }
         }
+        console.log("GameControl: Game objects created, total:", GameEnv.gameObjects.length);
         // Start the game loop
+        console.log("GameControl: Starting game loop...");
         this.gameLoop();
     },
 
@@ -76,9 +96,17 @@ const GameControl = {
             return;
         }
         // Nominal case: update the game objects 
+        if (!GameEnv.ctx) {
+            console.error("GameControl: GameEnv.ctx is null, cannot render!");
+            return;
+        }
         GameEnv.clear();
         for (let object of GameEnv.gameObjects) {
-            object.update();  // Update the game objects
+            try {
+                object.update();  // Update the game objects
+            } catch (error) {
+                console.error("GameControl: Error updating game object:", error, object);
+            }
         }
         this.handleLevelStart();
         // Recursively call this function at animation frame rate
@@ -262,11 +290,27 @@ window.addEventListener('resize', GameControl.resize.bind(GameControl));
 
 
 // Auto-start the game when the module loads
-document.addEventListener('DOMContentLoaded', () => {
+function initGame() {
+    console.log("GameControl: initGame() called");
     // Compute the base path for assets (strip trailing slash if present)
-    let baseurl = document.body.getAttribute('data-baseurl') || '';
+    let baseurl = document.body?.getAttribute('data-baseurl') || '';
     if (baseurl.endsWith('/')) baseurl = baseurl.slice(0, -1);
-    GameControl.start(baseurl);
-});
+    console.log("GameControl: Starting game with baseurl:", baseurl);
+    try {
+        GameControl.start(baseurl);
+        console.log("GameControl: Game started successfully");
+    } catch (error) {
+        console.error("GameControl: Error starting game:", error);
+    }
+}
+
+// Check if DOM is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGame);
+} else {
+    // DOM is already loaded, initialize immediately
+    console.log("GameControl: DOM already loaded, initializing immediately");
+    initGame();
+}
 
 export default GameControl;

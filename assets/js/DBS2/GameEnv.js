@@ -57,7 +57,14 @@ class GameEnv {
      * @static
      */
     static create() {
-        this.setCanvas();
+        console.log("GameEnv.create() called");
+        try {
+            this.setCanvas();
+            console.log("GameEnv: Canvas found and context created");
+        } catch (error) {
+            console.error("GameEnv: Failed to set canvas:", error);
+            throw error;
+        }
         this.setTop();
         this.setBottom();
         // Base sizing primarily off the window (viewport) size, then constrain to container if present.
@@ -90,7 +97,9 @@ class GameEnv {
         this.innerWidth = Math.max(1, Math.floor(targetWidth));
         this.innerHeight = Math.max(1, Math.floor(targetHeight));
 
+        console.log("GameEnv: Computed dimensions:", this.innerWidth, "x", this.innerHeight);
         this.size();
+        console.log("GameEnv: Canvas sized successfully");
     }
 
     /**
@@ -100,7 +109,15 @@ class GameEnv {
      */
     static setCanvas() {
         this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) {
+            console.error('GameEnv: Canvas element with id "gameCanvas" not found!');
+            throw new Error('Canvas element not found. Make sure <canvas id="gameCanvas"> exists in the DOM.');
+        }
         this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx) {
+            console.error('GameEnv: Could not get 2D rendering context from canvas!');
+            throw new Error('Could not get 2D rendering context from canvas.');
+        }
     }
 
     /**
@@ -129,6 +146,11 @@ class GameEnv {
      * @static
      */
     static size() {
+        if (!this.canvas) {
+            console.error('GameEnv: Cannot size canvas - canvas not initialized!');
+            return;
+        }
+        
         // Use devicePixelRatio to make canvas crisp on high-DPI displays
         const dpr = window.devicePixelRatio || 1;
         // If container exists, measure it to compute CSS size
@@ -140,6 +162,10 @@ class GameEnv {
             cssWidth = Math.floor(rect.width);
             cssHeight = Math.floor(rect.height);
         }
+
+        // Ensure minimum dimensions
+        cssWidth = Math.max(1, cssWidth);
+        cssHeight = Math.max(1, cssHeight);
 
         // Set CSS size
         this.canvas.style.width = `${cssWidth}px`;
@@ -175,6 +201,9 @@ class GameEnv {
      * @static
      */
     static clear() {
+        if (!this.ctx || !this.canvas) {
+            return; // Canvas not initialized yet, skip clearing
+        }
         this.ctx.clearRect(0, 0, this.innerWidth, this.innerHeight);
     }
 }

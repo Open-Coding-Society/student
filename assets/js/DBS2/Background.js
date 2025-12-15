@@ -7,13 +7,22 @@ import GameObject from './GameObject.js';
 export class Background extends GameObject {
     constructor(data = null) {
         super();
-        if (data.src) {
+        if (data && data.src) {
+            console.log('Background: Loading image from:', data.src);
             this.image = new Image();
+            this.image.onload = () => {
+                console.log('Background: Image loaded successfully:', data.src);
+            };
+            this.image.onerror = (error) => {
+                console.error('Background: Failed to load image:', data.src, error);
+            };
             this.image.src = data.src;
         } else {
+            console.warn('Background: No image source provided');
             this.image = null;
         }
         GameEnv.gameObjects.push(this);
+        console.log('Background: Background object created and added to gameObjects');
     }
 
     /** This method draws to GameEnv context, primary background
@@ -24,11 +33,23 @@ export class Background extends GameObject {
         const width = GameEnv.innerWidth;
         const height = GameEnv.innerHeight;
 
-        if (this.image) {
+        if (!ctx) {
+            console.warn('Background: Cannot draw - GameEnv.ctx is not initialized');
+            return;
+        }
+
+        if (width <= 0 || height <= 0) {
+            console.warn('Background: Cannot draw - invalid dimensions:', width, height);
+            return;
+        }
+
+        if (this.image && this.image.complete && this.image.naturalWidth > 0) {
             // Draw the background image scaled to the canvas size
+            console.log('Background: Drawing image:', this.image.src, 'at', width, 'x', height);
             ctx.drawImage(this.image, 0, 0, width, height);
         } else {
-            // Fill the canvas with fillstyle color if no image is provided
+            // Fill the canvas with fillstyle color if no image is provided or not loaded yet
+            console.log('Background: Image not loaded, drawing fallback color. Image:', this.image, 'complete:', this.image?.complete, 'naturalWidth:', this.image?.naturalWidth);
             ctx.fillStyle = '#87CEEB';
             ctx.fillRect(0, 0, width, height);
         }
