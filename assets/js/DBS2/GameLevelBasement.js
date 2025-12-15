@@ -160,16 +160,7 @@ class GameLevelBasement {
         "Chill Guy, bring me more fizz and I'll reward you in crypto wisdom.",
         "Careful shaking me. I WILL explode."
       ],
-      src: `${this.path}/images/DBS2/sodacan.png`,
-      SCALE_FACTOR: 7,
-      ANIMATION_RATE: 12,
-      pixels: { height: 64, width: 64 },
-      INIT_POSITION: { x: width * 0.15, y: height * 0.65 },
-      orientation: { rows: 1, columns: 1 },
-      down: { row: 0, start: 0, columns: 1 },
-      hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 },
-      // add metadata so other parts of the engine can route/interact
-      routeTo: 'whackarat' // friendly marker
+      
     };
 
     // All objects in the basement level
@@ -182,7 +173,6 @@ class GameLevelBasement {
       { class: Npc, data: sprite_data_shell1 },
       { class: Npc, data: sprite_data_shell2 },
       { class: Npc, data: sprite_data_bookshelf },
-      { class: Npc, data: sprite_data_sodacan }
     ];
 
     // Create the visible soda launcher button on page (so it's always visible).
