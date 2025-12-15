@@ -4,29 +4,55 @@ import Prompt from './Prompt.js';
 
 //bckend setup stuff
 //get the URL
-const url = `${pythonURI}/api/jokes`;
+const url = `${pythonURI}/api/DBS2`;
 const getURL = url +"/";
 const setURL = url + "set"
 //options for backend communication
 const commOptions = { ...fetchOptions,
     method: "PUT"
 }
-//fetch stuff
+//fetch stuff: attempt to load passwords item from backend, fallback to local list
 fetch(getURL, fetchOptions).then(response => {
     if (response.status != 200) { //stop faulty signals
         alert("Somebody did a skibidi in the backend lol. The game no longer works.");
         return;
     }
     response.json().then(parsed => {
-        console.log(parsed);
+        console.log('DBS2 items:', parsed);
+        try {
+            let pwItem = null;
+            if (Array.isArray(parsed)) {
+                pwItem = parsed.find(it => it && it.name && String(it.name).toLowerCase() === 'passwords');
+            } else if (parsed && parsed.name && String(parsed.name).toLowerCase() === 'passwords') {
+                pwItem = parsed;
+            }
+            if (pwItem) {
+                if (Array.isArray(pwItem.data) && pwItem.data.length) {
+                    passwords = pwItem.data;
+                } else if (Array.isArray(pwItem.passwords) && pwItem.passwords.length) {
+                    passwords = pwItem.passwords;
+                } else if (typeof pwItem.description === 'string' && pwItem.description.trim().length) {
+                    try {
+                        const parsedDesc = JSON.parse(pwItem.description);
+                        if (Array.isArray(parsedDesc) && parsedDesc.length) passwords = parsedDesc;
+                    } catch (e) {
+                        const parts = pwItem.description.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+                        if (parts.length) passwords = parts;
+                    }
+                }
+                console.log('Passwords loaded from backend:', passwords);
+            }
+        } catch (e) {
+            console.error('Error parsing DBS2 passwords:', e);
+        }
     })
 }).catch(err => {
-    alert("I did a skibidi in the backend lmao. Ur cooked Here's the error bro:", err);
+    console.warn("Could not fetch DBS2 passwords from backend:", err);
 })
 
 let quizzing = false;
 
-let passwords = [ // THIS SHOULD PULL FROM THE BACKEND BUT IS CURRENTLY JUST A PLACEHOLDER
+let passwords = [ // fallback until backend response populates this
     "ishowgreen",
     "helloworld",
     "albuquerque",
