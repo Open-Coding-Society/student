@@ -4,119 +4,122 @@ import Prompt from "./Prompt.js";
 import { showAshTrailMinigame } from "./AshTrailMinigame.js";
 import infiniteUserMinigame from "./InfiniteUserMinigame.js";
 import cryptoMinerMinigame from "./cryptoMinerMinigame.js";
-import showLaundryMinigame from "./LaundryGame.js";
+import { showLaundryMinigame } from "./LaundryGame.js";
+import startWhackGame from "./whackarat.js";
 
 class Npc extends Character {
     constructor(data = null) {
         super(data);
-        // Keep NPC lightweight: quizzes removed. Keep an alert timeout and bind interaction keys.
         this.alertTimeout = null;
         this.bindEventListeners();
     }
-    /**
-     * Override the update method to draw the NPC.
-     * This NPC is stationary, so the update method only calls the draw method.
-     */
+
     update() {
         this.draw();
     }
-    /**
-     * Bind key event listeners for proximity interaction.
-     */
+
     bindEventListeners() {
         addEventListener('keydown', this.handleKeyDown.bind(this));
         addEventListener('keyup', this.handleKeyUp.bind(this));
     }
-    /**
-     * Close all currently open dialogue boxes and prompts
-     */
+
     closeAllDialogues() {
-        // Close dialogue popup if exists
         const dialoguePopup = document.getElementById('dialoguePopup');
         if (dialoguePopup) {
             dialoguePopup.remove();
         }
         
-        // Close prompt panel if open
         if (Prompt.isOpen) {
             Prompt.backgroundDim.remove();
         }
         
-        // Close dim overlay if exists
         const dimDiv = document.getElementById('dim');
         if (dimDiv) {
             dimDiv.remove();
         }
         
-        // Close prompt dropdown if visible
         const promptDropDown = document.querySelector('.promptDropDown');
         if (promptDropDown) {
             promptDropDown.style.display = 'none';
         }
         
-        // Reset flags
         window.dialogueActive = false;
         Prompt.isOpen = false;
     }
     
-    /**
-     * Handle keydown events for interaction.
-     * @param {Object} event - The keydown event.
-     */
     handleKeyDown({ key }) {
         switch (key) {
             case 'e': // Player 1 interaction
             case 'u': // Player 2 interaction
                 try {
-                    // Only react if a player is colliding with this NPC
+                    // Debug: Log all NPCs and their collision states
+                    console.log('E key pressed. Checking collisions...');
+                    
                     const players = GameEnv.gameObjects.filter(
                         obj => obj.state?.collisionEvents?.includes(this.spriteData.id)
                     );
-                    if (players.length === 0) return;
+                    
+                    console.log(`NPC ID: ${this.spriteData.id}, Players colliding: ${players.length}`);
+                    
+                    if (players.length === 0) {
+                        // Check if player is at least close to this NPC
+                        const player = GameEnv.gameObjects.find(obj => obj.spriteData?.id === 'player');
+                        if (player && this.spriteData.id === 'SodaCan') {
+                            // Calculate distance
+                            const dist = Math.sqrt(
+                                Math.pow(player.position.x - this.position.x, 2) + 
+                                Math.pow(player.position.y - this.position.y, 2)
+                            );
+                            console.log(`Distance to SodaCan: ${dist}`);
+                            
+                            // If within 200 pixels, launch anyway
+                            if (dist < 200) {
+                                console.log('Player close enough to SodaCan, launching game...');
+                                this.launchWhackARat();
+                                return;
+                            }
+                        }
+                        return;
+                    }
 
-                    // Close all existing dialogues before opening new interaction
                     this.closeAllDialogues();
 
                     const npcId = this.spriteData.id;
+                    console.log(`Interacting with: ${npcId}`);
 
-                    // Route each NPC to their specific minigame
                     switch (npcId) {
                         case 'Bookshelf':
-                            // Ash Trail minigame
                             showAshTrailMinigame();
                             return;
 
                         case 'Computer1':
-                            // Infinite User password decryption minigame
                             infiniteUserMinigame();
                             return;
 
                         case 'Computer2':
-                            // Crypto Miner minigame
                             cryptoMinerMinigame();
                             return;
 
                         case 'laundry':
-                            // Laundry Machine Repair minigame
                             showLaundryMinigame();
                             return;
 
+                        case 'SodaCan':
+                            console.log('✅ SodaCan interaction detected!');
+                            this.launchWhackARat();
+                            return;
+
                         case 'IShowGreen':
-                            // IShowGreen has special escape logic - use prompt panel for interaction
                             Prompt.currentNpc = this;
                             Prompt.openPromptPanel(this);
                             return;
 
                         case 'ShellNpc1':
                         case 'ShellNpc2':
-                            // Shell NPCs - just show their greeting, no interaction panel
-                            // The greeting is already shown via collision in GameObject.js
-                            // So we can either do nothing or show a simple dialogue
-                            Prompt.showDialoguePopup(npcId, this.spriteData.greeting || 'Shell NPC (customize me)');
+                            Prompt.showDialoguePopup(npcId, this.spriteData.greeting || 'Shell NPC');
                             return;
 
                         default:
-                            // Default behaviour: open generic dialogue prompt for NPCs with interactions
                             Prompt.currentNpc = this;
                             Prompt.openPromptPanel(this);
                             return;
@@ -127,13 +130,64 @@ class Npc extends Character {
                 break;
         }
     }
-    /**
-     * Handle keyup events to stop player actions.
-     * @param {Object} event - The keyup event.
-     */
+
+    async launchWhackARat() {
+        try {
+            console.log('🎮 Starting Rat Clicker minigame...');
+
+            // Create fullscreen overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'whackarat-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '10000';
+            document.body.appendChild(overlay);
+
+            // Get player for crypto reward
+            const player = GameEnv.gameObjects?.find(obj => obj.spriteData?.id === 'player');
+
+            // Start the NEW game (click rat 10 times)
+            await startWhackGame(overlay, '/images/DBS2', (cryptoEarned) => {
+                console.log('✅ Game finished! Crypto earned:', cryptoEarned);
+
+                // Award crypto
+                if (player?.spriteData?.crypto !== undefined && cryptoEarned > 0) {
+                    player.spriteData.crypto += cryptoEarned;
+                    console.log(`💰 Total crypto: ${player.spriteData.crypto}`);
+
+                    setTimeout(() => {
+                        alert(`🎉 You Win!\n\n💰 +${cryptoEarned} Crypto Earned!\n💎 Total Crypto: ${player.spriteData.crypto}`);
+                    }, 100);
+                } else if (cryptoEarned === 0) {
+                    setTimeout(() => {
+                        alert(`😞 Game Over!\n\nTry again!`);
+                    }, 100);
+                }
+
+                // Remove overlay
+                if (overlay?.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            });
+        } catch (error) {
+            console.error('❌ Error launching Rat Clicker:', error);
+            const overlay = document.getElementById('whackarat-overlay');
+            if (overlay?.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+            alert('Error starting minigame: ' + error.message);
+        }
+    }
+
     handleKeyUp({ key }) {
         if (key === 'e' || key === 'u') {
-            // Clear any active timeouts when the interaction key is released
             if (this.alertTimeout) {
                 clearTimeout(this.alertTimeout);
                 this.alertTimeout = null;

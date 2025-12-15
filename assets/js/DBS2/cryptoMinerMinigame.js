@@ -1,16 +1,18 @@
-import { updateCrypto, completeMinigame, submitMinigameScore } from './StatsManager.js';
+import { updateCrypto, completeMinigame, isMinigameCompleted } from './StatsManager.js';
 import Prompt from './Prompt.js';
 
-// Function to be called by Computer2 - with Bitcoin boost integration
+// Function to be called by Computer2 - with Bitcoin price integration
 function cryptoMinerMinigame() {
     // Check if already running
     if (window.cryptoMinerActive) return;
     window.cryptoMinerActive = true;
     window.minigameActive = true;
     
-    // Track if this is first completion for bonus
+    // Bitcoin data from API
+    let btcPrice = 0;
+    let btcChange24h = 0;
+    let boostMultiplier = 1.0;
     let isFirstCompletion = false;
-    let bitcoinBoostData = null;
     
     // Create the UI
     const minerUI = document.createElement('div');
@@ -33,18 +35,29 @@ function cryptoMinerMinigame() {
     `;
     
     minerUI.innerHTML = `
-        <h2 style="color: #0f0; margin: 0 0 20px 0;">⛏️ CRYPTO MINER</h2>
-        <div id="btc-boost-display" style="font-size: 14px; margin-bottom: 15px; padding: 10px; background: rgba(255,165,0,0.1); border: 1px solid #f90; border-radius: 5px; display: none;">
-            <span style="color: #f90;">₿ Bitcoin Boost:</span> <span id="boost-multiplier">1.0x</span>
-            <div style="font-size: 11px; color: #888; margin-top: 4px;">BTC 24h: <span id="btc-change">0%</span></div>
+        <h2 style="color: #f7931a; margin: 0 0 20px 0;">₿ BITCOIN MINER</h2>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding: 10px; background: rgba(247, 147, 26, 0.1); border-radius: 5px; border: 1px solid #f7931a;">
+            <div style="text-align: left;">
+                <div style="font-size: 12px; color: #888;">BTC Price</div>
+                <div id="btc-price" style="font-size: 18px; color: #f7931a;">Loading...</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 12px; color: #888;">24h Change</div>
+                <div id="btc-change" style="font-size: 18px;">--</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 12px; color: #888;">Reward Boost</div>
+                <div id="boost-multiplier" style="font-size: 18px; color: #0ff;">1.0x</div>
+            </div>
         </div>
-        <div style="font-size: 18px; margin-bottom: 10px;">Active Coin: <span id="coin">BASEMENT</span></div>
-        <div style="font-size: 18px; margin-bottom: 10px;">Change: <span id="pct">+0%</span></div>
         <div style="font-size: 72px; font-weight: bold; margin: 20px 0;">
             Press: <span id="key" style="text-shadow: 0 0 10px #0f0;">-</span>
         </div>
         <div style="font-size: 24px; margin: 20px 0;">
             Progress: <span id="progress">0</span> / 50
+        </div>
+        <div id="reward-preview" style="font-size: 14px; color: #0ff; margin-bottom: 10px;">
+            Est. Reward: ~10 Crypto
         </div>
         <div style="font-size: 12px; color: #888; margin-bottom: 15px;">
             (Tap keys - holding won't work!)
@@ -59,136 +72,105 @@ function cryptoMinerMinigame() {
     let nextKeyChange = 0;
     let isActive = true;
     let heldKeys = new Set();
-    
-    // Local fallback data
     let playerProgress = 0;
     const targetProgress = 50;
-    const coins = ["BASEMENT", "ISHOWGREEN", "CHILLGUY", "DORITO", "NFTBRO"];
-    let activeCoin = coins[0];
-    let percentChange = 0;
     
-    // Fetch Bitcoin boost data on start
-    async function fetchBitcoinBoost() {
+    // Fetch Bitcoin data from backend
+    async function fetchBitcoinData() {
         try {
-            if (typeof window.DBS2API !== 'undefined') {
-                bitcoinBoostData = await window.DBS2API.getBitcoinBoost();
-                if (bitcoinBoostData && bitcoinBoostData.boost_multiplier) {
-                    const boostDisplay = document.getElementById('btc-boost-display');
-                    const boostMultiplier = document.getElementById('boost-multiplier');
-                    const btcChange = document.getElementById('btc-change');
-                    
-                    if (boostDisplay) boostDisplay.style.display = 'block';
-                    if (boostMultiplier) {
-                        boostMultiplier.textContent = bitcoinBoostData.boost_multiplier.toFixed(2) + 'x';
-                        boostMultiplier.style.color = bitcoinBoostData.boost_multiplier >= 1 ? '#0f0' : '#f00';
-                    }
-                    if (btcChange) {
-                        const change = bitcoinBoostData.btc_change_24h || 0;
-                        btcChange.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
-                        btcChange.style.color = change >= 0 ? '#0f0' : '#f00';
-                    }
-                    
-                    console.log('Bitcoin boost loaded:', bitcoinBoostData);
-                }
+            // Import config dynamically or use default
+            let baseUrl = 'http://localhost:8587';
+            try {
+                const config = await import('../api/config.js');
+                baseUrl = config.pythonURI || baseUrl;
+            } catch (e) {
+                console.log('Using default API URL');
+            }
+            
+            const res = await fetch(`${baseUrl}/api/dbs2/bitcoin-boost`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(5000)
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                btcPrice = data.btc_price_usd || 0;
+                btcChange24h = data.btc_change_24h || 0;
+                boostMultiplier = data.boost_multiplier || 1.0;
+                
+                updateBitcoinUI();
+                return;
             }
         } catch (e) {
-            console.log('Could not fetch Bitcoin boost:', e);
+            console.log('Bitcoin API not available, using simulation');
         }
+        
+        // Fallback: simulate Bitcoin data
+        btcPrice = 95000 + (Math.random() * 10000 - 5000);
+        btcChange24h = (Math.random() * 20 - 10); // -10% to +10%
+        boostMultiplier = Math.max(0.5, Math.min(2.0, 1.0 + (btcChange24h / 20)));
+        updateBitcoinUI();
     }
     
-    // Check if first completion
+    // Check first completion status
     async function checkFirstCompletion() {
         try {
-            if (typeof window.DBS2API !== 'undefined') {
-                const status = await window.DBS2API.getMinigameStatus();
-                isFirstCompletion = !status.crypto_miner;
-            }
+            isFirstCompletion = !(await isMinigameCompleted('crypto_miner'));
         } catch (e) {
-            console.log('Could not check minigame status:', e);
+            console.log('Could not check completion status');
+            isFirstCompletion = true; // Default to giving bonus if we can't check
         }
     }
     
-    // Initialize boost and completion status
-    fetchBitcoinBoost();
-    checkFirstCompletion();
+    // Update the Bitcoin display
+    function updateBitcoinUI() {
+        const priceEl = document.getElementById('btc-price');
+        const changeEl = document.getElementById('btc-change');
+        const boostEl = document.getElementById('boost-multiplier');
+        const rewardEl = document.getElementById('reward-preview');
+        
+        if (priceEl) {
+            priceEl.textContent = btcPrice > 0 ? `$${btcPrice.toLocaleString('en-US', {maximumFractionDigits: 0})}` : 'Offline';
+        }
+        
+        if (changeEl) {
+            const changeStr = btcChange24h >= 0 ? `+${btcChange24h.toFixed(2)}%` : `${btcChange24h.toFixed(2)}%`;
+            changeEl.textContent = changeStr;
+            changeEl.style.color = btcChange24h >= 0 ? '#0f0' : '#f00';
+        }
+        
+        if (boostEl) {
+            boostEl.textContent = `${boostMultiplier.toFixed(2)}x`;
+            // Color based on boost
+            if (boostMultiplier >= 1.5) {
+                boostEl.style.color = '#0f0'; // Green for great boost
+            } else if (boostMultiplier >= 1.0) {
+                boostEl.style.color = '#0ff'; // Cyan for normal
+            } else {
+                boostEl.style.color = '#f00'; // Red for penalty
+            }
+        }
+        
+        if (rewardEl) {
+            const estReward = Math.floor((targetProgress / 5) * boostMultiplier);
+            const bonusText = isFirstCompletion ? ' (+25 first time!)' : '';
+            rewardEl.textContent = `Est. Reward: ~${estReward} Crypto${bonusText}`;
+        }
+    }
+    
+    // Update reward preview as progress changes
+    function updateRewardPreview() {
+        const rewardEl = document.getElementById('reward-preview');
+        if (rewardEl) {
+            const currentReward = Math.floor((playerProgress / 5) * boostMultiplier);
+            const bonusText = isFirstCompletion ? ' (+25 bonus)' : '';
+            rewardEl.textContent = `Current Reward: ${currentReward} Crypto${bonusText}`;
+        }
+    }
     
     function randomKey() {
         const keys = "ASDFJKLQWERUIOP";
         return keys[Math.floor(Math.random() * keys.length)];
-    }
-    
-    async function updateState() {
-        if (!isActive) return;
-        
-        // Simulate locally (original API fallback removed for simplicity)
-        if (Math.random() > 0.7) {
-            activeCoin = coins[Math.floor(Math.random() * coins.length)];
-            percentChange = (Math.random() * 20 - 10).toFixed(1);
-        }
-        
-        const coinEl = document.getElementById('coin');
-        const pctEl = document.getElementById('pct');
-        const progressEl = document.getElementById('progress');
-        
-        if (coinEl) coinEl.textContent = activeCoin;
-        if (pctEl) {
-            pctEl.textContent = percentChange > 0 ? `+${percentChange}%` : `${percentChange}%`;
-            pctEl.style.color = percentChange > 0 ? '#0f0' : '#f00';
-        }
-        if (progressEl) progressEl.textContent = playerProgress;
-    }
-    
-    async function finishGame() {
-        isActive = false;
-        
-        // Calculate base reward
-        let baseReward = Math.floor(playerProgress / 5); // 5 hits = 1 crypto
-        
-        // Apply Bitcoin boost if available
-        let finalReward = baseReward;
-        let boostMessage = '';
-        
-        if (bitcoinBoostData && bitcoinBoostData.boost_multiplier) {
-            finalReward = Math.round(baseReward * bitcoinBoostData.boost_multiplier);
-            if (bitcoinBoostData.boost_multiplier !== 1) {
-                boostMessage = ` (${bitcoinBoostData.boost_multiplier.toFixed(2)}x Bitcoin boost!)`;
-            }
-        }
-        
-        // First completion bonus
-        let firstCompletionBonus = 0;
-        if (isFirstCompletion) {
-            firstCompletionBonus = 25;
-            finalReward += firstCompletionBonus;
-        }
-        
-        // Award crypto
-        updateCrypto(finalReward);
-        
-        // Mark minigame as complete and submit score
-        try {
-            await completeMinigame('crypto_miner');
-            await submitMinigameScore('crypto_miner', playerProgress);
-        } catch (e) {
-            console.log('Could not save minigame completion:', e);
-        }
-        
-        // Build completion message
-        let message = `Mining complete! You earned ${finalReward} Crypto${boostMessage}`;
-        if (firstCompletionBonus > 0) {
-            message += ` (includes +${firstCompletionBonus} first completion bonus!)`;
-        }
-        
-        try {
-            Prompt.showDialoguePopup('Crypto Miner', message);
-        } catch (e) {
-            console.warn(message);
-        }
-        
-        // Clean up after message
-        setTimeout(() => {
-            window.exitCryptoMiner();
-        }, 2000);
     }
     
     async function sendHits(count) {
@@ -197,9 +179,51 @@ function cryptoMinerMinigame() {
         const progressEl = document.getElementById('progress');
         if (progressEl) progressEl.textContent = playerProgress;
         
+        updateRewardPreview();
+        
         // Check if finished
         if (playerProgress >= targetProgress) {
-            await finishGame();
+            isActive = false;
+            
+            // Calculate reward with Bitcoin boost
+            const baseReward = Math.floor(playerProgress / 5);
+            let finalReward = Math.floor(baseReward * boostMultiplier);
+            
+            // First completion bonus
+            if (isFirstCompletion) {
+                finalReward += 25;
+            }
+            
+            // Award crypto
+            updateCrypto(finalReward);
+            
+            // Mark minigame complete
+            try {
+                await completeMinigame('crypto_miner');
+            } catch (e) {
+                console.log('Could not save completion:', e);
+            }
+            
+            // Build completion message
+            let message = `Mining complete!\n\nBase: ${baseReward} Crypto`;
+            if (boostMultiplier !== 1.0) {
+                message += `\nBTC Boost (${boostMultiplier.toFixed(2)}x): ${Math.floor(baseReward * boostMultiplier)} Crypto`;
+            }
+            if (isFirstCompletion) {
+                message += `\nFirst Time Bonus: +25 Crypto`;
+            }
+            message += `\n\nTotal: ${finalReward} Crypto!`;
+            
+            try {
+                Prompt.showDialoguePopup('Bitcoin Miner', message);
+            } catch (e) {
+                console.warn(message);
+                alert(message);
+            }
+            
+            setTimeout(() => {
+                window.exitCryptoMiner();
+            }, 2000);
         }
     }
     
@@ -209,8 +233,9 @@ function cryptoMinerMinigame() {
         const now = Date.now();
         if (now > nextKeyChange) {
             currentKey = randomKey();
-            nextKeyChange = now + (2000 + Math.random() * 5000);
-            document.getElementById('key').textContent = currentKey;
+            nextKeyChange = now + (2000 + Math.random() * 5000); // 2–7 sec
+            const keyEl = document.getElementById('key');
+            if (keyEl) keyEl.textContent = currentKey;
         }
         requestAnimationFrame(loop);
     }
@@ -256,10 +281,11 @@ function cryptoMinerMinigame() {
         window.cryptoMinerActive = false;
         window.minigameActive = false;
         
-        // Award partial progress
+        // Award partial progress with boost
         if (playerProgress > 0 && playerProgress < targetProgress) {
-            const reward = Math.floor(playerProgress / 5);
-            if (reward > 0) updateCrypto(reward);
+            const baseReward = Math.floor(playerProgress / 5);
+            const finalReward = Math.floor(baseReward * boostMultiplier);
+            if (finalReward > 0) updateCrypto(finalReward);
         }
         
         if (minerUI && minerUI.parentNode) {
@@ -271,12 +297,20 @@ function cryptoMinerMinigame() {
         delete window.exitCryptoMiner;
     };
     
+    // Start the game
     window.addEventListener('keydown', keyDownHandler, true);
     window.addEventListener('keyup', keyUpHandler, true);
     
-    setInterval(updateState, 2000);
-    updateState();
+    // Initialize: fetch Bitcoin data and check completion status
+    Promise.all([fetchBitcoinData(), checkFirstCompletion()]).then(() => {
+        updateBitcoinUI();
+    });
+    
+    // Refresh Bitcoin data every 5 minutes
+    setInterval(fetchBitcoinData, 5 * 60 * 1000);
+    
     loop();
 }
 
+// Export default function that NPCs can call
 export default cryptoMinerMinigame;

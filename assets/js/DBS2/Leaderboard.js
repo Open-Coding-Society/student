@@ -1,29 +1,128 @@
 /**
  * Leaderboard component for DBS2 game
- * Fetches real data from backend API, falls back to filler data if not available
+ * Displays a pixel-themed leaderboard with data from backend API
  */
 class Leaderboard {
-    constructor() {
+    constructor(apiBase = null) {
         this.container = null;
         this.isVisible = true;
-        // Filler leaderboard data (used as fallback)
+        // Default to full backend URL, but allow override
+        // Try to detect from window.location or use default backend port
+        if (apiBase) {
+            this.apiBase = apiBase;
+        } else {
+            // Check if we're on the same origin as backend (development)
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (isLocalhost) {
+                // Use full URL to backend on port 8587
+                this.apiBase = 'http://localhost:8587/api/dbs2';
+            } else {
+                // For production, use relative URL (assuming same domain or proxy)
+                this.apiBase = '/api/dbs2';
+            }
+        }
+        this.refreshInterval = null;
+        
+        // Default filler data (used as fallback)
         this.leaderboardData = [
-            { name: "Loading...", score: 0, rank: 1 }
+            { name: "Cyrus", score: 1250, rank: 1 },
+            { name: "Evan", score: 980, rank: 2 },
+            { name: "Aryaan", score: 875, rank: 3 },
+            { name: "West", score: 720, rank: 4 },
+            { name: "Maya", score: 650, rank: 5 }
         ];
     }
 
     /**
-     * Initialize and render the leaderboard UI
+     * Fetch leaderboard data from backend API
+     * @param {number} limit - Maximum number of entries to fetch (default: 10)
+     * @returns {Promise<Array>} Array of leaderboard entries
      */
-    async init() {
+    async fetchLeaderboard(limit = 10) {
+        try {
+            const url = `${this.apiBase}/leaderboard?limit=${limit}`;
+            console.log('[Leaderboard] Fetching from:', url);
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include', // Include cookies for authentication if needed
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            console.log('[Leaderboard] Response status:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[Leaderboard] HTTP error response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+            }
+            
+            const data = await response.json();
+            console.log('[Leaderboard] Received data:', data);
+            
+            if (!data.leaderboard || !Array.isArray(data.leaderboard)) {
+                console.warn('[Leaderboard] Invalid leaderboard data format:', data);
+                console.warn('[Leaderboard] Using fallback data');
+                return null; // Return null to indicate failure
+            }
+            
+            if (data.leaderboard.length === 0) {
+                console.warn('[Leaderboard] Empty leaderboard received');
+                return null; // Return null to indicate no data
+            }
+            
+            // Transform backend data format to frontend format
+            // Backend: { rank, user_info: { name, uid }, crypto, ... }
+            // Frontend: { rank, name, score }
+            const transformedData = data.leaderboard.map(entry => ({
+                rank: entry.rank || 0,
+                name: entry.user_info?.name || entry.user_info?.uid || 'Unknown',
+                score: entry.crypto || 0
+            }));
+            
+            console.log('[Leaderboard] Transformed data:', transformedData);
+            return transformedData;
+        } catch (error) {
+            console.error('[Leaderboard] Error fetching leaderboard:', error);
+            console.error('[Leaderboard] Error details:', {
+                message: error.message,
+                stack: error.stack,
+                apiBase: this.apiBase
+            });
+            // Return null to indicate failure
+            return null;
+        }
+    }
+
+    /**
+     * Initialize and render the leaderboard UI
+     * @param {boolean} autoRefresh - Whether to automatically refresh the leaderboard (default: false)
+     * @param {number} refreshIntervalMs - Refresh interval in milliseconds (default: 30000 = 30 seconds)
+     */
+    async init(autoRefresh = false, refreshIntervalMs = 30000) {
+        console.log('[Leaderboard] Initializing...');
+        
         // Remove existing leaderboard if present
         const existing = document.getElementById('leaderboard-container');
         if (existing) {
             existing.remove();
         }
 
-        // Try to fetch real data from API
-        await this.fetchLeaderboardData();
+        // Fetch real data from backend
+        const fetchedData = await this.fetchLeaderboard(10);
+        
+        // Only use fetched data if it's valid, otherwise keep/use fallback
+        if (fetchedData && fetchedData.length > 0) {
+            console.log('[Leaderboard] Using fetched data from backend');
+            this.leaderboardData = fetchedData;
+        } else {
+            console.warn('[Leaderboard] No valid data from backend, using fallback data');
+            // Keep the existing fallback data
+        }
+        
+        console.log('[Leaderboard] Rendering with data:', this.leaderboardData);
 
         // Create container
         this.container = document.createElement('div');
@@ -64,30 +163,6 @@ class Leaderboard {
         `;
         this.container.appendChild(title);
 
-        // Create refresh button
-        const refreshBtn = document.createElement('div');
-        refreshBtn.textContent = '↻ Refresh';
-        refreshBtn.style.cssText = `
-            font-size: 10px;
-            text-align: center;
-            margin-bottom: 10px;
-            padding: 4px 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #444;
-            cursor: pointer;
-            color: #888;
-        `;
-        refreshBtn.addEventListener('click', () => this.refresh());
-        refreshBtn.addEventListener('mouseenter', () => {
-            refreshBtn.style.background = 'rgba(255, 255, 255, 0.1)';
-            refreshBtn.style.color = '#fff';
-        });
-        refreshBtn.addEventListener('mouseleave', () => {
-            refreshBtn.style.background = 'rgba(255, 255, 255, 0.05)';
-            refreshBtn.style.color = '#888';
-        });
-        this.container.appendChild(refreshBtn);
-
         // Create leaderboard entries
         const entriesContainer = document.createElement('div');
         entriesContainer.id = 'leaderboard-entries';
@@ -104,60 +179,18 @@ class Leaderboard {
 
         this.container.appendChild(entriesContainer);
         document.body.appendChild(this.container);
-    }
 
-    /**
-     * Fetch leaderboard data from API
-     */
-    async fetchLeaderboardData() {
-        try {
-            // Check if DBS2API is available
-            if (typeof window.DBS2API !== 'undefined') {
-                const data = await window.DBS2API.getLeaderboard(5);
-                if (data && data.length > 0) {
-                    this.leaderboardData = data.map((player, index) => ({
-                        name: player.user_info?.name || player.user_info?.uid || 'Unknown',
-                        score: player.crypto || 0,
-                        rank: index + 1,
-                        completed: player.completed_all || false
-                    }));
-                    console.log('Leaderboard loaded from API:', this.leaderboardData);
-                    return;
-                }
-            }
-        } catch (e) {
-            console.log('Could not fetch leaderboard from API, using fallback data:', e);
-        }
-
-        // Fallback data if API not available
-        this.leaderboardData = [
-            { name: "West", score: 1250, rank: 1 },
-            { name: "Cyrus", score: 980, rank: 2 },
-            { name: "Maya", score: 750, rank: 3 },
-            { name: "???", score: 0, rank: 4 },
-            { name: "???", score: 0, rank: 5 }
-        ];
-    }
-
-    /**
-     * Refresh leaderboard data
-     */
-    async refresh() {
-        const refreshBtn = this.container?.querySelector('div:nth-child(2)');
-        if (refreshBtn) {
-            refreshBtn.textContent = '↻ Loading...';
-        }
-        
-        await this.fetchLeaderboardData();
-        this.updateData(this.leaderboardData);
-        
-        if (refreshBtn) {
-            refreshBtn.textContent = '↻ Refresh';
+        // Set up auto-refresh if enabled
+        if (autoRefresh) {
+            this.startAutoRefresh(refreshIntervalMs);
         }
     }
 
     /**
      * Create a leaderboard entry element
+     * @param {Object} entry - Entry data with name, score, and rank
+     * @param {number} index - Index in the array
+     * @returns {HTMLElement} Entry element
      */
     createEntry(entry, index) {
         const entryDiv = document.createElement('div');
@@ -185,11 +218,9 @@ class Leaderboard {
             font-size: ${index === 0 ? '14px' : '12px'};
         `;
 
-        // Name (with completion indicator)
+        // Name
         const nameSpan = document.createElement('span');
-        const displayName = entry.name.length > 8 ? entry.name.substring(0, 8) + '...' : entry.name;
-        nameSpan.textContent = displayName + (entry.completed ? ' ✓' : '');
-        nameSpan.title = entry.name + (entry.completed ? ' (All minigames completed!)' : '');
+        nameSpan.textContent = entry.name;
         nameSpan.style.cssText = `
             flex: 1;
             margin-left: 10px;
@@ -218,7 +249,25 @@ class Leaderboard {
     }
 
     /**
-     * Update leaderboard data
+     * Update leaderboard data from backend and refresh the display
+     * @param {number} limit - Maximum number of entries to fetch (default: 10)
+     */
+    async refresh(limit = 10) {
+        console.log('[Leaderboard] Refreshing data...');
+        const newData = await this.fetchLeaderboard(limit);
+        
+        // Only update if we got valid data
+        if (newData && newData.length > 0) {
+            console.log('[Leaderboard] Updating with new data');
+            this.updateData(newData);
+        } else {
+            console.warn('[Leaderboard] Refresh failed, keeping current data');
+        }
+    }
+
+    /**
+     * Update leaderboard data (for future use when real data is available)
+     * @param {Array} newData - New leaderboard data array
      */
     updateData(newData) {
         this.leaderboardData = newData;
@@ -234,6 +283,30 @@ class Leaderboard {
         }
     }
 
+    /**
+     * Start automatic refresh of leaderboard
+     * @param {number} intervalMs - Refresh interval in milliseconds
+     */
+    startAutoRefresh(intervalMs = 30000) {
+        this.stopAutoRefresh(); // Clear any existing interval
+        this.refreshInterval = setInterval(() => {
+            this.refresh();
+        }, intervalMs);
+    }
+
+    /**
+     * Stop automatic refresh of leaderboard
+     */
+    stopAutoRefresh() {
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+    }
+
+    /**
+     * Toggle leaderboard visibility
+     */
     toggle() {
         this.isVisible = !this.isVisible;
         if (this.container) {
@@ -241,6 +314,9 @@ class Leaderboard {
         }
     }
 
+    /**
+     * Show the leaderboard
+     */
     show() {
         this.isVisible = true;
         if (this.container) {
@@ -248,6 +324,9 @@ class Leaderboard {
         }
     }
 
+    /**
+     * Hide the leaderboard
+     */
     hide() {
         this.isVisible = false;
         if (this.container) {
@@ -255,7 +334,11 @@ class Leaderboard {
         }
     }
 
+    /**
+     * Remove the leaderboard from DOM
+     */
     destroy() {
+        this.stopAutoRefresh(); // Stop auto-refresh if running
         if (this.container) {
             this.container.remove();
             this.container = null;
@@ -264,3 +347,6 @@ class Leaderboard {
 }
 
 export default Leaderboard;
+
+
+
