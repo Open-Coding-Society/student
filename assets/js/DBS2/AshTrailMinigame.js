@@ -1,4 +1,4 @@
-import DBS2API from './DBS2API.js';
+import { addInventoryItem } from './StatsManager.js';
 // Logical grid that everything lives on (player + path).
 // Higher numbers = smoother curves and more room for complex shapes.
 const GRID_COLS = 24;
@@ -1524,6 +1524,11 @@ const score = computeScore(truePath, playerPath)
     
     // Mark minigame complete
     completeMinigame('ash_trail').catch(e => console.log('Could not save completion:', e));
+    await addInventoryItem({
+      name: 'Code Scrap: Ash Trail',
+      found_at: 'ash_trail',
+      timestamp: new Date().toISOString()
+  });
   } else if (score >= 50) {
     // Partial reward for close attempts
     cryptoReward = Math.floor(score / 20);

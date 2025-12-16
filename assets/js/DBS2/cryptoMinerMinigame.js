@@ -1,4 +1,4 @@
-import { updateCrypto, completeMinigame, isMinigameCompleted } from './StatsManager.js';
+import { updateCrypto, completeMinigame, isMinigameCompleted, addInventoryItem } from './StatsManager.js';
 import Prompt from './Prompt.js';
 
 // Function to be called by Computer2 - with Bitcoin price integration
@@ -313,10 +313,20 @@ function cryptoMinerMinigame() {
             // Award crypto
             updateCrypto(finalReward);
             
-            // Mark minigame complete
+            // Mark minigame complete and add code scrap to inventory
             try {
                 await completeMinigame('crypto_miner');
                 console.log('[CryptoMiner] Marked as complete in backend');
+                
+                // Add code scrap to inventory on first completion
+                if (isFirstCompletion) {
+                    await addInventoryItem({
+                        name: 'Code Scrap: Crypto Miner',
+                        found_at: 'crypto_miner',
+                        timestamp: new Date().toISOString()
+                    });
+                    console.log('[CryptoMiner] Code scrap added to inventory');
+                }
             } catch (e) {
                 console.log('Could not save completion:', e);
             }
