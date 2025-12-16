@@ -62,7 +62,7 @@ class Npc extends Character {
                     console.log(`NPC ID: ${this.spriteData.id}, Players colliding: ${players.length}`);
                     
                     if (players.length === 0) {
-                        // Check if player is at least close to this NPC
+                        // Check if player is at least close to this NPC (fallback for SodaCan)
                         const player = GameEnv.gameObjects.find(obj => obj.spriteData?.id === 'player');
                         if (player && this.spriteData.id === 'SodaCan') {
                             // Calculate distance
@@ -153,8 +153,19 @@ class Npc extends Character {
             // Get player for crypto reward
             const player = GameEnv.gameObjects?.find(obj => obj.spriteData?.id === 'player');
 
-            // Start the NEW game (click rat 10 times)
-            await startWhackGame(overlay, '/images/DBS2', (cryptoEarned) => {
+            // Determine the correct base path for images
+            // Try to extract path from the NPC's own sprite source
+            let basePath = 'images/DBS2'; // default
+            if (this.spriteData?.src) {
+                const srcParts = this.spriteData.src.split('/images/DBS2');
+                if (srcParts.length > 1) {
+                    basePath = srcParts[0] + '/images/DBS2';
+                }
+            }
+            console.log('Using base path:', basePath);
+
+            // Start the game
+            await startWhackGame(overlay, basePath, (cryptoEarned) => {
                 console.log('✅ Game finished! Crypto earned:', cryptoEarned);
 
                 // Award crypto

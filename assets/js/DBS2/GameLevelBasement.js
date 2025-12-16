@@ -8,7 +8,7 @@ import startWhackGame from './whackarat.js';
 /**
  * GameLevelBasement
  * - All asset paths use `${path}/images/DBS2/...`
- * - Adds a visible soda-can launcher element that routes to Whackarat via dynamic import
+ * - SodaCan NPC replaces ShellNpc1 and launches Whackarat minigame
  */
 class GameLevelBasement {
   constructor(path = '') {
@@ -107,17 +107,22 @@ class GameLevelBasement {
       hitbox: { widthPercentage: 0.01, heightPercentage: 0.01 }
     };
 
-    const sprite_data_shell1 = {
-      id: 'ShellNpc1',
-      greeting: 'Shell NPC 1 (customize me)',
-      src: `${this.path}/images/DBS2/computer2.png`,
-      SCALE_FACTOR: 8,
-      ANIMATION_RATE: 24,
-      pixels: { height: 64, width: 832 },
-      INIT_POSITION: { x: width * 4 / 12, y: height * 0.07 },
-      orientation: { rows: 1, columns: 13 },
-      down: { row: 0, start: 0, columns: 12 },
-      hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
+    /* ----------------------
+       SODA CAN (NPC) - REPLACES ShellNpc1
+       Shows "whack some rats" greeting and launches minigame
+    ------------------------*/
+    const sprite_data_sodacan = {
+      id: 'SodaCan',
+      greeting: 'Whack some rats!',
+      src: `${this.path}/images/DBS2/sodacan.png`,
+      SCALE_FACTOR: 6,
+      ANIMATION_RATE: 0,
+      pixels: { height: 512, width: 512 },
+      INIT_POSITION: { x: width * 4 / 12, y: height * 0.5 },
+      orientation: { rows: 1, columns: 1 },
+      down: { row: 0, start: 0, columns: 1 },
+      hitbox: { widthPercentage: 0.3, heightPercentage: 0.3 },
+      stationary: true
     };
 
     const sprite_data_shell2 = {
@@ -148,21 +153,6 @@ class GameLevelBasement {
       stationary: true
     };
 
-    /* ----------------------
-       SODA CAN (NPC) - shows on level AND also creates a launcher element
-    ------------------------*/
-    const sprite_data_sodacan = {
-      id: 'SodaCan',
-      greeting: [
-        "$list$",
-        "PSSSSHHHT! I'm SodaCan — carbonated, caffeinated, and slightly unstable!",
-        "You ever been stuck in a Discord mod basement? No? Lucky.",
-        "Chill Guy, bring me more fizz and I'll reward you in crypto wisdom.",
-        "Careful shaking me. I WILL explode."
-      ],
-      
-    };
-
     // All objects in the basement level
     this.objects = [
       { class: Background, data: image_data_basement },
@@ -170,70 +160,13 @@ class GameLevelBasement {
       { class: Npc, data: sprite_data_computer1 },
       { class: Npc, data: sprite_data_computer2 },
       { class: Npc, data: sprite_data_ishowgreen },
-      { class: Npc, data: sprite_data_shell1 },
+      { class: Npc, data: sprite_data_sodacan }, // REPLACED ShellNpc1 with SodaCan
       { class: Npc, data: sprite_data_shell2 },
       { class: Npc, data: sprite_data_bookshelf },
     ];
 
-    // Create the visible soda launcher button on page (so it's always visible).
-    // This is separate from the NPC in case NPC rendering or collision hides it.
-    this._createSodaLauncher(`${this.path}/images/DBS2/sodacan.png`);
-  }
-
-  /**
-   * Creates a floating soda-can launcher element that starts the Whackarat minigame.
-   * The element is appended to #gameControls if present, else document.body.
-   */
-  _createSodaLauncher(sodaSrc) {
-    // avoid creating multiple times
-    if (document.getElementById('sodacan-launcher')) return;
-
-    const container = document.querySelector('#gameControls') || document.body;
-    const img = document.createElement('img');
-    img.id = 'sodacan-launcher';
-    img.src = sodaSrc;
-    img.alt = 'Play Whackarat';
-    // small default styling; you can override in CSS
-    img.style.position = 'fixed';
-    img.style.bottom = '24px';
-    img.style.left = '24px';
-    img.style.width = '80px';
-    img.style.height = '80px';
-    img.style.cursor = 'pointer';
-    img.style.zIndex = 9999;
-    img.style.boxShadow = '0 6px 18px rgba(0,0,0,0.4)';
-    img.title = 'Play Whackarat';
-
-    img.addEventListener('click', async (e) => {
-      // dynamic import of whackarat (so it's only loaded when user clicks)
-      try {
-        // const module = await import('./whackarat.js');
-        // create overlay container for the minigame
-        let overlay = document.getElementById('whack-overlay');
-        if (!overlay) {
-          overlay = document.createElement('div');
-          overlay.id = 'whack-overlay';
-          overlay.style.position = 'fixed';
-          overlay.style.top = 0;
-          overlay.style.left = 0;
-          overlay.style.width = '100%';
-          overlay.style.height = '100%';
-          overlay.style.display = 'flex';
-          overlay.style.alignItems = 'center';
-          overlay.style.justifyContent = 'center';
-          overlay.style.background = 'rgba(0,0,0,0.5)';
-          overlay.style.zIndex = 10000;
-          document.body.appendChild(overlay);
-        }
-        // call start function from module; it will create its own canvas in overlay
-        startWhackGame(overlay, `${this.path}/images/DBS2`);
-      } catch (err) {
-        console.error('Failed to load Whackarat module:', err);
-        alert('Could not start Whackarat. See console for details.');
-      }
-    });
-
-    container.appendChild(img);
+    // REMOVED: _createSodaLauncher - no longer need floating button
+    // The SodaCan NPC now handles the interaction directly
   }
 }
 
