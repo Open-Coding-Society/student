@@ -1,4 +1,4 @@
-import { addInventoryItem } from './StatsManager.js';
+import { addInventoryItem, updateCrypto, isMinigameCompleted, completeMinigame } from './StatsManager.js';
 // Logical grid that everything lives on (player + path).
 // Higher numbers = smoother curves and more room for complex shapes.
 const GRID_COLS = 24;
@@ -163,6 +163,7 @@ let truePath = [];      // array of logical grid points {x, y}
 let playerPath = [];    // sampled player positions during run
 let playerPos = null;   // current player position in grid space (floats)
 let isRunPhase = false;
+let isFirstCompletion = false; // Track first completion for bonus reward
 
 // Continuous movement state for run phase
 let pressedDirs = { up: false, down: false, left: false, right: false };
@@ -1191,7 +1192,50 @@ function finishRun() {
   cleanupRunInput();
 
   const score = computeScore(truePath, playerPath);
+  
+  // Award crypto based on score
+  awardCryptoForScore(score);
+  
   renderResultsScene(score);
+}
+
+async function awardCryptoForScore(score) {
+  let cryptoReward = 0;
+  
+  if (score >= 80) {
+    // Passed: base reward + difficulty bonus + score bonus
+    const difficultyBonus = currentBook ? (currentBook.difficulty * 5) : 0;
+    cryptoReward = 15 + Math.floor(score / 10) + difficultyBonus;
+    
+    // First completion bonus
+    if (isFirstCompletion) {
+      cryptoReward += 20;
+      
+      try {
+        await completeMinigame('ash_trail');
+        console.log('[AshTrail] Marked as complete');
+        
+        await addInventoryItem({
+          name: 'Code Scrap: Ash Trail',
+          found_at: 'ash_trail',
+          timestamp: new Date().toISOString()
+        });
+        console.log('[AshTrail] Code scrap added to inventory');
+        
+        isFirstCompletion = false; // Only once
+      } catch (e) {
+        console.log('[AshTrail] Could not save completion:', e);
+      }
+    }
+    
+    await updateCrypto(cryptoReward);
+    console.log('[AshTrail] Awarded crypto:', cryptoReward);
+    
+  } else if (score >= 50) {
+    // Partial reward for close attempts
+    cryptoReward = Math.floor(score / 20);
+    await updateCrypto(cryptoReward);
+  }
 }
 
 function computeScore(trueP, playerP) {
@@ -1505,41 +1549,23 @@ function renderResultsScene(score) {
 }
 
 // --- Public entry point ----------------------------------------------------
-// Calculate and award crypto based on score
-const score = computeScore(truePath, playerPath)
-  let cryptoReward = 0;
-  if (score >= 80) {
-    // Passed: base reward + difficulty bonus
-    const difficultyBonus = currentBook ? (currentBook.difficulty * 5) : 0;
-    cryptoReward = 15 + Math.floor(score / 10) + difficultyBonus;
-    
-    // First completion bonus
-    if (isFirstCompletion) {
-      cryptoReward += 20;
-      isFirstCompletion = false; // Only once
-    }
-    
-    // Award crypto
-    updateCrypto(cryptoReward);
-    
-    // Mark minigame complete
-    completeMinigame('ash_trail').catch(e => console.log('Could not save completion:', e));
-    await addInventoryItem({
-      name: 'Code Scrap: Ash Trail',
-      found_at: 'ash_trail',
-      timestamp: new Date().toISOString()
-  });
-  } else if (score >= 50) {
-    // Partial reward for close attempts
-    cryptoReward = Math.floor(score / 20);
-    updateCrypto(cryptoReward);
-  }export function showAshTrailMinigame() {
+
+export async function showAshTrailMinigame() {
   window.ashTrailActive = true;
+  window.minigameActive = true;
+  
+  // Check if first completion
+  try {
+    isFirstCompletion = !(await isMinigameCompleted('ash_trail'));
+    console.log('[AshTrail] First completion:', isFirstCompletion);
+  } catch (e) {
+    console.log('[AshTrail] Could not check completion status:', e);
+    isFirstCompletion = false;
+  }
+  
   openOverlay();
   renderIntroScene();
 }
 
-// Also expose globally so it’s easy to call from HTML/other scripts if needed
+// Also expose globally so it's easy to call from HTML/other scripts if needed
 window.showAshTrailMinigame = showAshTrailMinigame;
-
-

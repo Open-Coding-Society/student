@@ -119,7 +119,8 @@ export async function getInventory() {
     try {
         if (DBS2API && DBS2API.getInventory) {
             const result = await DBS2API.getInventory();
-            return result.inventory || [];
+            // API returns array directly or in inventory property
+            return Array.isArray(result) ? result : (result.inventory || []);
         }
     } catch (e) {
         console.log('API getInventory failed, using local:', e);
@@ -135,15 +136,28 @@ export async function getInventory() {
 export async function addInventoryItem(item) {
     try {
         if (DBS2API && DBS2API.addInventoryItem) {
-            const result = await DBS2API.addInventoryItem(item);
+            // Handle both object format and string format
+            let name, foundAt;
+            if (typeof item === 'object') {
+                name = item.name;
+                foundAt = item.found_at || 'unknown';
+            } else {
+                name = item;
+                foundAt = 'unknown';
+            }
+            const result = await DBS2API.addInventoryItem(name, foundAt);
             return result.inventory || [];
         }
     } catch (e) {
         console.log('API addInventoryItem failed, using local:', e);
     }
     // Local fallback
-    if (!localState.inventory.includes(item)) {
-        localState.inventory.push(item);
+    const itemObj = typeof item === 'object' ? item : { name: item, found_at: 'unknown' };
+    const exists = localState.inventory.some(i => 
+        (typeof i === 'object' ? i.name : i) === (itemObj.name)
+    );
+    if (!exists) {
+        localState.inventory.push(itemObj);
         saveLocalState();
     }
     return localState.inventory;

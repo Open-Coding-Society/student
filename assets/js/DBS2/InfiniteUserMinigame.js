@@ -1,20 +1,15 @@
-import { updateCrypto } from './StatsManager.js'
-import { javaURI, pythonURI, fetchOptions } from '../api/config.js';;
+import { updateCrypto, isMinigameCompleted, completeMinigame, addInventoryItem } from './StatsManager.js';
+import { javaURI, pythonURI, fetchOptions } from '../api/config.js';
 import Prompt from './Prompt.js';
 
-//bckend setup stuff
-//get the URL
-const url = `${pythonURI}/api/DBS2`;
-const getURL = url +"/";
-const setURL = url + "set"
-//options for backend communication
-const commOptions = { ...fetchOptions,
-    method: "PUT"
-}
-//fetch stuff: attempt to load passwords item from backend, fallback to local list
+// Backend setup
+const url = `${pythonURI}/api/dbs2`;
+const getURL = url;
+
+// Fetch passwords from backend
 fetch(getURL, fetchOptions).then(response => {
-    if (response.status != 200) { //stop faulty signals
-        alert("Somebody did a skibidi in the backend lol. The game no longer works.");
+    if (response.status != 200) {
+        console.warn("Could not fetch passwords from backend");
         return;
     }
     response.json().then(parsed => {
@@ -45,34 +40,34 @@ fetch(getURL, fetchOptions).then(response => {
         } catch (e) {
             console.error('Error parsing DBS2 passwords:', e);
         }
-    })
+    });
 }).catch(err => {
     console.warn("Could not fetch DBS2 passwords from backend:", err);
-})
+});
 
 let quizzing = false;
 
-let passwords = [ // fallback until backend response populates this
+let passwords = [
     "ishowgreen",
     "helloworld",
     "albuquerque",
     "ilovebitcoin",
     "cryptorules",
     "unemployment",
-]
+];
 
-function convertToAlphaNumeric(str){
+function convertToAlphaNumeric(str) {
     let newString = "";
-    for (let i = 0; i < str.length; i++){
+    for (let i = 0; i < str.length; i++) {
         newString += str.charCodeAt(i) - 96;
-        newString += "/"
+        newString += "/";
     }
     return newString;
 }
 
-export default function infiniteUserMinigame(){
-    if(!quizzing){
-        // Defensive cleanup in case a previous instance left artifacts
+export default async function infiniteUserMinigame() {
+    if (!quizzing) {
+        // Cleanup any existing instance
         const existing = document.getElementById("quizWindow");
         if (existing) {
             existing.remove();
@@ -83,18 +78,20 @@ export default function infiniteUserMinigame(){
         }
 
         quizzing = true;
-        // Set minigame active flags
         window.infiniteUserActive = true;
         window.minigameActive = true;
         
         let creatingNew = false;
-        const selectedPassword = passwords[Math.floor(Math.random()*passwords.length)];
+        const selectedPassword = passwords[Math.floor(Math.random() * passwords.length)];
+        
+        const baseurl = document.body.getAttribute('data-baseurl') || '';
+        
+        // Create DOM elements FIRST before any async operations
         let quizWindow = document.createElement("div");
         quizWindow.style = 'position: fixed; width: 50%; height: 50%; top: 25%; left: 25%; z-index: 10000; background-color: black; border-width: 10px; border-style: solid; border-color: rgb(50, 50, 50); text-align: center; vertical-align: center; color: rgb(0, 255, 0); font-size: 3vh; font-family: "Sixtyfour", monospace; border-radius: 3vh;';
         quizWindow.id = "quizWindow";
         document.body.appendChild(quizWindow);
         
-        // messageDiv holds the changing text so replacing it doesn't remove other children
         let messageDiv = document.createElement("div");
         messageDiv.style = 'width: 100%; height: 60%; padding-top: 2vh; color: rgb(0, 255, 0);';
         messageDiv.innerText = `Please decrypt alphanumeric password to continue: ${convertToAlphaNumeric(selectedPassword)}`;
@@ -112,6 +109,15 @@ export default function infiniteUserMinigame(){
         closeBtn.onclick = closeMinigame;
         quizWindow.appendChild(closeBtn);
         
+        // Check if first completion AFTER DOM is created
+        let isFirstCompletion = false;
+        try {
+            isFirstCompletion = !(await isMinigameCompleted('infinite_user'));
+            console.log('[InfiniteUser] First completion:', isFirstCompletion);
+        } catch (e) {
+            console.log('[InfiniteUser] Could not check completion status:', e);
+        }
+        
         function closeMinigame() {
             try { quizWindow.remove(); } catch (e) {}
             quizzing = false;
@@ -120,48 +126,85 @@ export default function infiniteUserMinigame(){
             window.removeEventListener("keydown", keyHandler, true);
         }
         
-        function completeWithReward() {
-            // Award crypto for completing the minigame
-            const reward = 15 + Math.floor(Math.random() * 10); // 15-24 crypto
-            updateCrypto(reward);
+        async function completeWithReward() {
+            // Calculate reward
+            const baseReward = 15 + Math.floor(Math.random() * 10); // 15-24 crypto
+            const bonus = isFirstCompletion ? 20 : 0;
+            const totalReward = baseReward + bonus;
             
-            messageDiv.innerText = `New user password created. You earned ${reward} Crypto!`;
+            // Award crypto
+            await updateCrypto(totalReward);
+            
+            // Mark complete and add code scrap on first completion
+            if (isFirstCompletion) {
+                try {
+                    await completeMinigame('infinite_user');
+                    console.log('[InfiniteUser] Marked as complete');
+                    
+                    await addInventoryItem({
+                        name: 'Code Scrap: Infinite User',
+                        found_at: 'infinite_user',
+                        timestamp: new Date().toISOString()
+                    });
+                    console.log('[InfiniteUser] Code scrap added to inventory');
+                } catch (e) {
+                    console.log('[InfiniteUser] Could not save completion:', e);
+                }
+            }
+            
+            // Update passwords list
             passwords.push(typebox.innerText.slice(1, typebox.innerText.length));
             passwords.splice(0, 1);
+            
+            // Show completion message
+            if (isFirstCompletion) {
+                messageDiv.innerHTML = `
+                    <div style="font-size: 2.5vh;">🎉 FIRST COMPLETION! 🎉</div>
+                    <div style="font-size: 2vh; margin-top: 10px;">New user password created!</div>
+                    <div style="margin-top: 15px;">
+                        <img src="${baseurl}/images/DBS2/codescrapPassword.png" style="max-width: 80px; border: 2px solid #0f0; border-radius: 8px;" onerror="this.style.display='none'">
+                    </div>
+                    <div style="font-size: 2.5vh; margin-top: 10px; color: #ffd700;">+${totalReward} Crypto!</div>
+                    <div style="font-size: 1.5vh; color: #888;">(includes +20 first completion bonus)</div>
+                `;
+            } else {
+                messageDiv.innerText = `New user password created. You earned ${totalReward} Crypto!`;
+            }
             
             setTimeout(() => {
                 closeMinigame();
                 try {
-                    Prompt.showDialoguePopup('Computer1', `Password system updated! You earned ${reward} Crypto!`);
+                    if (isFirstCompletion) {
+                        Prompt.showDialoguePopup('Computer1', `🎉 First completion! Code scrap collected! +${totalReward} Crypto!`);
+                    } else {
+                        Prompt.showDialoguePopup('Computer1', `Password system updated! You earned ${totalReward} Crypto!`);
+                    }
                 } catch(e) {
-                    console.log(`Earned ${reward} Crypto!`);
+                    console.log(`Earned ${totalReward} Crypto!`);
                 }
-            }, 1500);
+            }, isFirstCompletion ? 2500 : 1500);
         }
 
         function keyHandler(event) {
-            // Prevent event from reaching game
             event.preventDefault();
             event.stopPropagation();
             
-            if(event.key == 'Backspace' && typebox.innerText.length > 1){
+            if (event.key == 'Backspace' && typebox.innerText.length > 1) {
                 typebox.innerText = typebox.innerText.slice(0, -1);
-                console.log(typebox.innerText.length);
-            }else if(event.key == "Escape"){
+            } else if (event.key == "Escape") {
                 closeMinigame();
-            }else if(event.key == "Enter" || event.key == "Return"){
-                if(creatingNew){
+            } else if (event.key == "Enter" || event.key == "Return") {
+                if (creatingNew) {
                     completeWithReward();
-                }else{
-                    if(typebox.innerText.slice(1, typebox.innerText.length) == selectedPassword){
+                } else {
+                    if (typebox.innerText.slice(1, typebox.innerText.length) == selectedPassword) {
                         messageDiv.innerText = `Password approved. You may now move on.`;
                         setTimeout(() => {
                             creatingNew = true;
                             messageDiv.innerText = `Create a new user password:`;
                             typebox.innerText = ">";
                         }, 1000);
-                    }else{
-                        console.log(typebox.innerText.slice(1, typebox.innerText.length), selectedPassword);
+                    } else {
                         typebox.style.color = "red";
                         typebox.innerText = ">TRY AGAIN";
                         setTimeout(() => {
@@ -170,12 +213,12 @@ export default function infiniteUserMinigame(){
                         }, 1000);
                     }
                 }
-            }else if(event.key.length == 1 && typebox.innerText.length < 20 && /^[a-z]$/i.test(event.key[0])){
+            } else if (event.key.length == 1 && typebox.innerText.length < 20 && /^[a-z]$/i.test(event.key[0])) {
                 typebox.innerText += event.key.toLowerCase();
             }
         }
         
-        // Use capture phase to intercept keys before game
         window.addEventListener("keydown", keyHandler, true);
+        window._infiniteUserKeyHandler = keyHandler;
     }
 }

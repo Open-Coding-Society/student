@@ -33,17 +33,17 @@ const CODE_SCRAPS = {
         hint: 'Found by completing the Whack-a-Rat minigame.'
     },
     ash_trail: {
-        id: 'codescrap_ash',
+        id: 'codescrap_pages',
         name: 'Ash Trail Code Scrap',
-        image: 'codescrapAsh.png',
+        image: 'codescrapPages.png',
         icon: '📚',
         description: 'Burnt document fragments with partial account numbers. Someone tried to destroy evidence.',
         hint: 'Found by completing the Ash Trail minigame.'
     },
     infinite_user: {
-        id: 'codescrap_infinite',
+        id: 'codescrap_password',
         name: 'Infinite User Code Scrap',
-        image: 'codescrapInfinite.png',
+        image: 'codescrapPassword.png',
         icon: '💻',
         description: 'Login credentials and backdoor access codes. The system has been compromised.',
         hint: 'Found by completing the Infinite User minigame.'
@@ -56,11 +56,13 @@ const Inventory = {
     isOpen: false,
     isLoading: false,
     baseImagePath: '',
+    owner: null,
+    _keyListenerAdded: false,
 
     /**
      * Initialize the inventory system
      */
-    async init(options = {}) {
+    init(options = {}) {
         if (options.slots) this.slots = options.slots;
         
         // Get base path for images
@@ -71,17 +73,22 @@ const Inventory = {
         this.renderButton();
         this.renderPanel();
         
-        // Load from backend
-        await this.loadFromBackend();
-        
-        // Keyboard shortcut
-        window.addEventListener('keydown', (e) => {
-            if ((e.key === 'i' || e.key === 'I') && !window.minigameActive) {
-                this.toggle();
-            }
+        // Load from backend asynchronously (don't block)
+        this.loadFromBackend().catch(e => {
+            console.error('[Inventory] Background load failed:', e);
         });
         
-        console.log('[Inventory] Initialized with', this.items.length, 'items');
+        // Keyboard shortcut
+        if (!this._keyListenerAdded) {
+            this._keyListenerAdded = true;
+            window.addEventListener('keydown', (e) => {
+                if ((e.key === 'i' || e.key === 'I') && !window.minigameActive) {
+                    this.toggle();
+                }
+            });
+        }
+        
+        console.log('[Inventory] Initialized');
     },
 
     /**
@@ -97,24 +104,41 @@ const Inventory = {
             
             // Convert backend format to display format
             this.items = [];
-            if (Array.isArray(inventory)) {
+            if (Array.isArray(inventory) && inventory.length > 0) {
                 for (const item of inventory) {
-                    // Check if it's a code scrap
-                    const scrapInfo = this.getCodeScrapInfo(item);
-                    if (scrapInfo) {
-                        this.items.push({
-                            ...scrapInfo,
-                            raw: item
-                        });
-                    } else {
-                        // Regular item
-                        this.items.push({
-                            id: item.id || item.name || 'unknown',
-                            name: item.name || 'Unknown Item',
-                            icon: '📦',
-                            description: item.description || `Found at: ${item.found_at || 'unknown'}`,
-                            raw: item
-                        });
+                    if (!item) continue;
+                    
+                    try {
+                        // Check if it's a code scrap
+                        const scrapInfo = this.getCodeScrapInfo(item);
+                        if (scrapInfo) {
+                            this.items.push({
+                                ...scrapInfo,
+                                raw: item
+                            });
+                        } else {
+                            // Regular item - extract name safely
+                            let name = 'Unknown Item';
+                            if (typeof item === 'string') {
+                                name = item;
+                            } else if (typeof item.name === 'string') {
+                                name = item.name;
+                            } else if (item.name && typeof item.name.name === 'string') {
+                                name = item.name.name;
+                            } else if (item.item_name) {
+                                name = item.item_name;
+                            }
+                            
+                            this.items.push({
+                                id: item.id || name || 'unknown',
+                                name: name,
+                                icon: '📦',
+                                description: item.description || `Found at: ${item.found_at || 'unknown'}`,
+                                raw: item
+                            });
+                        }
+                    } catch (parseError) {
+                        console.warn('[Inventory] Failed to parse item:', item, parseError);
                     }
                 }
             }
@@ -122,6 +146,9 @@ const Inventory = {
             this.refreshGrid();
         } catch (e) {
             console.error('[Inventory] Failed to load from backend:', e);
+            // Show empty state instead of loading forever
+            this.items = [];
+            this.refreshGrid();
         }
         
         this.isLoading = false;
@@ -134,8 +161,30 @@ const Inventory = {
     getCodeScrapInfo(item) {
         if (!item) return null;
         
-        const itemName = (item.name || '').toLowerCase();
-        const foundAt = (item.found_at || '').toLowerCase();
+        // Handle various item formats from backend
+        let itemName = '';
+        let foundAt = '';
+        
+        // Get item name (could be string or nested object)
+        if (typeof item === 'string') {
+            itemName = item.toLowerCase();
+        } else if (typeof item.name === 'string') {
+            itemName = item.name.toLowerCase();
+        } else if (item.name && typeof item.name.name === 'string') {
+            // Handle nested {name: {name: "..."}} format
+            itemName = item.name.name.toLowerCase();
+        } else if (item.item_name && typeof item.item_name === 'string') {
+            itemName = item.item_name.toLowerCase();
+        }
+        
+        // Get found_at
+        if (typeof item.found_at === 'string') {
+            foundAt = item.found_at.toLowerCase();
+        } else if (item.name && typeof item.name.found_at === 'string') {
+            foundAt = item.name.found_at.toLowerCase();
+        }
+        
+        console.log('[Inventory] Parsing item:', { itemName, foundAt, raw: item });
         
         // Check each code scrap type
         for (const [minigame, scrap] of Object.entries(CODE_SCRAPS)) {
@@ -164,7 +213,7 @@ const Inventory = {
             if (itemName.includes('rat') || itemName.includes('whack')) {
                 return { ...CODE_SCRAPS.whackarat, minigame: 'whackarat' };
             }
-            if (itemName.includes('ash') || itemName.includes('trail') || itemName.includes('book')) {
+            if (itemName.includes('ash') || itemName.includes('trail') || itemName.includes('book') || itemName.includes('page')) {
                 return { ...CODE_SCRAPS.ash_trail, minigame: 'ash_trail' };
             }
             if (itemName.includes('infinite') || itemName.includes('user') || itemName.includes('password')) {
@@ -737,6 +786,16 @@ const Inventory = {
      */
     getCodeScrapCount() {
         return this.items.filter(i => i && i.minigame).length;
+    },
+
+    /**
+     * Set owner for backward compatibility with Player.js
+     */
+    setOwner(owner) {
+        this.owner = owner || null;
+        if (this.owner) {
+            this.owner.inventory = this.getItems();
+        }
     }
 };
 

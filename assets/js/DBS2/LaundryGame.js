@@ -1,11 +1,22 @@
 // Laundry Machine Repair Minigame
 // Call showLaundryMinigame() to display the popup
 
-export function showLaundryMinigame(onComplete) {
+import { isMinigameCompleted, completeMinigame, addInventoryItem, updateCrypto } from './StatsManager.js';
+
+export async function showLaundryMinigame(onComplete) {
     const baseurl = document.body.getAttribute('data-baseurl') || '';
     
     window.laundryMinigameActive = true;
     window.minigameActive = true;
+    
+    // Check if this is first completion
+    let isFirstCompletion = false;
+    try {
+        isFirstCompletion = !(await isMinigameCompleted('laundry'));
+        console.log('[Laundry] First completion:', isFirstCompletion);
+    } catch (e) {
+        console.log('[Laundry] Could not check completion status:', e);
+    }
     
     let partsPlaced = 0;
     const totalParts = 4;
@@ -218,161 +229,139 @@ export function showLaundryMinigame(onComplete) {
         zone.style.cssText = `
             position: absolute;
             ${zoneInfo.style}
-            border: 3px dashed #888;
-            border-radius: 8px;
             background: rgba(100, 100, 100, 0.3);
-            transition: all 0.3s;
+            border: 3px dashed #88aaff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         `;
 
         const label = document.createElement('div');
         label.textContent = zoneInfo.label;
         label.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 11px;
+            color: #aaa;
+            font-size: 12px;
             text-align: center;
             pointer-events: none;
-            text-shadow: 1px 1px 2px #000;
         `;
-
         zone.appendChild(label);
+
         dropZones.push(zone);
         machineContainer.appendChild(zone);
     });
 
-    const machineDoorZone = document.createElement('div');
-    machineDoorZone.style.cssText = `
-        position: absolute;
-        top: 10%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 40%;
-        height: 40%;
-        border: 3px dashed #88aaff;
-        border-radius: 50%;
-        background: rgba(100, 100, 150, 0.2);
-        display: none;
-        transition: all 0.3s;
-    `;
-
-    const doorLabel = document.createElement('div');
-    doorLabel.textContent = 'Drop Laundry Here';
-    doorLabel.style.cssText = `
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: #fff;
-        font-size: 14px;
-        text-align: center;
-        pointer-events: none;
-        text-shadow: 1px 1px 3px #000;
-    `;
-    machineDoorZone.appendChild(doorLabel);
-    machineContainer.appendChild(machineDoorZone);
-
+    // Laundry items area (hidden initially)
     const laundryItemsArea = document.createElement('div');
     laundryItemsArea.style.cssText = `
         display: none;
-        margin-top: 15px;
-        padding: 15px;
-        background: rgba(80, 80, 120, 0.8);
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 120px;
+        background: rgba(50, 50, 50, 0.9);
         border-radius: 10px;
+        padding: 10px;
     `;
 
-    const laundryTitle = document.createElement('h3');
-    laundryTitle.textContent = 'Dirty Laundry - Drag into Machine';
+    const laundryTitle = document.createElement('div');
+    laundryTitle.textContent = 'Dirty Laundry';
     laundryTitle.style.cssText = `
         color: #fff;
-        font-size: 16px;
+        font-size: 14px;
         margin-bottom: 10px;
         text-align: center;
     `;
-
-    const laundryContainer = document.createElement('div');
-    laundryContainer.style.cssText = `
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        flex-wrap: wrap;
-    `;
-
-    const laundryList = [
-        { name: 'Shirt', type: 'shirt', sprite: `${baseurl}/images/DBS2/shirt.png` },
-        { name: 'Pants', type: 'pants', sprite: `${baseurl}/images/DBS2/pants.png` },
-        { name: 'Socks', type: 'socks', sprite: `${baseurl}/images/DBS2/socks.png` },
-        { name: 'Towel', type: 'towel', sprite: `${baseurl}/images/DBS2/towel.png` },
-        { name: 'Jacket', type: 'jacket', sprite: `${baseurl}/images/DBS2/jacket.png` }
-    ];
+    laundryItemsArea.appendChild(laundryTitle);
 
     const laundryItems = [];
-    laundryList.forEach(item => {
-        const laundryItem = document.createElement('div');
-        laundryItem.className = 'laundry-item';
-        laundryItem.textContent = item.name;
-        laundryItem.draggable = true;
-        laundryItem.dataset.laundry = item.type;
-        laundryItem.style.cssText = `
-            width: 60px;
-            height: 60px;
-            background: #6a6a8a;
-            border: 2px solid #8888aa;
+    const laundryTypes = ['🧦', '👕', '👖', '🧥', '🩳'];
+    laundryTypes.forEach((emoji, i) => {
+        const item = document.createElement('div');
+        item.className = 'laundry-item';
+        item.draggable = true;
+        item.textContent = emoji;
+        item.style.cssText = `
+            width: 50px;
+            height: 50px;
+            background: #666;
+            border: 2px solid #888;
             border-radius: 8px;
-            cursor: grab;
+            margin: 5px auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
-            color: #fff;
-            text-align: center;
+            font-size: 24px;
+            cursor: grab;
             transition: all 0.2s;
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
         `;
-        laundryItem.style.backgroundImage = `url('${item.sprite}')`;
-
-        laundryItem.onmouseover = () => {
-            if (!laundryItem.classList.contains('loaded')) {
-                laundryItem.style.borderColor = '#aaaaff';
-                laundryItem.style.transform = 'scale(1.05)';
+        item.onmouseover = () => {
+            if (!item.classList.contains('loaded')) {
+                item.style.borderColor = '#88ff88';
+                item.style.transform = 'scale(1.1)';
             }
         };
-        laundryItem.onmouseout = () => {
-            laundryItem.style.borderColor = '#8888aa';
-            laundryItem.style.transform = 'scale(1)';
+        item.onmouseout = () => {
+            item.style.borderColor = '#888';
+            item.style.transform = 'scale(1)';
         };
-
-        laundryItems.push(laundryItem);
-        laundryContainer.appendChild(laundryItem);
+        laundryItems.push(item);
+        laundryItemsArea.appendChild(item);
     });
 
-    laundryItemsArea.appendChild(laundryTitle);
-    laundryItemsArea.appendChild(laundryContainer);
+    // Machine door zone (for loading laundry)
+    const machineDoorZone = document.createElement('div');
+    machineDoorZone.style.cssText = `
+        display: none;
+        position: absolute;
+        top: 30%;
+        left: 30%;
+        width: 40%;
+        height: 40%;
+        background: rgba(100, 100, 150, 0.2);
+        border: 3px dashed #88aaff;
+        border-radius: 50%;
+        transition: all 0.2s;
+    `;
+    machineContainer.appendChild(machineDoorZone);
 
+    // Start button
     const startBtn = document.createElement('button');
-    startBtn.textContent = 'Start Laundry Cycle';
+    startBtn.textContent = 'Start Wash Cycle';
     startBtn.disabled = true;
     startBtn.style.cssText = `
         margin-top: 15px;
-        padding: 15px;
+        padding: 12px 24px;
+        font-size: 16px;
         background: #666;
         color: #999;
         border: none;
         border-radius: 8px;
-        font-size: 18px;
         cursor: not-allowed;
         transition: all 0.3s;
     `;
 
-    machineArea.appendChild(machineContainer);
-    machineArea.appendChild(laundryItemsArea);
-    machineArea.appendChild(startBtn);
+    // Success message
+    const successMessage = document.createElement('div');
+    successMessage.style.cssText = `
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 150, 0, 0.9);
+        color: white;
+        padding: 20px 40px;
+        border-radius: 10px;
+        font-size: 24px;
+        text-align: center;
+        z-index: 100;
+    `;
+    successMessage.innerHTML = '✅ Wash Complete!';
 
-    // Paper discovery screen - UPDATED: Shows ONLY the code scrap image
+    // Paper discovery message
     const paperDiscovery = document.createElement('div');
     paperDiscovery.style.cssText = `
         display: none;
@@ -380,111 +369,70 @@ export function showLaundryMinigame(onComplete) {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.95);
-        color: #fff;
-        padding: 40px;
-        border-radius: 15px;
-        text-align: center;
-        font-size: 18px;
-        z-index: 100;
-        box-shadow: 0 0 30px rgba(255, 255, 100, 0.5);
-        max-width: 600px;
-    `;
-
-    const paperTitle = document.createElement('div');
-    paperTitle.innerHTML = '📄 Wait... What\'s this?';
-    paperTitle.style.cssText = `
-        font-size: 24px;
-        margin-bottom: 20px;
-        color: #ffff99;
-    `;
-
-    const paperText = document.createElement('div');
-    paperText.innerHTML = 'You found a crumpled piece of paper in the washing machine!';
-    paperText.style.cssText = `
-        margin-bottom: 20px;
-        line-height: 1.6;
-    `;
-
-    // UPDATED: Shows ONLY the code scrap image, no text overlay
-    const paperImage = document.createElement('div');
-    paperImage.style.cssText = `
-        width: 100%;
-        max-width: 450px;
-        height: 500px;
-        margin: 20px auto;
-        background: transparent;
-        border: none;
-        border-radius: 5px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        position: relative;
-        background-size: contain;
-        background-position: center;
-        background-repeat: no-repeat;
-    `;
-    paperImage.style.backgroundImage = `url('${baseurl}/images/DBS2/codescrapLaundry.png')`;
-
-    const continueBtn = document.createElement('button');
-    continueBtn.textContent = 'Take the Paper';
-    continueBtn.style.cssText = `
-        padding: 12px 30px;
-        background: #44cc44;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        margin-top: 20px;
-    `;
-    continueBtn.onmouseover = () => continueBtn.style.background = '#55dd55';
-    continueBtn.onmouseout = () => continueBtn.style.background = '#44cc44';
-
-    paperDiscovery.appendChild(paperTitle);
-    paperDiscovery.appendChild(paperText);
-    paperDiscovery.appendChild(paperImage);
-    paperDiscovery.appendChild(continueBtn);
-
-    const successMessage = document.createElement('div');
-    successMessage.innerHTML = '✅ Success!<br>The washing machine is fixed and the laundry is done!';
-    successMessage.style.cssText = `
-        display: none;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.95);
-        color: #44ff44;
-        padding: 40px;
+        padding: 30px;
         border-radius: 15px;
+        border: 3px solid #ffd700;
+        font-size: 16px;
         text-align: center;
-        font-size: 24px;
         z-index: 100;
-        box-shadow: 0 0 30px rgba(68, 255, 68, 0.5);
+        max-width: 400px;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
     `;
+    
+    // Show different message based on first completion
+    const rewardAmount = isFirstCompletion ? 520 : 20;
+    paperDiscovery.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 15px;">📜</div>
+        <h2 style="color: #ffd700; margin-bottom: 10px;">
+            ${isFirstCompletion ? '🎉 CODE SCRAP FOUND! 🎉' : 'Paper Found!'}
+        </h2>
+        <p style="margin-bottom: 15px;">You found a soggy piece of paper stuck in the machine!</p>
+        ${isFirstCompletion ? `
+            <div style="background: rgba(0,255,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="color: #0f0; font-size: 14px;">First completion bonus!</p>
+                <img src="${baseurl}/images/DBS2/codescrapLaundry.png" style="max-width: 100px; margin: 10px auto; display: block; border: 2px solid #0f0; border-radius: 8px;" onerror="this.style.display='none'">
+            </div>
+        ` : ''}
+        <p style="color: #0f0; font-size: 20px;">+${rewardAmount} Crypto!</p>
+        <button id="continueBtn" style="
+            margin-top: 15px;
+            padding: 12px 30px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        ">Continue</button>
+    `;
+
+    machineArea.appendChild(machineContainer);
+    machineArea.appendChild(startBtn);
+    machineArea.appendChild(successMessage);
+    machineArea.appendChild(paperDiscovery);
+    machineArea.appendChild(laundryItemsArea);
 
     gameArea.appendChild(partsArea);
     gameArea.appendChild(machineArea);
+
     container.appendChild(closeBtn);
     container.appendChild(title);
     container.appendChild(instructions);
     container.appendChild(gameArea);
-    container.appendChild(paperDiscovery);
-    container.appendChild(successMessage);
-    overlay.appendChild(container);
 
-    // Drag and Drop Event Handlers
+    // Drag and drop handlers
     function handleDragStart(e) {
-        if (this.classList.contains('placed') || this.classList.contains('loaded')) return;
         currentDraggedElement = this;
         this.style.opacity = '0.5';
-        this.style.cursor = 'grabbing';
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.innerHTML);
+        e.dataTransfer.setData('text/plain', this.dataset.part || 'laundry');
     }
 
     function handleDragEnd(e) {
         this.style.opacity = '1';
-        this.style.cursor = 'grab';
     }
 
     function handleDragOver(e) {
@@ -496,17 +444,13 @@ export function showLaundryMinigame(onComplete) {
     }
 
     function handleDragEnter(e) {
-        if (!this.classList.contains('filled')) {
-            this.style.borderColor = this.id === 'machine-door-zone' ? '#aaffaa' : '#88ff88';
-            this.style.background = 'rgba(136, 255, 136, 0.3)';
-            this.style.borderStyle = 'solid';
-        }
+        this.style.borderColor = '#ffff00';
+        this.style.background = 'rgba(255, 255, 0, 0.2)';
     }
 
     function handleDragLeave(e) {
-        this.style.borderColor = this.id === 'machine-door-zone' ? '#88aaff' : '#888';
-        this.style.background = this.id === 'machine-door-zone' ? 'rgba(100, 100, 150, 0.2)' : 'rgba(100, 100, 100, 0.3)';
-        this.style.borderStyle = 'dashed';
+        this.style.borderColor = '#88aaff';
+        this.style.background = 'rgba(100, 100, 100, 0.3)';
     }
 
     function handleDrop(e) {
@@ -515,19 +459,14 @@ export function showLaundryMinigame(onComplete) {
         }
         e.preventDefault();
 
-        this.style.borderColor = '#888';
+        this.style.borderColor = '#88aaff';
         this.style.background = 'rgba(100, 100, 100, 0.3)';
-        this.style.borderStyle = 'dashed';
 
-        if (this.classList.contains('filled')) {
-            return false;
-        }
+        const draggedPart = currentDraggedElement.dataset.part;
+        const acceptsPart = this.dataset.accepts;
 
-        const partType = currentDraggedElement.getAttribute('data-part');
-        const acceptedType = this.getAttribute('data-accepts');
-
-        if (partType === acceptedType) {
-            this.classList.add('filled');
+        if (draggedPart === acceptsPart && !currentDraggedElement.classList.contains('placed')) {
+            this.style.borderStyle = 'solid';
             this.style.borderColor = '#44ff44';
             this.style.background = 'rgba(68, 255, 68, 0.3)';
             currentDraggedElement.classList.add('placed');
@@ -628,7 +567,6 @@ export function showLaundryMinigame(onComplete) {
         startBtn.onmouseover = () => startBtn.style.background = '#55dd55';
         startBtn.onmouseout = () => startBtn.style.background = '#44cc44';
         
-        // FIXED: Moved onclick inside enableStartButton function
         startBtn.onclick = () => {
             if (repairComplete && laundryLoaded === totalLaundry) {
                 laundryItemsArea.style.display = 'none';
@@ -657,91 +595,93 @@ export function showLaundryMinigame(onComplete) {
                     setTimeout(() => {
                         successMessage.style.display = 'none';
                         paperDiscovery.style.display = 'block';
+                        
+                        // Add continue button handler after it's in DOM
+                        const continueBtn = document.getElementById('continueBtn');
+                        if (continueBtn) {
+                            continueBtn.onclick = handleContinue;
+                        }
                     }, 2000);
                 }, 3000);
             }
         };
     }
 
-    // Continue button - syncs to backend
-    continueBtn.onclick = async () => {
+    // Continue button handler - syncs to backend
+    async function handleContinue() {
+        const continueBtn = document.getElementById('continueBtn');
+        if (!continueBtn) return;
+        
         continueBtn.textContent = 'Saving...';
         continueBtn.disabled = true;
         continueBtn.style.background = '#666';
         continueBtn.style.cursor = 'wait';
         
-        if (window.DBS2API) {
-            try {
-                console.log('🧺 Syncing laundry minigame completion...');
+        try {
+            console.log('🧺 Syncing laundry minigame completion...');
+            
+            // Award crypto
+            const cryptoAmount = isFirstCompletion ? 520 : 20;
+            await updateCrypto(cryptoAmount);
+            console.log('✅ Crypto added:', cryptoAmount);
+            
+            // Mark minigame complete and add code scrap on first completion
+            if (isFirstCompletion) {
+                await completeMinigame('laundry');
+                console.log('✅ Minigame marked complete');
                 
-                const minigameResult = await window.DBS2API.completeMinigame('laundry');
-                console.log('✅ Minigame marked complete:', minigameResult);
-                
-                const cryptoResult = await window.DBS2API.addCrypto(500);
-                console.log('✅ Crypto added:', cryptoResult);
-                
-                const inventoryResult = await window.DBS2API.addInventoryItem({
-                    name: 'Exit Code Paper',
-                    found_at: 'washing_machine'
+                await addInventoryItem({
+                    name: 'Code Scrap: Laundry',
+                    found_at: 'laundry',
+                    timestamp: new Date().toISOString()
                 });
-                console.log('✅ Inventory updated:', inventoryResult);
-                
-                const balanceEl = document.getElementById('balance');
-                if (balanceEl && cryptoResult.crypto) {
-                    balanceEl.textContent = cryptoResult.crypto;
-                    balanceEl.style.color = '#44ff44';
-                    balanceEl.style.transform = 'scale(1.2)';
-                    setTimeout(() => {
-                        balanceEl.style.color = '';
-                        balanceEl.style.transform = 'scale(1)';
-                    }, 500);
-                }
-                
-                if (window.GameControl && window.GameControl.leaderboard) {
-                    try {
-                        await window.GameControl.leaderboard.refresh();
-                        console.log('✅ Leaderboard refreshed');
-                    } catch (leaderboardError) {
-                        console.warn('⚠️ Leaderboard refresh failed:', leaderboardError);
-                    }
-                }
-                
-                continueBtn.textContent = '✅ Saved!';
-                continueBtn.style.background = '#44cc44';
-                
-                setTimeout(() => {
-                    window.laundryMinigameActive = false;
-                    window.minigameActive = false;
-                    document.body.removeChild(overlay);
-                    if (onComplete) onComplete();
-                }, 800);
-                
-            } catch (error) {
-                console.error('❌ Sync failed:', error);
-                console.error('Error details:', error.message);
-                
-                continueBtn.textContent = '⚠️ Error';
-                continueBtn.style.background = '#ff4444';
-                
-                const errorMsg = error.message || 'Unknown error';
-                alert(`⚠️ Failed to save progress:\n${errorMsg}\n\nCheck console for details.`);
-                
-                setTimeout(() => {
-                    window.laundryMinigameActive = false;
-                    window.minigameActive = false;
-                    document.body.removeChild(overlay);
-                    if (onComplete) onComplete();
-                }, 2000);
+                console.log('✅ Code scrap added to inventory');
             }
-        } else {
-            console.warn('⚠️ DBS2API not available');
-            alert('⚠️ You must be logged in to save progress.');
-            window.laundryMinigameActive = false;
-            window.minigameActive = false;
-            document.body.removeChild(overlay);
-            if (onComplete) onComplete();
+            
+            // Update UI
+            const balanceEl = document.getElementById('balance');
+            if (balanceEl) {
+                balanceEl.style.color = '#44ff44';
+                balanceEl.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    balanceEl.style.color = '';
+                    balanceEl.style.transform = 'scale(1)';
+                }, 500);
+            }
+            
+            // Refresh leaderboard
+            if (window.GameControl && window.GameControl.leaderboard) {
+                try {
+                    await window.GameControl.leaderboard.refresh();
+                    console.log('✅ Leaderboard refreshed');
+                } catch (leaderboardError) {
+                    console.warn('⚠️ Leaderboard refresh failed:', leaderboardError);
+                }
+            }
+            
+            continueBtn.textContent = '✅ Saved!';
+            continueBtn.style.background = '#44cc44';
+            
+            setTimeout(() => {
+                window.laundryMinigameActive = false;
+                window.minigameActive = false;
+                document.body.removeChild(overlay);
+                if (onComplete) onComplete();
+            }, 800);
+            
+        } catch (error) {
+            console.error('❌ Sync failed:', error);
+            continueBtn.textContent = '⚠️ Error - Closing...';
+            continueBtn.style.background = '#ff4444';
+            
+            setTimeout(() => {
+                window.laundryMinigameActive = false;
+                window.minigameActive = false;
+                document.body.removeChild(overlay);
+                if (onComplete) onComplete();
+            }, 1500);
         }
-    };
+    }
 
     document.body.appendChild(overlay);
 }
