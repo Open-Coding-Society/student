@@ -2,14 +2,11 @@
 // Call showLaundryMinigame() to display the popup
 
 export function showLaundryMinigame(onComplete) {
-    // Get baseurl dynamically from the data attribute set by the page
     const baseurl = document.body.getAttribute('data-baseurl') || '';
     
-    // Set minigame active flags
     window.laundryMinigameActive = true;
     window.minigameActive = true;
     
-    // Game state
     let partsPlaced = 0;
     const totalParts = 4;
     let laundryLoaded = 0;
@@ -17,7 +14,6 @@ export function showLaundryMinigame(onComplete) {
     let currentDraggedElement = null;
     let repairComplete = false;
 
-    // Create overlay
     const overlay = document.createElement('div');
     overlay.id = 'minigame-overlay';
     overlay.style.cssText = `
@@ -30,10 +26,9 @@ export function showLaundryMinigame(onComplete) {
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 1000;
+        z-index: 10000;
     `;
 
-    // Create container
     const container = document.createElement('div');
     container.id = 'minigame-container';
     container.style.cssText = `
@@ -50,10 +45,8 @@ export function showLaundryMinigame(onComplete) {
         background-size: cover;
         background-position: center;
     `;
-    // Background image - FIXED: Added baseurl
     container.style.backgroundImage = `url('${baseurl}/images/DBS2/basement.png')`;
 
-    // Close button
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✕ Close';
     closeBtn.style.cssText = `
@@ -77,7 +70,6 @@ export function showLaundryMinigame(onComplete) {
         document.body.removeChild(overlay);
     };
 
-    // Title
     const title = document.createElement('h1');
     title.textContent = '🔧 Repair the Washing Machine';
     title.style.cssText = `
@@ -88,7 +80,6 @@ export function showLaundryMinigame(onComplete) {
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     `;
 
-    // Instructions
     const instructions = document.createElement('div');
     instructions.textContent = 'Drag and drop the parts onto the correct spots on the washing machine. Once all parts are installed, load the laundry!';
     instructions.style.cssText = `
@@ -102,7 +93,6 @@ export function showLaundryMinigame(onComplete) {
         transition: all 0.3s;
     `;
 
-    // Game area
     const gameArea = document.createElement('div');
     gameArea.style.cssText = `
         display: flex;
@@ -111,7 +101,6 @@ export function showLaundryMinigame(onComplete) {
         overflow: hidden;
     `;
 
-    // Parts area (left side)
     const partsArea = document.createElement('div');
     partsArea.style.cssText = `
         flex: 1;
@@ -137,7 +126,6 @@ export function showLaundryMinigame(onComplete) {
         gap: 15px;
     `;
 
-    // Create parts with individual sprites - FIXED: Added baseurl to all paths
     const partsList = [
         { name: 'Motor', type: 'motor', sprite: `${baseurl}/images/DBS2/motor.png` },
         { name: 'Belt', type: 'belt', sprite: `${baseurl}/images/DBS2/belt.png` },
@@ -170,7 +158,6 @@ export function showLaundryMinigame(onComplete) {
             background-position: center;
             background-repeat: no-repeat;
         `;
-        // Set individual sprite
         part.style.backgroundImage = `url('${partInfo.sprite}')`;
 
         part.onmouseover = () => {
@@ -191,7 +178,6 @@ export function showLaundryMinigame(onComplete) {
     partsArea.appendChild(partsTitle);
     partsArea.appendChild(partsContainer);
 
-    // Machine area (right side)
     const machineArea = document.createElement('div');
     machineArea.style.cssText = `
         flex: 1.5;
@@ -214,10 +200,8 @@ export function showLaundryMinigame(onComplete) {
         background-repeat: no-repeat;
         transition: transform 0.1s;
     `;
-    // Washing machine sprite - FIXED: Added baseurl
     machineContainer.style.backgroundImage = `url('${baseurl}/images/DBS2/broken-washing-machine-jpeg.jpeg')`;
 
-    // Create drop zones
     const zones = [
         { id: 'zone-motor', accepts: 'motor', label: 'Motor', style: 'top: 20%; left: 15%; width: 25%; height: 20%;' },
         { id: 'zone-belt', accepts: 'belt', label: 'Belt', style: 'top: 45%; left: 10%; width: 30%; height: 15%;' },
@@ -259,7 +243,6 @@ export function showLaundryMinigame(onComplete) {
         machineContainer.appendChild(zone);
     });
 
-    // Machine door zone for laundry
     const machineDoorZone = document.createElement('div');
     machineDoorZone.style.cssText = `
         position: absolute;
@@ -291,7 +274,6 @@ export function showLaundryMinigame(onComplete) {
     machineDoorZone.appendChild(doorLabel);
     machineContainer.appendChild(machineDoorZone);
 
-    // Laundry items area
     const laundryItemsArea = document.createElement('div');
     laundryItemsArea.style.cssText = `
         display: none;
@@ -318,7 +300,6 @@ export function showLaundryMinigame(onComplete) {
         flex-wrap: wrap;
     `;
 
-    // Create laundry items with individual sprites - FIXED: Added baseurl to all paths
     const laundryList = [
         { name: 'Shirt', type: 'shirt', sprite: `${baseurl}/images/DBS2/shirt.png` },
         { name: 'Pants', type: 'pants', sprite: `${baseurl}/images/DBS2/pants.png` },
@@ -352,7 +333,6 @@ export function showLaundryMinigame(onComplete) {
             background-position: center;
             background-repeat: no-repeat;
         `;
-        // Set individual sprite
         laundryItem.style.backgroundImage = `url('${item.sprite}')`;
 
         laundryItem.onmouseover = () => {
@@ -373,7 +353,6 @@ export function showLaundryMinigame(onComplete) {
     laundryItemsArea.appendChild(laundryTitle);
     laundryItemsArea.appendChild(laundryContainer);
 
-    // Start button
     const startBtn = document.createElement('button');
     startBtn.textContent = 'Start Laundry Cycle';
     startBtn.disabled = true;
@@ -393,7 +372,7 @@ export function showLaundryMinigame(onComplete) {
     machineArea.appendChild(laundryItemsArea);
     machineArea.appendChild(startBtn);
 
-    // Paper discovery screen
+    // Paper discovery screen - UPDATED: Shows ONLY the code scrap image
     const paperDiscovery = document.createElement('div');
     paperDiscovery.style.cssText = `
         display: none;
@@ -409,7 +388,7 @@ export function showLaundryMinigame(onComplete) {
         font-size: 18px;
         z-index: 100;
         box-shadow: 0 0 30px rgba(255, 255, 100, 0.5);
-        max-width: 500px;
+        max-width: 600px;
     `;
 
     const paperTitle = document.createElement('div');
@@ -427,24 +406,23 @@ export function showLaundryMinigame(onComplete) {
         line-height: 1.6;
     `;
 
+    // UPDATED: Shows ONLY the code scrap image, no text overlay
     const paperImage = document.createElement('div');
     paperImage.style.cssText = `
-        width: 300px;
-        height: 400px;
+        width: 100%;
+        max-width: 450px;
+        height: 500px;
         margin: 20px auto;
-        background: #f4f1e8;
-        border: 2px solid #888;
+        background: transparent;
+        border: none;
         border-radius: 5px;
-        padding: 20px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         position: relative;
-        background-size: cover;
+        background-size: contain;
         background-position: center;
+        background-repeat: no-repeat;
     `;
-    
     paperImage.style.backgroundImage = `url('${baseurl}/images/DBS2/codescrapLaundry.png')`;
-
-    paperImage.appendChild(codeText);
 
     const continueBtn = document.createElement('button');
     continueBtn.textContent = 'Take the Paper';
@@ -466,7 +444,6 @@ export function showLaundryMinigame(onComplete) {
     paperDiscovery.appendChild(paperImage);
     paperDiscovery.appendChild(continueBtn);
 
-    // Success message
     const successMessage = document.createElement('div');
     successMessage.innerHTML = '✅ Success!<br>The washing machine is fixed and the laundry is done!';
     successMessage.style.cssText = `
@@ -485,7 +462,6 @@ export function showLaundryMinigame(onComplete) {
         box-shadow: 0 0 30px rgba(68, 255, 68, 0.5);
     `;
 
-    // Assemble everything
     gameArea.appendChild(partsArea);
     gameArea.appendChild(machineArea);
     container.appendChild(closeBtn);
@@ -608,7 +584,6 @@ export function showLaundryMinigame(onComplete) {
         return false;
     }
 
-    // Add event listeners to parts
     parts.forEach(part => {
         part.addEventListener('dragstart', handleDragStart);
         part.addEventListener('dragend', handleDragEnd);
@@ -621,7 +596,6 @@ export function showLaundryMinigame(onComplete) {
         zone.addEventListener('drop', handleDrop);
     });
 
-    // Add event listeners to laundry items
     laundryItems.forEach(item => {
         item.addEventListener('dragstart', handleDragStart);
         item.addEventListener('dragend', handleDragEnd);
@@ -653,55 +627,124 @@ export function showLaundryMinigame(onComplete) {
         
         startBtn.onmouseover = () => startBtn.style.background = '#55dd55';
         startBtn.onmouseout = () => startBtn.style.background = '#44cc44';
+        
+        // FIXED: Moved onclick inside enableStartButton function
+        startBtn.onclick = () => {
+            if (repairComplete && laundryLoaded === totalLaundry) {
+                laundryItemsArea.style.display = 'none';
+                machineDoorZone.style.display = 'none';
+
+                let animFrame = 0;
+                const washingInterval = setInterval(() => {
+                    animFrame++;
+                    const offset = Math.sin(animFrame * 0.3) * 3;
+                    const rotation = Math.sin(animFrame * 0.3) * 0.5;
+                    machineContainer.style.transform = `translateX(${offset}px) rotate(${rotation}deg)`;
+                }, 50);
+
+                startBtn.textContent = 'Running...';
+                startBtn.disabled = true;
+                startBtn.style.background = '#666';
+                startBtn.style.cursor = 'not-allowed';
+                instructions.innerHTML = '🌊 Washing cycle in progress...';
+                instructions.style.background = 'rgba(0, 100, 200, 0.6)';
+
+                setTimeout(() => {
+                    clearInterval(washingInterval);
+                    machineContainer.style.transform = 'translateX(0) rotate(0)';
+                    successMessage.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                        paperDiscovery.style.display = 'block';
+                    }, 2000);
+                }, 3000);
+            }
+        };
     }
 
-    startBtn.onclick = () => {
-        if (repairComplete && laundryLoaded === totalLaundry) {
-            laundryItemsArea.style.display = 'none';
-            machineDoorZone.style.display = 'none';
-
-            // Running animation
-            let animFrame = 0;
-            const washingInterval = setInterval(() => {
-                animFrame++;
-                const offset = Math.sin(animFrame * 0.3) * 3;
-                const rotation = Math.sin(animFrame * 0.3) * 0.5;
-                machineContainer.style.transform = `translateX(${offset}px) rotate(${rotation}deg)`;
-            }, 50);
-
-            startBtn.textContent = 'Running...';
-            startBtn.disabled = true;
-            startBtn.style.background = '#666';
-            startBtn.style.cursor = 'not-allowed';
-            instructions.innerHTML = '🌊 Washing cycle in progress...';
-            instructions.style.background = 'rgba(0, 100, 200, 0.6)';
-
-            setTimeout(() => {
-                clearInterval(washingInterval);
-                machineContainer.style.transform = 'translateX(0) rotate(0)';
-                successMessage.style.display = 'block';
+    // Continue button - syncs to backend
+    continueBtn.onclick = async () => {
+        continueBtn.textContent = 'Saving...';
+        continueBtn.disabled = true;
+        continueBtn.style.background = '#666';
+        continueBtn.style.cursor = 'wait';
+        
+        if (window.DBS2API) {
+            try {
+                console.log('🧺 Syncing laundry minigame completion...');
                 
-                // Show paper discovery after 2 seconds
+                const minigameResult = await window.DBS2API.completeMinigame('laundry');
+                console.log('✅ Minigame marked complete:', minigameResult);
+                
+                const cryptoResult = await window.DBS2API.addCrypto(500);
+                console.log('✅ Crypto added:', cryptoResult);
+                
+                const inventoryResult = await window.DBS2API.addInventoryItem({
+                    name: 'Exit Code Paper',
+                    found_at: 'washing_machine'
+                });
+                console.log('✅ Inventory updated:', inventoryResult);
+                
+                const balanceEl = document.getElementById('balance');
+                if (balanceEl && cryptoResult.crypto) {
+                    balanceEl.textContent = cryptoResult.crypto;
+                    balanceEl.style.color = '#44ff44';
+                    balanceEl.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        balanceEl.style.color = '';
+                        balanceEl.style.transform = 'scale(1)';
+                    }, 500);
+                }
+                
+                if (window.GameControl && window.GameControl.leaderboard) {
+                    try {
+                        await window.GameControl.leaderboard.refresh();
+                        console.log('✅ Leaderboard refreshed');
+                    } catch (leaderboardError) {
+                        console.warn('⚠️ Leaderboard refresh failed:', leaderboardError);
+                    }
+                }
+                
+                continueBtn.textContent = '✅ Saved!';
+                continueBtn.style.background = '#44cc44';
+                
                 setTimeout(() => {
-                    successMessage.style.display = 'none';
-                    paperDiscovery.style.display = 'block';
+                    window.laundryMinigameActive = false;
+                    window.minigameActive = false;
+                    document.body.removeChild(overlay);
+                    if (onComplete) onComplete();
+                }, 800);
+                
+            } catch (error) {
+                console.error('❌ Sync failed:', error);
+                console.error('Error details:', error.message);
+                
+                continueBtn.textContent = '⚠️ Error';
+                continueBtn.style.background = '#ff4444';
+                
+                const errorMsg = error.message || 'Unknown error';
+                alert(`⚠️ Failed to save progress:\n${errorMsg}\n\nCheck console for details.`);
+                
+                setTimeout(() => {
+                    window.laundryMinigameActive = false;
+                    window.minigameActive = false;
+                    document.body.removeChild(overlay);
+                    if (onComplete) onComplete();
                 }, 2000);
-            }, 3000);
+            }
+        } else {
+            console.warn('⚠️ DBS2API not available');
+            alert('⚠️ You must be logged in to save progress.');
+            window.laundryMinigameActive = false;
+            window.minigameActive = false;
+            document.body.removeChild(overlay);
+            if (onComplete) onComplete();
         }
-    };
-
-    // Continue button to finish minigame
-    continueBtn.onclick = () => {
-        window.laundryMinigameActive = false;
-        window.minigameActive = false;
-        document.body.removeChild(overlay);
-        if (onComplete) onComplete();
     };
 
     document.body.appendChild(overlay);
 }
 
-// Make available globally for backwards compatibility
 window.showLaundryMinigame = showLaundryMinigame;
-
 export default showLaundryMinigame;
