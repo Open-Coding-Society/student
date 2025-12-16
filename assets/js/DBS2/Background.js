@@ -45,7 +45,6 @@ export class Background extends GameObject {
 
         if (this.image && this.image.complete && this.image.naturalWidth > 0) {
             // Draw the background image scaled to the canvas size
-            console.log('Background: Drawing image:', this.image.src, 'at', width, 'x', height);
             ctx.drawImage(this.image, 0, 0, width, height);
         } else {
             // Fill the canvas with fillstyle color if no image is provided or not loaded yet
