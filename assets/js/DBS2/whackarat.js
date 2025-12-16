@@ -1,8 +1,6 @@
 /// whackarat.js
 // Ash-Trail style rewrite of Whack-a-rat game
-// Exports: startWhackGame(overlayElement, basePath)
-// overlayElement: DOM element to host the game (we create a canvas inside it)
-// basePath: path to assets (e.g. '/images/DBS2')
+// Exports: startWhackGame(overlayElement, basePath, onComplete)
 
 const Whack = {
   canvas: null,
@@ -17,19 +15,28 @@ const Whack = {
   lastSpawn: 0,
   entities: [],
   running: false,
-  lastFrame: 0
+  lastFrame: 0,
+  onComplete: null
 };
 
 function loadImage(name, src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve({ name, img });
-    img.onerror = (e) => reject(new Error('Failed to load ' + src));
+    img.onload = () => {
+      console.log(`✅ Loaded: ${name} from ${src}`);
+      resolve({ name, img });
+    };
+    img.onerror = (e) => {
+      console.error(`❌ Failed to load: ${name} from ${src}`);
+      reject(new Error('Failed to load ' + src));
+    };
     img.src = src;
   });
 }
 
 async function loadAssets(basePath) {
+  console.log('Loading assets from:', basePath);
+  
   const manifest = [
     ['basement', `${basePath}/basement.png`],
     ['pipes', `${basePath}/pipes.png`],
@@ -38,13 +45,18 @@ async function loadAssets(basePath) {
     ['soda', `${basePath}/sodacan.png`]
   ];
 
-  const promises = manifest.map(m => loadImage(m[0], m[1]));
-  const assets = await Promise.all(promises);
-  assets.forEach(a => Whack.images[a.name] = a.img);
+  try {
+    const promises = manifest.map(m => loadImage(m[0], m[1]));
+    const assets = await Promise.all(promises);
+    assets.forEach(a => Whack.images[a.name] = a.img);
+    console.log('✅ All assets loaded successfully');
+  } catch (error) {
+    console.error('❌ Asset loading failed:', error);
+    throw error;
+  }
 }
 
 function createCanvasInOverlay(overlay) {
-  // remove existing canvas wrapper if present
   const existing = overlay.querySelector('#whack-root');
   if (existing) existing.remove();
 
@@ -76,9 +88,8 @@ function createCanvasInOverlay(overlay) {
 
   closeBtn.addEventListener('click', () => {
     stopGame();
-    const parentOverlay = overlay;
-    if (parentOverlay && parentOverlay.parentNode) {
-      parentOverlay.parentNode.removeChild(parentOverlay);
+    if (overlay && overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
     }
   });
 
@@ -105,8 +116,6 @@ function initGameListeners(canvas) {
 
   canvas.addEventListener('mousedown', () => Whack.mouse.down = true);
   canvas.addEventListener('mouseup', () => Whack.mouse.down = false);
-
-  // prevent right click context on canvas
   canvas.addEventListener('contextmenu', e => e.preventDefault());
 }
 
@@ -116,7 +125,7 @@ function spawnTarget() {
   const x = slotsX[Math.floor(Math.random() * slotsX.length)];
   const y = slotsY[Math.floor(Math.random() * slotsY.length)];
 
-  const isRat = Math.random() < 0.6; // rats more common than soda
+  const isRat = Math.random() < 0.6;
   Whack.entities.push({
     type: isRat ? 'rat' : 'soda',
     x: x - 30,
@@ -134,7 +143,6 @@ function update(dt) {
     Whack.running = false;
   }
 
-  // spawn rate ramps up slowly
   Whack.spawnInterval = Math.max(400, Whack.spawnInterval - dt * 0.002);
 
   if (performance.now() - Whack.lastSpawn > Whack.spawnInterval) {
@@ -142,23 +150,20 @@ function update(dt) {
     Whack.lastSpawn = performance.now();
   }
 
-  // update entities
   Whack.entities = Whack.entities.filter(e => {
     e.ttl -= dt;
-    // click detection (simple)
     if (Whack.mouse.down &&
         Whack.mouse.x > e.x &&
         Whack.mouse.x < e.x + e.w &&
         Whack.mouse.y > e.y &&
         Whack.mouse.y < e.y + e.h) {
 
-      // clicking consumes the down state until next up to avoid multi-hit
       Whack.mouse.down = false;
 
       if (e.type === 'rat') Whack.score += 100;
       else Whack.score -= 50;
 
-      return false; // remove entity
+      return false;
     }
     return e.ttl > 0;
   });
@@ -166,35 +171,28 @@ function update(dt) {
 
 function draw() {
   const ctx = Whack.ctx;
-  // clear
   ctx.clearRect(0, 0, Whack.width, Whack.height);
 
-  // background
   const bg = Whack.images.basement;
   if (bg) ctx.drawImage(bg, 0, 0, Whack.width, Whack.height);
 
-  // pipes (center)
   const pipes = Whack.images.pipes;
   if (pipes) ctx.drawImage(pipes, (Whack.width - pipes.width)/2, 150);
 
-  // entities
   Whack.entities.forEach(e => {
     const img = Whack.images[e.type];
     if (img) ctx.drawImage(img, e.x, e.y, e.w, e.h);
     else {
-      // fallback box
       ctx.fillStyle = e.type === 'rat' ? 'brown' : 'cyan';
       ctx.fillRect(e.x, e.y, e.w, e.h);
     }
   });
 
-  // UI
   ctx.fillStyle = "#ffffff";
   ctx.font = "20px monospace";
   ctx.fillText("Score: " + Whack.score, Whack.width - 160, 36);
   ctx.fillText("Time: " + Math.ceil(Whack.timer / 1000), 20, 36);
 
-  // hammer cursor
   const hammer = Whack.images.hammer;
   if (hammer) ctx.drawImage(hammer, Whack.mouse.x - 24, Whack.mouse.y - 24, 48, 48);
 }
@@ -212,7 +210,6 @@ function loop(ts) {
 }
 
 function endGame() {
-  // simple end: show alert and stop loop
   Whack.running = false;
   const canvas = Whack.canvas;
   if (canvas && Whack.ctx) {
@@ -223,11 +220,16 @@ function endGame() {
     Whack.ctx.fillText("Game Over", Whack.width / 2 - 70, Whack.height / 2 - 10);
     Whack.ctx.fillText("Score: " + Whack.score, Whack.width / 2 - 70, Whack.height / 2 + 28);
   }
+  
+  // Call completion callback with crypto earned
+  if (Whack.onComplete) {
+    const cryptoEarned = Math.floor(Whack.score / 100);
+    Whack.onComplete(cryptoEarned);
+  }
 }
 
 function stopGame() {
   Whack.running = false;
-  // remove canvas if desired - caller may remove overlay
   if (Whack.canvas && Whack.canvas.parentNode) {
     Whack.canvas.parentNode.removeChild(Whack.canvas);
   }
@@ -235,9 +237,15 @@ function stopGame() {
   Whack.ctx = null;
 }
 
-// PUBLIC: startWhackGame(overlayElement, basePath)
-export default function startWhackGame(overlayElement, basePath = '/images/DBS2') {
-  // reset state
+// PUBLIC: startWhackGame(overlayElement, basePath, onComplete)
+export default async function startWhackGame(overlayElement, basePath = '/images/DBS2', onComplete = null) {
+  console.log('🎮 Starting Whack-a-Rat game...');
+  console.log('Base path:', basePath);
+  
+  // Store completion callback
+  Whack.onComplete = onComplete;
+  
+  // Reset state
   Whack.score = 0;
   Whack.timer = 45000;
   Whack.spawnInterval = 1000;
@@ -246,20 +254,29 @@ export default function startWhackGame(overlayElement, basePath = '/images/DBS2'
   Whack.lastSpawn = 0;
   Whack.lastFrame = performance.now();
 
-  // load assets
-  loadAssets(basePath);
-
-  // build canvas inside overlay
+  // Build canvas
   const canvas = createCanvasInOverlay(overlayElement);
   Whack.canvas = canvas;
   Whack.ctx = canvas.getContext('2d');
 
-  initGameListeners(canvas);
+  // Show loading message
+  Whack.ctx.fillStyle = '#000';
+  Whack.ctx.fillRect(0, 0, Whack.width, Whack.height);
+  Whack.ctx.fillStyle = '#fff';
+  Whack.ctx.font = '24px monospace';
+  Whack.ctx.fillText('Loading...', Whack.width / 2 - 60, Whack.height / 2);
 
-  // attach canvas to object for cleanup purpose
-  Whack.canvas = canvas;
-
-  requestAnimationFrame(loop);
+  try {
+    await loadAssets(basePath);
+    initGameListeners(canvas);
+    requestAnimationFrame(loop);
+  } catch (error) {
+    console.error('Failed to load game assets:', error);
+    Whack.ctx.fillStyle = '#f00';
+    Whack.ctx.fillText('Error loading assets!', Whack.width / 2 - 100, Whack.height / 2);
+    Whack.ctx.font = '14px monospace';
+    Whack.ctx.fillText('Check console for details', Whack.width / 2 - 100, Whack.height / 2 + 30);
+  }
 }
 
 export function stopWhackGame() {

@@ -280,7 +280,7 @@ const GameControl = {
         if (!this.leaderboard) {
             this.leaderboard = new Leaderboard();
         }
-        this.leaderboard.init();
+        this.leaderboard.init(true, 3000);
     },
 
 };
