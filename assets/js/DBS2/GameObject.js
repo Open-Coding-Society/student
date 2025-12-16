@@ -178,7 +178,6 @@ class GameObject {
             const speaker = this.collisionData.touchPoints.other.id || 'NPC';
             try { Prompt.showDialoguePopup(speaker, message); } catch (e) { console.warn('Prompt not available', e); }
         }
-        console.log(objectID);
         this.handleReaction();
     }
 
