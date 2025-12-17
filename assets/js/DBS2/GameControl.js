@@ -3,6 +3,7 @@ import GameLevelBasement from './GameLevelBasement.js';
 import Inventory from './Inventory.js';
 import Prompt from './Prompt.js';
 import Leaderboard from './Leaderboard.js';
+import AshTrailLeaderboardWidget from './AshTrailLeaderboardWidget.js';
 
 console.log("GameControl.js loaded!");
 
@@ -32,6 +33,7 @@ const GameControl = {
     levelClasses: [],
     path: '',
     leaderboard: null,
+    ashTrailWidget: null,
 
     start: function(path) {
         console.log("GameControl.start() called with path:", path);
@@ -72,6 +74,7 @@ const GameControl = {
         console.log("GameControl: Initializing stats UI and leaderboard...");
         this.initStatsUI();
         this.initLeaderboard();
+        this.initAshTrailLeaderboard();
         console.log("GameControl: Creating game objects, count:", gameInstance.objects.length);
         // Instantiate the game objects
         for (let object of gameInstance.objects) {
@@ -281,6 +284,18 @@ const GameControl = {
             this.leaderboard = new Leaderboard();
         }
         this.leaderboard.init(true, 3000);
+    },
+
+    // Small Ash Trail leaderboard near the bookshelf (main game overlay)
+    initAshTrailLeaderboard: function() {
+        try {
+            if (!this.ashTrailWidget) {
+                this.ashTrailWidget = new AshTrailLeaderboardWidget();
+            }
+            this.ashTrailWidget.init(true, 3000);
+        } catch (e) {
+            console.error("AshTrailLeaderboardWidget init failed", e);
+        }
     },
 
 };

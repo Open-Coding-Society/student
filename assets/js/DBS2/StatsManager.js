@@ -203,8 +203,9 @@ export async function hasItem(item) {
 export async function getScores() {
     try {
         if (DBS2API && DBS2API.getScores) {
-            const result = await DBS2API.getScores();
-            return result.scores || {};
+            // DBS2API.getScores() returns the raw scores dict (not wrapped)
+            const scores = await DBS2API.getScores();
+            return scores || {};
         }
     } catch (e) {
         console.log('API getScores failed, using local:', e);
@@ -220,8 +221,9 @@ export async function getScores() {
  */
 export async function updateScore(game, score) {
     try {
-        if (DBS2API && DBS2API.updateScore) {
-            const result = await DBS2API.updateScore(game, score);
+        // DBS2API exposes submitScore(game, score) which returns {scores: {...}}
+        if (DBS2API && DBS2API.submitScore) {
+            const result = await DBS2API.submitScore(game, score);
             return result.scores || {};
         }
     } catch (e) {
