@@ -7,15 +7,19 @@ import startWhackGame from './whackarat.js';
 
 /**
  * GameLevelBasement
- * - All asset paths use `${path}/images/DBS2/...`
- * - SodaCan NPC replaces ShellNpc1 and launches Whackarat minigame
+ * 
+ * STORY: IShowGreen was once a crypto mining legend. His program, "The Green Machine,"
+ * generated wealth beyond imagination. But years of neglect destroyed it - rats, floods,
+ * fire, and forgotten passwords reduced his empire to rubble. Now he traps wanderers
+ * in his basement, forcing them to recover the fragments of his lost code.
+ * 
+ * You can escape by earning 500 crypto, or by recovering all 5 code fragments
+ * and presenting them to IShowGreen to rebuild The Green Machine.
  */
 class GameLevelBasement {
   constructor(path = '') {
-    // path should be the base path for assets (e.g. '' or '/DBS2-Frontend' or location of site)
     this.path = path;
 
-    // Responsive dimensions provided by GameEnv.create()
     let width = GameEnv.innerWidth;
     let height = GameEnv.innerHeight;
 
@@ -24,7 +28,7 @@ class GameLevelBasement {
     ------------------------*/
     const image_data_basement = {
       name: 'basement',
-      greeting: "IShowGreen has locked you in his discord mod basement. Earn enough Crypto to escape.",
+      greeting: "You wake up in a basement. The air is stale. A figure watches from the corner.",
       src: `${this.path}/images/DBS2/basement.png`,
       pixels: { height: 580, width: 1038 }
     };
@@ -34,8 +38,8 @@ class GameLevelBasement {
     ------------------------*/
     const CHILLGUY_SCALE_FACTOR = 5;
     const sprite_data_chillguy = {
-      id: 'player', // Note: GameLevel expects the player id to be "player" in some places
-      greeting: "I am Chill Guy, the desert wanderer. I am looking for wisdom and adventure!",
+      id: 'player',
+      greeting: "...",
       src: `${this.path}/images/DBS2/chillguy.png`,
       SCALE_FACTOR: CHILLGUY_SCALE_FACTOR,
       STEP_FACTOR: 1000,
@@ -56,9 +60,11 @@ class GameLevelBasement {
     /* ----------------------
        NPCs
     ------------------------*/
+    
+    // Computer1 - The Password Terminal (Infinite User minigame)
     const sprite_data_computer1 = {
       id: 'Computer1',
-      greeting: "Computer of Infinite Users",
+      greeting: "SYSTEM LOCKED. IShowGreen wrote down all the passwords somewhere. Maybe behind the keyboard.",
       src: `${this.path}/images/DBS2/computer1.png`,
       SCALE_FACTOR: 8,
       ANIMATION_RATE: 8,
@@ -69,14 +75,14 @@ class GameLevelBasement {
       hitbox: { widthPercentage: 0.1, heightPercentage: 0.2 }
     };
 
+    // Computer2 - The Mining Terminal (Crypto Miner minigame)
     const sprite_data_computer2 = {
       id: 'Computer2',
       greeting: [
         "$list$",
-        "Hi, I am Computer2! I am the GitHub code guardian.",
-        "Wait, you're not IShowGreen? Finally, someone with proper sanitation!",
-        "Psst! Don't tell him I keep deleting his NFTs...",
-        "Finally, someone without Dorito dust on their fingers."
+        "Mining terminal. The algorithm was written on paper during a blackout.",
+        "IShowGreen lost the page somewhere behind here.",
+        "Press E to search while mining."
       ],
       src: `${this.path}/images/DBS2/computer2.png`,
       SCALE_FACTOR: 8,
@@ -88,14 +94,14 @@ class GameLevelBasement {
       hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
     };
 
+    // IShowGreen - The Captor
     const sprite_data_ishowgreen = {
       id: 'IShowGreen',
       greeting: [
         "$list$",
-        "Crypto... bLOcKcHaIn...",
-        "EW, WHAT IS THAT SMELL? ... SHAMPOO?!",
-        "Get out of my room unless you're buying my meme coin!",
-        "Don't give me water... I HATE the taste!"
+        "I wrote The Green Machine by hand. Every line of code on paper first.",
+        "Then I lost the pages. All five of them. Scattered around this basement.",
+        "Find them all and bring them to me. Or earn 500 crypto. Then you can leave."
       ],
       src: `${this.path}/images/DBS2/ishowgreen.png`,
       SCALE_FACTOR: 4,
@@ -107,27 +113,24 @@ class GameLevelBasement {
       hitbox: { widthPercentage: 0.01, heightPercentage: 0.01 }
     };
 
-    /* ----------------------
-       SODA CAN (NPC) - REPLACES ShellNpc1
-       Shows "whack some rats" greeting and launches minigame
-    ------------------------*/
-    const sprite_data_sodacan = {
-      id: 'SodaCan',
-      greeting: 'Whack some rats!',
-      src: `${this.path}/images/DBS2/sodacan.png`,
-      SCALE_FACTOR: 6,
-      ANIMATION_RATE: 0,
-      pixels: { height: 512, width: 512 },
-      INIT_POSITION: { x: width * 4 / 12, y: height * 0.5 },
-      orientation: { rows: 1, columns: 1 },
-      down: { row: 0, start: 0, columns: 1 },
-      hitbox: { widthPercentage: 0.3, heightPercentage: 0.3 },
-      stationary: true
+    // Shell NPC - Old Server Rack
+    const sprite_data_shell1 = {
+      id: 'ShellNpc1',
+      greeting: "Old hardware. Nothing useful here. The code was never digital. He wrote it all on paper.",
+      src: `${this.path}/images/DBS2/computer2.png`,
+      SCALE_FACTOR: 8,
+      ANIMATION_RATE: 24,
+      pixels: { height: 64, width: 832 },
+      INIT_POSITION: { x: width * 4 / 12, y: height * 0.07 },
+      orientation: { rows: 1, columns: 13 },
+      down: { row: 0, start: 0, columns: 12 },
+      hitbox: { widthPercentage: 0.1, heightPercentage: 0.1 }
     };
 
+    // Laundry Machine - paper in pants pocket
     const sprite_data_shell2 = {
       id: 'laundry',
-      greeting: 'Fix the laundry machine!',
+      greeting: "A washing machine. IShowGreen left a page in his pants pocket. It went through the wash.",
       src: `${this.path}/images/DBS2/broken-washing-machine-jpeg.jpg`,
       SCALE_FACTOR: 5,
       ANIMATION_RATE: 0,
@@ -139,9 +142,10 @@ class GameLevelBasement {
       stationary: true
     };
 
+    // Bookshelf - Burned pages
     const sprite_data_bookshelf = {
       id: 'Bookshelf',
-      greeting: 'A bookshelf filled with coding books and references.',
+      greeting: "A charred bookshelf. IShowGreen kept his backup pages here. A candle set them on fire.",
       src: `${this.path}/images/DBS2/Tracethepage.png`,
       SCALE_FACTOR: 3,
       ANIMATION_RATE: 0,
@@ -153,6 +157,17 @@ class GameLevelBasement {
       stationary: true
     };
 
+    // Soda Can area - Rat territory
+    const sprite_data_sodacan = {
+      id: 'SodaCan',
+      greeting: [
+        "$list$",
+        "Rats live in the walls here.",
+        "IShowGreen hid a page in a crack. The rats took it for their nest.",
+        "They shredded part of it but the code might still be readable."
+      ],
+    };
+
     // All objects in the basement level
     this.objects = [
       { class: Background, data: image_data_basement },
@@ -160,13 +175,57 @@ class GameLevelBasement {
       { class: Npc, data: sprite_data_computer1 },
       { class: Npc, data: sprite_data_computer2 },
       { class: Npc, data: sprite_data_ishowgreen },
-      { class: Npc, data: sprite_data_sodacan }, // REPLACED ShellNpc1 with SodaCan
+      { class: Npc, data: sprite_data_shell1 },
       { class: Npc, data: sprite_data_shell2 },
       { class: Npc, data: sprite_data_bookshelf },
     ];
 
-    // REMOVED: _createSodaLauncher - no longer need floating button
-    // The SodaCan NPC now handles the interaction directly
+    this._createSodaLauncher(`${this.path}/images/DBS2/sodacan.png`);
+  }
+
+  _createSodaLauncher(sodaSrc) {
+    if (document.getElementById('sodacan-launcher')) return;
+
+    const container = document.querySelector('#gameControls') || document.body;
+    const img = document.createElement('img');
+    img.id = 'sodacan-launcher';
+    img.src = sodaSrc;
+    img.alt = 'Rat Territory';
+    img.style.position = 'fixed';
+    img.style.bottom = '24px';
+    img.style.left = '24px';
+    img.style.width = '80px';
+    img.style.height = '80px';
+    img.style.cursor = 'pointer';
+    img.style.zIndex = 9999;
+    img.style.boxShadow = '0 6px 18px rgba(0,0,0,0.4)';
+    img.title = 'Rat Territory - Click to investigate';
+
+    img.addEventListener('click', async (e) => {
+      try {
+        let overlay = document.getElementById('whack-overlay');
+        if (!overlay) {
+          overlay = document.createElement('div');
+          overlay.id = 'whack-overlay';
+          overlay.style.position = 'fixed';
+          overlay.style.top = 0;
+          overlay.style.left = 0;
+          overlay.style.width = '100%';
+          overlay.style.height = '100%';
+          overlay.style.display = 'flex';
+          overlay.style.alignItems = 'center';
+          overlay.style.justifyContent = 'center';
+          overlay.style.background = 'rgba(0,0,0,0.5)';
+          overlay.style.zIndex = 10000;
+          document.body.appendChild(overlay);
+        }
+        startWhackGame(overlay, `${this.path}/images/DBS2`);
+      } catch (err) {
+        console.error('Failed to load minigame:', err);
+      }
+    });
+
+    container.appendChild(img);
   }
 }
 
