@@ -34,6 +34,7 @@ const GameControl = {
     leaderboard: null,
     cryptoWinTriggered: false,
     scrapWinTriggered: false,
+    introStarted: false,
 
     start: function(path) {
         console.log("GameControl.start() called with path:", path);
@@ -120,81 +121,67 @@ const GameControl = {
     },
 
     handleLevelStart: function() {
-        // Story intro sequence
+        // Check if intro has been shown before
+        const introShown = localStorage.getItem('dbs2_intro_shown') === 'true';
+        
         if (this.currentLevelIndex === 0) {
-            if (this.currentPass === 10) {
-                try { 
-                    Prompt.showDialoguePopup('???', 'You wake up in a basement. The door is locked.'); 
-                } catch(e){ console.warn('Prompt not available', e); }
-            }
-            if (this.currentPass === 200) {
-                try { 
-                    Prompt.showDialoguePopup('IShowGreen', 'Good. You are awake. I need your help.'); 
-                } catch(e){ console.warn('Prompt not available', e); }
-            }
-            if (this.currentPass === 400) {
-                try { 
-                    Prompt.showDialoguePopup('IShowGreen', 'I wrote a program called The Green Machine. Every line by hand. On paper.'); 
-                } catch(e){ console.warn('Prompt not available', e); }
-            }
-            if (this.currentPass === 600) {
-                try { 
-                    Prompt.showDialoguePopup('IShowGreen', 'I lost the pages. Five of them. One in the wash. One burned. One the rats took. The others... somewhere in here.'); 
-                } catch(e){ console.warn('Prompt not available', e); }
-            }
-            if (this.currentPass === 800) {
-                try { 
-                    Prompt.showDialoguePopup('IShowGreen', 'Find all five pages and bring them to me. Or earn 500 crypto and buy your way out. WASD to move. E to interact.'); 
-                } catch(e){ console.warn('Prompt not available', e); }
+            // Story intro sequence - only shows once ever
+            if (!introShown && !this.introStarted) {
+                this.introStarted = true;
+                this.playIntroSequence();
             }
             
-            // Check win conditions every 60 frames
-            if (this.currentPass > 100 && this.currentPass % 60 === 0) {
-                this.checkWinConditions();
+            // Controls message - shows every time at start
+            if (this.currentPass === 10 && introShown) {
+                try { 
+                    Prompt.showDialoguePopup('Controls', 'WASD to move. E to interact with objects and NPCs. Find the 5 code pages or earn 500 crypto to escape.'); 
+                } catch(e){ console.warn('Prompt not available', e); }
             }
         }
         
         this.currentPass++;
     },
 
-    checkWinConditions: function() {
-        // Check crypto win condition (500 crypto)
-        const cryptoEl = document.getElementById('balance');
-        if (cryptoEl) {
-            const crypto = parseInt(cryptoEl.textContent) || 0;
-            if (crypto >= 500 && !this.cryptoWinTriggered) {
-                this.cryptoWinTriggered = true;
-                this.triggerCryptoWin();
-            }
-        }
+    playIntroSequence: function() {
+        const dialogues = [
+            { speaker: '???', text: 'You wake up in a basement. The door is locked.', duration: 3500 },
+            { speaker: 'IShowGreen', text: 'Good. You are awake. I need your help.', duration: 3500 },
+            { speaker: 'IShowGreen', text: 'I wrote a program called The Green Machine. Every line by hand. On paper.', duration: 4000 },
+            { speaker: 'IShowGreen', text: 'I lost the pages. Five of them. One in the wash. One burned. One the rats took. The others... somewhere in here.', duration: 5000 },
+        ];
         
-        // Check if all code scraps collected (handled by event listener)
+        let index = 0;
+        
+        const showNext = () => {
+            if (index < dialogues.length) {
+                const d = dialogues[index];
+                try {
+                    Prompt.showIntroDialogue(d.speaker, d.text, d.duration, () => {
+                        index++;
+                        showNext();
+                    });
+                } catch(e) {
+                    console.warn('Could not show intro dialogue', e);
+                    index++;
+                    showNext();
+                }
+            } else {
+                // Mark intro as shown
+                localStorage.setItem('dbs2_intro_shown', 'true');
+                // Show final controls message with close button
+                try {
+                    Prompt.showDialoguePopup('IShowGreen', 'Find all five pages and bring them to me. Or earn 500 crypto and buy your way out. WASD to move. E to interact.');
+                } catch(e) {
+                    console.warn('Could not show controls', e);
+                }
+            }
+        };
+        
+        // Start after a brief delay
+        setTimeout(showNext, 500);
     },
 
-    triggerCryptoWin: function() {
-        try {
-            Prompt.showDialoguePopup('IShowGreen', '500 crypto. You kept your end of the deal. The door is unlocked. Get out of my sight.');
-            setTimeout(() => {
-                this.showWinScreen('crypto');
-            }, 3000);
-        } catch(e) {
-            console.warn('Could not show crypto win:', e);
-        }
-    },
-
-    triggerCodeScrapWin: function() {
-        try {
-            Prompt.showDialoguePopup('IShowGreen', 'All five fragments. My program... I can rebuild it. You have done well.');
-            setTimeout(() => {
-                Prompt.showDialoguePopup('IShowGreen', 'There is another way this could end. But for now... the door is open. You may leave.');
-                setTimeout(() => {
-                    this.showWinScreen('scraps');
-                }, 3000);
-            }, 3000);
-        } catch(e) {
-            console.warn('Could not show scrap win:', e);
-        }
-    },
+    // Win conditions are checked when talking to IShowGreen (see Prompt.js)
 
     showWinScreen: function(winType) {
         const overlay = document.createElement('div');

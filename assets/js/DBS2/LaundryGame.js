@@ -682,8 +682,8 @@ export async function showLaundryMinigame(onComplete) {
                 document.body.removeChild(overlay);
                 // Refresh leaderboard
                 try {
-                    if (window.Leaderboard && typeof window.Leaderboard.fetchLeaderboard === 'function') {
-                        window.Leaderboard.fetchLeaderboard();
+                    if (window.Leaderboard && typeof window.Leaderboard.refresh === 'function') {
+                        window.Leaderboard.refresh();
                     }
                 } catch(e) { console.log('Could not refresh leaderboard'); }
                 if (onComplete) onComplete();
