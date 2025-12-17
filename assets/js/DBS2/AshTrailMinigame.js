@@ -1,4 +1,4 @@
-import { addInventoryItem, completeMinigame, updateCrypto, updateScore, isMinigameCompleted, getScores } from './StatsManager.js';
+import { addInventoryItem, updateCrypto, isMinigameCompleted, completeMinigame } from './StatsManager.js';
 // Logical grid that everything lives on (player + path).
 // Higher numbers = smoother curves and more room for complex shapes.
 const GRID_COLS = 24;
@@ -151,74 +151,6 @@ function createEl(tag, props = {}, children = []) {
   return el;
 }
 
-// --- Progress / completion tracking ----------------------------------------
-// Track completion per-book locally so the player can see 0/3, 1/3, ... 3/3.
-// (This is separate from completeMinigame('ash_trail') which is for the overall minigame.)
-const ASH_TRAIL_COMPLETION_KEY = "ash_trail_completed_books_v1";
-
-function loadCompletedBookIds() {
-  try {
-    const raw = localStorage.getItem(ASH_TRAIL_COMPLETION_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveCompletedBookIds(ids) {
-  try {
-    localStorage.setItem(ASH_TRAIL_COMPLETION_KEY, JSON.stringify(ids));
-  } catch (e) {
-    // ignore
-  }
-}
-
-function isBookCompleted(bookId) {
-  return loadCompletedBookIds().includes(bookId);
-}
-
-function markBookCompleted(bookId) {
-  const ids = loadCompletedBookIds();
-  if (!ids.includes(bookId)) {
-    ids.push(bookId);
-    saveCompletedBookIds(ids);
-  }
-  return ids;
-}
-
-function completionCount() {
-  const ids = loadCompletedBookIds();
-  return Math.min(BOOKS.length, ids.length);
-}
-
-function allBooksCompleted() {
-  return completionCount() >= BOOKS.length;
-}
-
-function createProgressPill() {
-  const done = completionCount();
-  return createEl("div", {
-    textContent: allBooksCompleted()
-      ? `Progress: ${done}/${BOOKS.length} — ALL BOOKS CLEARED ✅`
-      : `Progress: ${done}/${BOOKS.length} — Clear all ${BOOKS.length} to finish`,
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      padding: "6px 10px",
-      borderRadius: "999px",
-      fontSize: "12px",
-      fontWeight: "700",
-      background: allBooksCompleted() ? "rgba(34,197,94,0.18)" : "rgba(148,163,184,0.12)",
-      color: allBooksCompleted() ? "#86efac" : "#e5e7eb",
-      border: allBooksCompleted()
-        ? "1px solid rgba(34,197,94,0.55)"
-        : "1px solid rgba(148,163,184,0.35)",
-      marginTop: "10px",
-    },
-  });
-}
-
 // --- Core state ------------------------------------------------------------
 
 let overlay = null;
@@ -231,6 +163,7 @@ let truePath = [];      // array of logical grid points {x, y}
 let playerPath = [];    // sampled player positions during run
 let playerPos = null;   // current player position in grid space (floats)
 let isRunPhase = false;
+let isFirstCompletion = false; // Track first completion for bonus reward
 
 // Continuous movement state for run phase
 let pressedDirs = { up: false, down: false, left: false, right: false };
@@ -239,186 +172,6 @@ let lastTimestamp = null;
 let sampleAccumulator = 0;
 let keyHandlerDown = null;
 let keyHandlerUp = null;
-
-// --- AshTrail-only "leaderboard" (your best %) ------------------------------
-async function renderAshTrailBestPanel(mountEl) {
-  if (!mountEl) return;
-  mountEl.innerHTML = "";
-
-  const wrapper = createEl("div", {
-    style: {
-      padding: "8px 10px",
-      borderRadius: "12px",
-      border: "1px solid rgba(148,163,184,0.25)",
-      background: "rgba(148,163,184,0.06)",
-      display: "flex",
-      flexDirection: "column",
-      gap: "6px",
-    },
-  });
-
-  wrapper.appendChild(
-    createEl("div", {
-      textContent: "Ash Trail — Best %",
-      style: { fontSize: "12px", fontWeight: "900", color: "#e5e7eb" },
-    })
-  );
-
-  let completed = false;
-  try {
-    completed = await isMinigameCompleted("ash_trail");
-  } catch (_) {
-    completed = false;
-  }
-
-  let best = null;
-  if (completed) {
-    try {
-      const scores = (await getScores()) || {};
-      best = scores["ash_trail"];
-    } catch (_) {
-      best = null;
-    }
-  }
-
-  wrapper.appendChild(
-    createEl("div", {
-      textContent: completed ? `Best: ${Math.round(Number(best || 0))}%` : "Best: NA (finish all 3 books)",
-      style: { fontSize: "12px", fontWeight: "800", color: completed ? "#86efac" : "#9ca3af" },
-    })
-  );
-
-  wrapper.appendChild(
-    createEl("div", {
-      textContent: "This updates after each run. NA until the full Ash Trail set is completed.",
-      style: { fontSize: "10px", color: "#9ca3af", lineHeight: "1.35" },
-    })
-  );
-
-  mountEl.appendChild(wrapper);
-}
-
-// --- AshTrail global leaderboard (backend-powered) --------------------------
-function getDbs2ApiBase() {
-  // Match the main `Leaderboard.js` behavior
-  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  return isLocalhost ? "http://localhost:8587/api/dbs2" : "/api/dbs2";
-}
-
-/**
- * Expected backend contract (you said you'll add it):
- * GET `${apiBase}/leaderboard/minigame?game=ash_trail&limit=10`
- * Response shape (flexible):
- * {
- *   leaderboard: [
- *     { rank: 1, score: 97, user_info: { name: "Cyrus", uid: "..." } }
- *   ]
- * }
- */
-async function fetchAshTrailLeaderboard(limit = 10) {
-  const apiBase = getDbs2ApiBase();
-  const url = `${apiBase}/leaderboard/minigame?game=ash_trail&limit=${limit}`;
-  const res = await fetch(url, { method: "GET", credentials: "include" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  const raw = data?.leaderboard;
-  if (!Array.isArray(raw)) return [];
-  return raw.map((entry, idx) => ({
-    rank: entry?.rank ?? (idx + 1),
-    name: entry?.user_info?.name || entry?.user_info?.uid || entry?.name || "Unknown",
-    score: typeof entry?.score === "number" ? entry.score : Number(entry?.score ?? 0),
-  }));
-}
-
-async function renderAshTrailLeaderboardPanel(mountEl) {
-  if (!mountEl) return;
-  mountEl.innerHTML = "";
-
-  const wrapper = createEl("div", {
-    style: {
-      padding: "8px 10px",
-      borderRadius: "12px",
-      border: "1px solid rgba(148,163,184,0.25)",
-      background: "rgba(148,163,184,0.06)",
-      display: "flex",
-      flexDirection: "column",
-      gap: "6px",
-    },
-  });
-
-  const header = createEl("div", {
-    style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" },
-  });
-
-  header.appendChild(
-    createEl("div", {
-      textContent: "Ash Trail Leaderboard",
-      style: { fontSize: "12px", fontWeight: "900", color: "#e5e7eb" },
-    })
-  );
-
-  const refreshBtn = createEl("button", {
-    textContent: "Refresh",
-    style: {
-      padding: "4px 8px",
-      borderRadius: "999px",
-      border: "1px solid rgba(148,163,184,0.35)",
-      background: "rgba(15,23,42,0.7)",
-      color: "#e5e7eb",
-      fontSize: "11px",
-      cursor: "pointer",
-    },
-  });
-  header.appendChild(refreshBtn);
-  wrapper.appendChild(header);
-
-  const list = createEl("div", { style: { display: "flex", flexDirection: "column", gap: "4px" } });
-  wrapper.appendChild(list);
-
-  const load = async () => {
-    list.innerHTML = "";
-    list.appendChild(createEl("div", { textContent: "Loading…", style: { fontSize: "11px", color: "#9ca3af" } }));
-    try {
-      const rows = await fetchAshTrailLeaderboard(10);
-      list.innerHTML = "";
-      if (!rows.length) {
-        list.appendChild(
-          createEl("div", { textContent: "No scores yet.", style: { fontSize: "11px", color: "#9ca3af" } })
-        );
-      } else {
-        rows.slice(0, 10).forEach((r) => {
-          const row = createEl("div", { style: { display: "flex", justifyContent: "space-between", gap: "8px" } });
-          row.appendChild(
-            createEl("div", {
-              textContent: `#${r.rank} ${r.name}`,
-              style: { fontSize: "11px", color: "#e5e7eb", overflow: "hidden", textOverflow: "ellipsis" },
-            })
-          );
-          row.appendChild(
-            createEl("div", {
-              textContent: `${Math.max(0, Math.min(100, Math.round(r.score)))}%`,
-              style: { fontSize: "11px", fontWeight: "900", color: "#86efac" },
-            })
-          );
-          list.appendChild(row);
-        });
-      }
-    } catch (e) {
-      list.innerHTML = "";
-      list.appendChild(
-        createEl("div", {
-          textContent: "Leaderboard unavailable (backend endpoint not added yet).",
-          style: { fontSize: "11px", color: "#fca5a5", lineHeight: "1.35" },
-        })
-      );
-    }
-  };
-
-  refreshBtn.addEventListener("click", load);
-  await load();
-
-  mountEl.appendChild(wrapper);
-}
 
 // --- Overlay lifecycle -----------------------------------------------------
 
@@ -491,6 +244,14 @@ function closeOverlay() {
   cleanupRunInput();
   // Re-enable main game controls
   window.ashTrailActive = false;
+  window.minigameActive = false;
+  
+  // Refresh leaderboard
+  try {
+    if (window.Leaderboard && typeof window.Leaderboard.refresh === 'function') {
+      window.Leaderboard.refresh();
+    }
+  } catch(e) { console.log('Could not refresh leaderboard'); }
 }
 
 function createHeader() {
@@ -504,7 +265,7 @@ function createHeader() {
   });
 
   const subtitle = createEl("div", {
-    textContent: "Follow the ash trail and restore Ishowgreen’s crypto scriptures.",
+    textContent: "Trace the ash trail to recover the burned pages.",
     style: {
       fontSize: "12px",
       color: "#9ca3af",
@@ -580,7 +341,7 @@ function renderIntroScene() {
   });
 
   const introTitle = createEl("h2", {
-    textContent: "Ishowgreen’s Burnt Library",
+    textContent: "IShowGreen’s Burnt Library",
     style: {
       margin: "0",
       fontSize: "22px",
@@ -590,7 +351,7 @@ function renderIntroScene() {
 
   const introText = createEl("p", {
     textContent:
-      "Ishowgreen torched his own crypto scriptures in a rage. Now he wants you to reconstruct them from ash trails.",
+      "IShowGreen's backup pages burned in a candle accident. Trace the ash trails to recover the code.",
     style: {
       margin: "4px 0 0",
       fontSize: "14px",
@@ -754,54 +515,6 @@ function renderBookSelectScene() {
   sidebar.appendChild(title);
   sidebar.appendChild(subtitle);
 
-  // AshTrail-only best % (NA until full minigame completed)
-  const bestMount = createEl("div", { id: "ashtrail-best-mount" });
-  sidebar.appendChild(bestMount);
-  // fire-and-forget
-  renderAshTrailBestPanel(bestMount);
-
-  // Clear, explicit checklist so players know they must clear all 3
-  const checklist = createEl("div", {
-    style: {
-      padding: "8px 10px",
-      borderRadius: "12px",
-      border: "1px solid rgba(148,163,184,0.25)",
-      background: "rgba(148,163,184,0.06)",
-      display: "flex",
-      flexDirection: "column",
-      gap: "4px",
-    },
-  });
-  checklist.appendChild(
-    createEl("div", {
-      textContent: `Completion Checklist (${completionCount()}/${BOOKS.length})`,
-      style: { fontSize: "12px", fontWeight: "800", color: "#e5e7eb" },
-    })
-  );
-  BOOKS.forEach((b) => {
-    const done = isBookCompleted(b.id);
-    checklist.appendChild(
-      createEl("div", {
-        textContent: `${done ? "✅" : "⬜"} ${b.title}`,
-        style: { fontSize: "11px", color: done ? "#86efac" : "#9ca3af" },
-      })
-    );
-  });
-  if (allBooksCompleted()) {
-    checklist.appendChild(
-      createEl("div", {
-        textContent: "ALL THREE BOOKS CLEARED — set complete!",
-        style: {
-          marginTop: "4px",
-          fontSize: "11px",
-          fontWeight: "900",
-          color: "#bbf7d0",
-        },
-      })
-    );
-  }
-  sidebar.appendChild(checklist);
-
   const bookList = createEl("div", {
     style: {
       marginTop: "6px",
@@ -849,10 +562,9 @@ function renderBookSelectScene() {
     titleRow.appendChild(t);
     titleRow.appendChild(d);
 
-    const completed = isBookCompleted(book.id);
     const status = createEl("span", {
-      textContent: completed ? "Status: COMPLETED ✅" : "Status: Not completed",
-      style: { fontSize: "11px", color: completed ? "#86efac" : "#9ca3af" },
+      textContent: "Status: Not started (frontend demo)",
+      style: { fontSize: "11px", color: "#9ca3af" },
     });
 
     card.appendChild(titleRow);
@@ -868,7 +580,6 @@ function renderBookSelectScene() {
   });
 
   sidebar.appendChild(bookList);
-  sidebar.appendChild(createProgressPill());
 
   const mainPanel = createEl("div", {
     style: {
@@ -1151,13 +862,11 @@ function playPathPreview(path, onComplete) {
   const cellH = canvas.height / GRID_ROWS;
   let i = 0;
 
-  // Dynamic speed: longer paths draw faster per‑point so total time stays reasonable
-  // Faster demo (requested)
-  const baseDelay = 70;
-  const minDelay = 16;
-  const speedMult = 0.5; // lower = faster
+  // Faster preview: still readable, but doesn't stall the gameplay loop.
+  const baseDelay = 85;
+  const minDelay = 25;
   const delay =
-    Math.max(minDelay, baseDelay - Math.min(90, (path.length - 80) * 0.45)) * speedMult;
+    Math.max(minDelay, baseDelay - Math.min(80, (path.length - 80) * 0.3));
 
   const step = () => {
     if (!ctx) return;
@@ -1270,7 +979,7 @@ function renderRunScene() {
 
   const info = createEl("p", {
     textContent:
-      "Press Enter at any time to finish your run and see Ishowgreen’s reaction.",
+      "Press Enter at any time to finish your run and see IShowGreen’s reaction.",
     style: {
       fontSize: "12px",
       color: "#9ca3af",
@@ -1491,15 +1200,58 @@ function finishRun() {
   cleanupRunInput();
 
   const score = computeScore(truePath, playerPath);
-  // Store best % for Ash Trail (always keep highest)
-  // Store best % for Ash Trail overall + per-book leaderboards (backend-backed via /api/dbs2/scores)
+
+  // Persist best % to backend (overall + per-book leaderboards)
   try { updateScore("ash_trail", score); } catch (_) {}
   try {
-    if (currentBook?.id) {
-      updateScore(`ash_trail_${currentBook.id}`, score);
-    }
+    if (currentBook?.id) updateScore(`ash_trail_${currentBook.id}`, score);
   } catch (_) {}
+
+  // Award crypto based on score
+  awardCryptoForScore(score);
+  
   renderResultsScene(score);
+}
+
+async function awardCryptoForScore(score) {
+  let cryptoReward = 0;
+  
+  // Completion threshold is per-book requiredScore (default 60 now)
+  const required = currentBook?.requiredScore ?? 60;
+  if (score >= required) {
+    // Passed: base reward + difficulty bonus + score bonus
+    const difficultyBonus = currentBook ? (currentBook.difficulty * 5) : 0;
+    cryptoReward = 15 + Math.floor(score / 10) + difficultyBonus;
+    
+    // First completion bonus
+    if (isFirstCompletion) {
+      cryptoReward += 20;
+      
+      try {
+        await completeMinigame('ash_trail');
+        console.log('[AshTrail] Marked as complete');
+        
+        await addInventoryItem({
+          name: 'Code Scrap: Ash Trail',
+          found_at: 'ash_trail',
+          timestamp: new Date().toISOString()
+        });
+        console.log('[AshTrail] Code scrap added to inventory');
+        
+        isFirstCompletion = false; // Only once
+      } catch (e) {
+        console.log('[AshTrail] Could not save completion:', e);
+      }
+    }
+    
+    await updateCrypto(cryptoReward);
+    console.log('[AshTrail] Awarded crypto:', cryptoReward);
+    
+  } else if (score >= 50) {
+    // Partial reward for close attempts
+    cryptoReward = Math.floor(score / 20);
+    await updateCrypto(cryptoReward);
+  }
 }
 
 function computeScore(trueP, playerP) {
@@ -1547,18 +1299,15 @@ function computeScore(trueP, playerP) {
     excessPenalty = Math.max(0.5, 1.0 - (pathLengthRatio - 2.0) * 0.6);
   }
 
-  // Harder scoring: require closer alignment to earn higher %.
-  // Use a distance-weighted score instead of a simple "within radius = good" check.
-  //
-  // MAX_DIST is in grid units. Smaller = stricter.
+  // Harder-than-original scoring, but not overly punishing:
+  // distance-weighted scoring that rewards staying closer to the trail.
   const difficulty = currentBook?.difficulty ?? 2;
-  // Tuned difficulty: still stricter than the original (1.2), but less punishing than the first pass.
+  // Tuned difficulty: still stricter than the original (1.2), but manageable.
   // diff1=1.00, diff2=0.93, diff3=0.86
   const MAX_DIST = Math.max(0.75, 1.07 - 0.07 * difficulty);
 
   const weightFromDist = (d) => {
     // 1.0 at d=0, smoothly drops to 0 at d>=MAX_DIST.
-    // Slightly harsh, but not as punishing as squaring.
     const t = Math.max(0, 1 - d / MAX_DIST);
     return Math.pow(t, 1.35);
   };
@@ -1566,16 +1315,14 @@ function computeScore(trueP, playerP) {
   // 1) Proximity accuracy: average weight of player samples to the true trail
   let proximitySum = 0;
   for (const p of playerP) {
-    const d = distanceToPath(p, trueP);
-    proximitySum += weightFromDist(d);
+    proximitySum += weightFromDist(distanceToPath(p, trueP));
   }
   const proximityFrac = proximitySum / playerP.length;
 
   // 2) Coverage: how much of the true trail was "touched", also distance-weighted
   let coverageSum = 0;
   for (const tp of trueP) {
-    const d = distanceToPath(tp, playerP);
-    coverageSum += weightFromDist(d);
+    coverageSum += weightFromDist(distanceToPath(tp, playerP));
   }
   const coverageFrac = coverageSum / trueP.length;
 
@@ -1619,7 +1366,7 @@ function reactionForScore(score) {
     return {
       label: "Not enough pages collected",
       text:
-        'Ishowgreen squints at the half‑burnt pages: "The rat burns down and tape? That doesn’t even make sense. Try again."',
+        'IShowGreen squints at the half‑burnt pages: "The rat burns down and tape? That doesn’t even make sense. Try again."',
       tone: "error",
     };
   }
@@ -1627,28 +1374,20 @@ function reactionForScore(score) {
     return {
       label: "Somewhat collected",
       text:
-        'Ishowgreen mutters: "The rat escapes and the house burns down? You’re close, but I’m missing way too many details."',
+        'IShowGreen mutters: "The rat escapes and the house burns down? You’re close, but I’m missing way too many details."',
       tone: "warn",
     };
   }
   return {
     label: "Enough collected",
     text:
-      'Ishowgreen actually smiles: "Impressive. I can finally read my precious possession again. Maybe there’s hope for you."',
+      'IShowGreen actually smiles: "Impressive. I can finally read my precious possession again. Maybe there’s hope for you."',
     tone: "success",
   };
 }
 
 function renderResultsScene(score) {
   const reaction = reactionForScore(score);
-
-  // Determine pass/fail for this specific book
-  const required = currentBook?.requiredScore ?? 80;
-  const passed = score >= required;
-  const alreadyCompleted = currentBook?.id ? isBookCompleted(currentBook.id) : false;
-  if (currentBook?.id && passed) {
-    markBookCompleted(currentBook.id);
-  }
 
   const layout = createEl("div", {
     style: {
@@ -1720,57 +1459,6 @@ function renderResultsScene(score) {
     },
   });
 
-  // Clear completion marking so the player knows what they finished
-  const progressBlock = createEl("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "6px",
-      marginTop: "6px",
-    },
-  });
-
-  const completionLine = createEl("div", {
-    textContent: passed
-      ? `✅ Book cleared: ${currentBook?.title || "Unknown"} (${completionCount()}/${BOOKS.length})`
-      : `❌ Not cleared (need ${required}% to clear this book)`,
-    style: {
-      fontSize: "12px",
-      color: passed ? "#86efac" : "#fca5a5",
-    },
-  });
-  progressBlock.appendChild(completionLine);
-  progressBlock.appendChild(createProgressPill());
-
-  // Reward (non-blocking) on first clear of this book
-  if (passed && currentBook?.id && !alreadyCompleted) {
-    addInventoryItem({
-      name: `Code Scrap: ${currentBook?.title || "Ash Trail"}`,
-      found_at: "ash_trail",
-      timestamp: new Date().toISOString(),
-    }).catch(() => {});
-  }
-
-  // When all three books are cleared, mark minigame complete and give a bonus
-  if (allBooksCompleted()) {
-    const allDone = createEl("div", {
-      textContent: "ALL THREE BOOKS RECOVERED! You completed the Ash Trail set.",
-      style: {
-        marginTop: "6px",
-        padding: "8px 10px",
-        borderRadius: "12px",
-        background: "rgba(34,197,94,0.12)",
-        border: "1px solid rgba(34,197,94,0.55)",
-        color: "#bbf7d0",
-        fontSize: "12px",
-        fontWeight: "800",
-      },
-    });
-    progressBlock.appendChild(allDone);
-    completeMinigame("ash_trail").catch(() => {});
-    updateCrypto(25).catch(() => {});
-  }
-
   const buttons = createEl("div", {
     style: {
       display: "flex",
@@ -1835,7 +1523,6 @@ function renderResultsScene(score) {
   left.appendChild(scoreValue);
   left.appendChild(badge);
   left.appendChild(reactionText);
-  left.appendChild(progressBlock);
   left.appendChild(buttons);
 
   const right = createEl("div", {
@@ -1886,13 +1573,23 @@ function renderResultsScene(score) {
 }
 
 // --- Public entry point ----------------------------------------------------
-export function showAshTrailMinigame() {
+
+export async function showAshTrailMinigame() {
   window.ashTrailActive = true;
+  window.minigameActive = true;
+  
+  // Check if first completion
+  try {
+    isFirstCompletion = !(await isMinigameCompleted('ash_trail'));
+    console.log('[AshTrail] First completion:', isFirstCompletion);
+  } catch (e) {
+    console.log('[AshTrail] Could not check completion status:', e);
+    isFirstCompletion = false;
+  }
+  
   openOverlay();
   renderIntroScene();
 }
 
-// Also expose globally so it’s easy to call from HTML/other scripts if needed
+// Also expose globally so it's easy to call from HTML/other scripts if needed
 window.showAshTrailMinigame = showAshTrailMinigame;
-
-
