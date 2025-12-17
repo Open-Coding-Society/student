@@ -88,24 +88,24 @@ export default async function infiniteUserMinigame() {
         
         // Create DOM elements FIRST before any async operations
         let quizWindow = document.createElement("div");
-        quizWindow.style = 'position: fixed; width: 50%; height: 50%; top: 25%; left: 25%; z-index: 10000; background-color: black; border-width: 10px; border-style: solid; border-color: rgb(50, 50, 50); text-align: center; vertical-align: center; color: rgb(0, 255, 0); font-size: 3vh; font-family: "Sixtyfour", monospace; border-radius: 3vh;';
+        quizWindow.style = 'position: fixed; width: 50%; height: 50%; top: 25%; left: 25%; z-index: 10000; background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 100%); border: 2px solid #0a5; text-align: center; vertical-align: center; color: #0a5; font-size: 2.5vh; font-family: "Courier New", monospace; border-radius: 10px;';
         quizWindow.id = "quizWindow";
         document.body.appendChild(quizWindow);
         
         let messageDiv = document.createElement("div");
-        messageDiv.style = 'width: 100%; height: 60%; padding-top: 2vh; color: rgb(0, 255, 0);';
-        messageDiv.innerText = `Please decrypt alphanumeric password to continue: ${convertToAlphaNumeric(selectedPassword)}`;
+        messageDiv.style = 'width: 100%; height: 60%; padding-top: 3vh; color: #0a5; font-size: 2.2vh;';
+        messageDiv.innerText = `Decrypt the alphanumeric password:\n\n${convertToAlphaNumeric(selectedPassword)}`;
         quizWindow.appendChild(messageDiv);
 
         let typebox = document.createElement("div");
-        typebox.style = 'position: absolute; width: 100%; height: 20%; bottom: 15%; background-color: black; font-size: auto; font-family: "Sixtyfour", monospace; font-size: 5vh; text-align: center; vertical-align: center; color: rgb(0, 255, 0);';
+        typebox.style = 'position: absolute; width: 90%; left: 5%; height: 15%; bottom: 18%; background: rgba(0, 40, 20, 0.5); font-family: "Courier New", monospace; font-size: 4vh; text-align: center; color: #0a5; border: 1px solid #052; border-radius: 5px; display: flex; align-items: center; justify-content: center;';
         typebox.innerText = ">";
         quizWindow.appendChild(typebox);
         
         // Close button
         let closeBtn = document.createElement("button");
-        closeBtn.innerText = "✕ Close (ESC)";
-        closeBtn.style = 'position: absolute; top: 10px; right: 10px; background: #f00; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px;';
+        closeBtn.innerText = "EXIT (ESC)";
+        closeBtn.style = 'position: absolute; top: 10px; right: 10px; background: #600; color: #ccc; border: 1px solid #800; padding: 6px 12px; cursor: pointer; font-size: 12px; font-family: "Courier New", monospace;';
         closeBtn.onclick = closeMinigame;
         quizWindow.appendChild(closeBtn);
         
@@ -124,6 +124,12 @@ export default async function infiniteUserMinigame() {
             window.infiniteUserActive = false;
             window.minigameActive = false;
             window.removeEventListener("keydown", keyHandler, true);
+            // Refresh leaderboard
+            try {
+                if (window.Leaderboard && typeof window.Leaderboard.refresh === 'function') {
+                    window.Leaderboard.refresh();
+                }
+            } catch(e) { console.log('Could not refresh leaderboard'); }
         }
         
         async function completeWithReward() {
@@ -159,28 +165,27 @@ export default async function infiniteUserMinigame() {
             // Show completion message
             if (isFirstCompletion) {
                 messageDiv.innerHTML = `
-                    <div style="font-size: 2.5vh;">🎉 FIRST COMPLETION! 🎉</div>
-                    <div style="font-size: 2vh; margin-top: 10px;">New user password created!</div>
+                    <div style="font-size: 2.2vh; color: #0a5;">CODE FRAGMENT RECOVERED</div>
+                    <div style="font-size: 1.8vh; margin-top: 10px; color: #888;">Found a faded page wedged behind the keyboard. The password list.</div>
                     <div style="margin-top: 15px;">
-                        <img src="${baseurl}/images/DBS2/codescrapPassword.png" style="max-width: 80px; border: 2px solid #0f0; border-radius: 8px;" onerror="this.style.display='none'">
+                        <img src="${baseurl}/images/DBS2/codescrapPassword.png" style="max-width: 70px; border: 1px solid #0a5; border-radius: 4px;" onerror="this.style.display='none'">
                     </div>
-                    <div style="font-size: 2.5vh; margin-top: 10px; color: #ffd700;">+${totalReward} Crypto!</div>
-                    <div style="font-size: 1.5vh; color: #888;">(includes +20 first completion bonus)</div>
+                    <div style="font-size: 1.6vh; margin-top: 10px; color: #0a5;">+${totalReward} Crypto</div>
                 `;
             } else {
-                messageDiv.innerText = `New user password created. You earned ${totalReward} Crypto!`;
+                messageDiv.innerText = `Password updated. +${totalReward} Crypto`;
             }
             
             setTimeout(() => {
                 closeMinigame();
                 try {
                     if (isFirstCompletion) {
-                        Prompt.showDialoguePopup('Computer1', `🎉 First completion! Code scrap collected! +${totalReward} Crypto!`);
+                        Prompt.showDialoguePopup('System', `Found a page with passwords behind the terminal. +${totalReward} Crypto.`);
                     } else {
-                        Prompt.showDialoguePopup('Computer1', `Password system updated! You earned ${totalReward} Crypto!`);
+                        Prompt.showDialoguePopup('System', `Password updated. +${totalReward} Crypto.`);
                     }
                 } catch(e) {
-                    console.log(`Earned ${totalReward} Crypto!`);
+                    console.log(`Earned ${totalReward} Crypto`);
                 }
             }, isFirstCompletion ? 2500 : 1500);
         }
