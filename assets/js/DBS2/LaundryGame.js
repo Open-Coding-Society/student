@@ -46,34 +46,35 @@ export async function showLaundryMinigame(onComplete) {
         width: 90%;
         max-width: 900px;
         height: 80vh;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        border: 2px solid #0a5;
-        border-radius: 10px;
+        background: #2a2a2a;
+        border-radius: 15px;
         padding: 20px;
         box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
         position: relative;
         display: flex;
         flex-direction: column;
-        font-family: 'Courier New', monospace;
+        background-size: cover;
+        background-position: center;
     `;
+    container.style.backgroundImage = `url('${baseurl}/images/DBS2/basement.png')`;
 
     const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'EXIT';
+    closeBtn.textContent = '✕ Close';
     closeBtn.style.cssText = `
         position: absolute;
         top: 10px;
         right: 10px;
-        background: #600;
-        color: #ccc;
-        border: 1px solid #800;
-        padding: 8px 15px;
+        background: #ff4444;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
         cursor: pointer;
-        font-size: 12px;
-        font-family: 'Courier New', monospace;
+        font-size: 16px;
         z-index: 10;
     `;
-    closeBtn.onmouseover = () => closeBtn.style.background = '#800';
-    closeBtn.onmouseout = () => closeBtn.style.background = '#600';
+    closeBtn.onmouseover = () => closeBtn.style.background = '#cc0000';
+    closeBtn.onmouseout = () => closeBtn.style.background = '#ff4444';
     closeBtn.onclick = () => {
         window.laundryMinigameActive = false;
         window.minigameActive = false;
@@ -81,27 +82,26 @@ export async function showLaundryMinigame(onComplete) {
     };
 
     const title = document.createElement('h1');
-    title.textContent = 'WASHING MACHINE REPAIR';
+    title.textContent = '🔧 Repair the Washing Machine';
     title.style.cssText = `
         text-align: center;
-        color: #0a5;
-        font-size: 20px;
+        color: #fff;
+        font-size: 24px;
         margin-bottom: 10px;
-        letter-spacing: 2px;
-        font-family: 'Courier New', monospace;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     `;
 
     const instructions = document.createElement('div');
-    instructions.textContent = 'Drag the parts to the correct spots on the machine. Then load the laundry.';
+    instructions.textContent = 'Drag and drop the parts onto the correct spots on the washing machine. Once all parts are installed, load the laundry!';
     instructions.style.cssText = `
         text-align: center;
-        color: #888;
-        font-size: 12px;
+        color: #ffff99;
+        font-size: 14px;
         margin-bottom: 15px;
         padding: 10px;
         background: rgba(0, 0, 0, 0.6);
-        border-radius: 5px;
-        font-family: 'Courier New', monospace;
+        border-radius: 8px;
+        transition: all 0.3s;
     `;
 
     const gameArea = document.createElement('div');
@@ -378,37 +378,35 @@ export async function showLaundryMinigame(onComplete) {
         text-align: center;
         z-index: 100;
         max-width: 400px;
-        box-shadow: 0 0 30px rgba(0, 170, 85, 0.3);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
     `;
     
     // Show different message based on first completion
     const rewardAmount = isFirstCompletion ? 520 : 20;
     paperDiscovery.innerHTML = `
-        <h2 style="color: #0a5; margin-bottom: 10px; font-size: 16px; letter-spacing: 1px;">
-            ${isFirstCompletion ? 'CODE FRAGMENT RECOVERED' : 'MACHINE REPAIRED'}
+        <div style="font-size: 48px; margin-bottom: 15px;">📜</div>
+        <h2 style="color: #ffd700; margin-bottom: 10px;">
+            ${isFirstCompletion ? '🎉 CODE SCRAP FOUND! 🎉' : 'Paper Found!'}
         </h2>
-        <p style="margin-bottom: 15px; font-size: 13px; color: #888;">
-            ${isFirstCompletion 
-                ? 'A soggy piece of paper was stuck in the drum. The ink ran but the code is still readable.' 
-                : 'The machine runs again.'}
-        </p>
+        <p style="margin-bottom: 15px;">You found a soggy piece of paper stuck in the machine!</p>
         ${isFirstCompletion ? `
-            <div style="background: rgba(0,170,85,0.1); padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #052;">
-                <p style="color: #0a5; font-size: 12px;">Code fragment recovered. 1 of 5.</p>
-                <img src="${baseurl}/images/DBS2/codescrapLaundry.png" style="max-width: 80px; margin: 10px auto; display: block; border: 1px solid #0a5; border-radius: 4px;" onerror="this.style.display='none'">
+            <div style="background: rgba(0,255,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="color: #0f0; font-size: 14px;">First completion bonus!</p>
+                <img src="${baseurl}/images/DBS2/codescrapLaundry.png" style="max-width: 100px; margin: 10px auto; display: block; border: 2px solid #0f0; border-radius: 8px;" onerror="this.style.display='none'">
             </div>
         ` : ''}
-        <p style="color: #0a5; font-size: 16px;">+${rewardAmount} Crypto</p>
+        <p style="color: #0f0; font-size: 20px;">+${rewardAmount} Crypto!</p>
         <button id="continueBtn" style="
             margin-top: 15px;
-            padding: 10px 25px;
-            font-size: 13px;
-            background: #052;
-            color: #0a5;
-            border: 1px solid #0a5;
+            padding: 12px 30px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
-        ">CONTINUE</button>
+            font-weight: bold;
+        ">Continue</button>
     `;
 
     machineArea.appendChild(machineContainer);
@@ -680,18 +678,11 @@ export async function showLaundryMinigame(onComplete) {
                 window.laundryMinigameActive = false;
                 window.minigameActive = false;
                 document.body.removeChild(overlay);
-                // Refresh leaderboard
-                try {
-                    if (window.Leaderboard && typeof window.Leaderboard.refresh === 'function') {
-                        window.Leaderboard.refresh();
-                    }
-                } catch(e) { console.log('Could not refresh leaderboard'); }
                 if (onComplete) onComplete();
             }, 1500);
         }
     }
 
-    overlay.appendChild(container);
     document.body.appendChild(overlay);
 }
 
