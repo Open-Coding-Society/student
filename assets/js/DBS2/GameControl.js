@@ -424,8 +424,7 @@ const GameControl = {
             if (!this.ashTrailWidget) {
                 this.ashTrailWidget = new AshTrailLeaderboardWidget();
             }
-            // Faster UI updates so the leaderboard feels instant
-            this.ashTrailWidget.init(true, 1000);
+            this.ashTrailWidget.init(true, 3000);
         } catch (e) {
             console.error("AshTrailLeaderboardWidget init failed", e);
         }
