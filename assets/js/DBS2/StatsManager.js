@@ -335,7 +335,8 @@ export async function syncWithServer() {
         for (const [game, score] of Object.entries(localState.scores)) {
             const serverScore = serverData.scores?.[game] || 0;
             if (score > serverScore) {
-                await DBS2API.updateScore(game, score);
+                // DBS2API exposes submitScore(game, score)
+                await DBS2API.submitScore(game, score);
             }
         }
         localState.scores = {};
