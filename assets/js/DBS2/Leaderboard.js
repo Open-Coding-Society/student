@@ -523,4 +523,5 @@ class Leaderboard {
     }
 }
 
+window.Leaderboard = Leaderboard;
 export default Leaderboard;

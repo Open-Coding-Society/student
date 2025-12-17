@@ -50,7 +50,6 @@ class Npc extends Character {
     handleKeyDown({ key }) {
         switch (key) {
             case 'e': // Player 1 interaction
-            case 'u': // Player 2 interaction
                 try {
                     
                     const players = GameEnv.gameObjects.filter(

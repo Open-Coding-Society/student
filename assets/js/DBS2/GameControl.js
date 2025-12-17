@@ -26,7 +26,7 @@ console.log("GameControl.js loaded!");
  * @property {function} resize - Resize the canvas and player object when the window is resized.
  */
 const GameControl = {
-    intervalId: null, // Variable to hold the timer interval reference
+    intervalId: null,
     localStorageTimeKey: "localTimes",
     currentPass: 0,
     currentLevelIndex: 0,
@@ -34,6 +34,9 @@ const GameControl = {
     path: '',
     leaderboard: null,
     ashTrailWidget: null,
+    cryptoWinTriggered: false,
+    scrapWinTriggered: false,
+    introStarted: false,
 
     start: function(path) {
         console.log("GameControl.start() called with path:", path);
@@ -46,8 +49,12 @@ const GameControl = {
             console.error("GameControl: Failed to create GameEnv:", error);
             throw error;
         }
-        // Initialize inventory UI (flexible; persists to localStorage for now)
+        // Initialize inventory UI
         try { Inventory.init(); } catch (e) { console.error('Inventory init failed', e); }
+        
+        // Initialize win condition listeners
+        this.initWinConditionListeners();
+        
         this.levelClasses = [GameLevelBasement];
         this.currentLevelIndex = 0;
         this.path = path;
@@ -117,12 +124,137 @@ const GameControl = {
     },
 
     handleLevelStart: function() {
-        // First time message for level 0, delay 10 passes
-        if (this.currentLevelIndex === 0 && this.currentPass === 10) {
-            try { Prompt.showDialoguePopup('How To Play', 'Press E to interact with NPCs. WASD to move around. Collect Crypto, appease IShowGreen and escape the basement!. Make sure to complete all minigames in order to earn code scraps to give to IShowGreen. Maybe he will let you out of the basement!'); } catch(e){ console.warn('Prompt not available', e); }
+        // Check if intro has been shown before
+        const introShown = localStorage.getItem('dbs2_intro_shown') === 'true';
+        
+        if (this.currentLevelIndex === 0) {
+            // Story intro sequence - only shows once ever
+            if (!introShown && !this.introStarted) {
+                this.introStarted = true;
+                this.playIntroSequence();
+            }
+            
+            // Controls message - shows every time at start
+            if (this.currentPass === 10 && introShown) {
+                try { 
+                    Prompt.showDialoguePopup('Controls', 'WASD to move. E to interact with objects and NPCs. Find the 5 code pages or earn 500 crypto to escape.'); 
+                } catch(e){ console.warn('Prompt not available', e); }
+            }
         }
-        // Recursion tracker
+        
         this.currentPass++;
+    },
+
+    playIntroSequence: function() {
+        const dialogues = [
+            { speaker: '???', text: 'You wake up in a basement. The door is locked.', duration: 3500 },
+            { speaker: 'IShowGreen', text: 'Good. You are awake. I need your help.', duration: 3500 },
+            { speaker: 'IShowGreen', text: 'I wrote a program called The Green Machine. Every line by hand. On paper.', duration: 4000 },
+            { speaker: 'IShowGreen', text: 'I lost the pages. Five of them. One in the wash. One burned. One the rats took. The others... somewhere in here.', duration: 5000 },
+        ];
+        
+        let index = 0;
+        
+        const showNext = () => {
+            if (index < dialogues.length) {
+                const d = dialogues[index];
+                try {
+                    Prompt.showIntroDialogue(d.speaker, d.text, d.duration, () => {
+                        index++;
+                        showNext();
+                    });
+                } catch(e) {
+                    console.warn('Could not show intro dialogue', e);
+                    index++;
+                    showNext();
+                }
+            } else {
+                // Mark intro as shown
+                localStorage.setItem('dbs2_intro_shown', 'true');
+                // Show final controls message with close button
+                try {
+                    Prompt.showDialoguePopup('IShowGreen', 'Find all five pages and bring them to me. Or earn 500 crypto and buy your way out. WASD to move. E to interact.');
+                } catch(e) {
+                    console.warn('Could not show controls', e);
+                }
+            }
+        };
+        
+        // Start after a brief delay
+        setTimeout(showNext, 500);
+    },
+
+    // Win conditions are checked when talking to IShowGreen (see Prompt.js)
+
+    showWinScreen: function(winType) {
+        const overlay = document.createElement('div');
+        overlay.id = 'win-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            font-family: 'Courier New', monospace;
+            color: #0a5;
+        `;
+        
+        let title, subtitle, hint;
+        
+        if (winType === 'crypto') {
+            title = 'BOUGHT YOUR FREEDOM';
+            subtitle = 'You paid 500 crypto. IShowGreen unlocks the door. You climb the stairs and leave.';
+            hint = '';
+        } else if (winType === 'scraps') {
+            title = 'THE PAGES RETURNED';
+            subtitle = 'You gave IShowGreen his five pages. He can rebuild The Green Machine. He lets you go.';
+            hint = '<p style="color: #640; margin-top: 30px; font-style: italic;">There was another choice. What if you had kept them?</p>';
+        } else if (winType === 'alternate') {
+            title = 'STOLEN';
+            subtitle = 'You kept the pages. The Green Machine belongs to you now. IShowGreen can only watch as you walk out with his lifes work.';
+            hint = '<p style="color: #640; margin-top: 30px; font-style: italic;">The full alternate ending is coming soon.</p>';
+        } else {
+            title = 'ESCAPED';
+            subtitle = 'You found a way out.';
+            hint = '';
+        }
+        
+        overlay.innerHTML = `
+            <h1 style="font-size: 32px; margin-bottom: 20px; letter-spacing: 3px;">${title}</h1>
+            <p style="color: #888; font-size: 13px; max-width: 500px; text-align: center; line-height: 1.6;">${subtitle}</p>
+            ${hint}
+            <button onclick="location.reload()" style="
+                margin-top: 40px;
+                background: #052;
+                color: #0a5;
+                border: 1px solid #0a5;
+                padding: 12px 30px;
+                font-size: 13px;
+                cursor: pointer;
+                font-family: 'Courier New', monospace;
+            ">PLAY AGAIN</button>
+        `;
+        
+        document.body.appendChild(overlay);
+        GameEnv.continueLevel = false;
+    },
+
+    initWinConditionListeners: function() {
+        // Listen for code scrap collection event
+        window.addEventListener('allCodeScrapsCollected', () => {
+            if (!this.scrapWinTriggered) {
+                // Don't auto-trigger - player must present to IShowGreen
+                try {
+                    Prompt.showDialoguePopup('System', 'All five pages found. Bring them to IShowGreen.');
+                } catch(e) {}
+            }
+        });
     },
 
     handleLevelEnd: function() {
@@ -283,7 +415,7 @@ const GameControl = {
         if (!this.leaderboard) {
             this.leaderboard = new Leaderboard();
         }
-        this.leaderboard.init(true, 3000);
+        this.leaderboard.init();
     },
 
     // Small Ash Trail leaderboard near the bookshelf (main game overlay)
