@@ -273,13 +273,38 @@ const Prompt = {
         let speaker = npcId || 'NPC';
         
         if (npcId === 'IShowGreen') {
-            if (playerCrypto >= 250) {
-                dialogue = "You've escaped the basement! Congratulations — freedom is yours.";
-                if (window.GameControl && typeof window.GameControl.stopTimer === 'function') {
-                    window.GameControl.stopTimer();
+            // Check for code scraps
+            let hasAllScraps = false;
+            let scrapCount = 0;
+            try {
+                if (window.Inventory) {
+                    scrapCount = window.Inventory.getCodeScrapCount();
+                    hasAllScraps = window.Inventory.hasAllCodeScraps();
                 }
+            } catch(e) {
+                console.log('Could not check inventory:', e);
+            }
+            
+            if (hasAllScraps) {
+                // Player has all 5 pages - offer to present them
+                dialogue = "You found all five pages. Give them to me and you can leave. Or keep them. Your choice.";
+                
+                // Show special dialogue with choice
+                Prompt.showCodeScrapChoice(playerCrypto, scrapCount);
+                return; // Don't show normal dialogue
+                
+            } else if (playerCrypto >= 500) {
+                dialogue = "500 crypto. Fine. The door is unlocked. Get out.";
+                if (window.GameControl) {
+                    window.GameControl.cryptoWinTriggered = true;
+                    setTimeout(() => {
+                        window.GameControl.showWinScreen('crypto');
+                    }, 2000);
+                }
+            } else if (scrapCount > 0) {
+                dialogue = `${scrapCount} pages found. ${5 - scrapCount} still missing. Keep looking. Or earn ${500 - playerCrypto} more crypto.`;
             } else {
-                dialogue = `Not so fast! You need 250 Crypto to escape, but you only have ${playerCrypto}. Keep hustling!`;
+                dialogue = `You have ${playerCrypto} crypto. I need 500 to let you out. Or find my five pages. They are somewhere in this basement.`;
             }
         } else {
             // Generic handling for other NPCs: optionally award a small interaction reward
@@ -406,6 +431,119 @@ const Prompt = {
         btnRow.appendChild(cancel);
         popup.appendChild(btnRow);
         document.body.appendChild(popup);
+    },
+
+    showCodeScrapChoice(playerCrypto, scrapCount) {
+        // Close existing popups
+        let existingPopup = document.getElementById('dialoguePopup');
+        if (existingPopup) existingPopup.remove();
+        
+        if (this.isOpen) {
+            this.backgroundDim.remove();
+        }
+        
+        window.dialogueActive = true;
+        
+        let popup = document.createElement('div');
+        popup.id = 'dialoguePopup';
+        popup.style.cssText = `
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 100%);
+            color: #ccc;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #0a5;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 10001;
+            min-width: 350px;
+            max-width: 90vw;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        `;
+        
+        popup.innerHTML = `
+            <div style="font-weight: 700; margin-bottom: 10px; color: #0a5; font-size: 16px;">ISHOWGREEN</div>
+            <div style="margin-bottom: 20px; line-height: 1.6; font-size: 13px;">
+                All five pages. My code. You actually found them.
+            </div>
+            <div style="margin-bottom: 20px; color: #888; font-size: 12px; font-style: italic;">
+                Hand them over and you can leave. Or you could keep them for yourself.
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="present-scraps-btn" style="
+                    background: #052;
+                    color: #0a5;
+                    border: 1px solid #0a5;
+                    padding: 12px 20px;
+                    cursor: pointer;
+                    font-family: 'Courier New', monospace;
+                    font-size: 13px;
+                ">GIVE HIM THE PAGES</button>
+                <button id="keep-scraps-btn" style="
+                    background: #520;
+                    color: #a50;
+                    border: 1px solid #640;
+                    padding: 12px 20px;
+                    cursor: pointer;
+                    font-family: 'Courier New', monospace;
+                    font-size: 13px;
+                ">KEEP THEM</button>
+                <button id="cancel-choice-btn" style="
+                    background: transparent;
+                    color: #666;
+                    border: 1px solid #333;
+                    padding: 8px 20px;
+                    cursor: pointer;
+                    font-family: 'Courier New', monospace;
+                    font-size: 11px;
+                ">WALK AWAY</button>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        // Handle present choice - normal good ending
+        document.getElementById('present-scraps-btn').onclick = () => {
+            popup.remove();
+            window.dialogueActive = false;
+            
+            Prompt.showDialoguePopup('IShowGreen', 'Finally. I can rebuild The Green Machine. The door is open. Leave before I change my mind.', () => {
+                if (window.GameControl) {
+                    window.GameControl.scrapWinTriggered = true;
+                    window.GameControl.showWinScreen('scraps');
+                }
+            });
+        };
+        
+        // Handle keep choice - alternate ending hook
+        document.getElementById('keep-scraps-btn').onclick = () => {
+            popup.remove();
+            window.dialogueActive = false;
+            
+            // This is where an alternate ending could be added
+            Prompt.showDialoguePopup('IShowGreen', 'What? No. Those are mine. I wrote them. Give them back.', () => {
+                setTimeout(() => {
+                    Prompt.showDialoguePopup('IShowGreen', 'You would steal from me? After everything?', () => {
+                        setTimeout(() => {
+                            Prompt.showDialoguePopup('System', 'Alternate ending not yet implemented. You leave with the pages. IShowGreen cannot stop you.', () => {
+                                if (window.GameControl) {
+                                    window.GameControl.showWinScreen('alternate');
+                                }
+                            });
+                        }, 500);
+                    });
+                }, 500);
+            });
+        };
+        
+        // Handle cancel
+        document.getElementById('cancel-choice-btn').onclick = () => {
+            popup.remove();
+            window.dialogueActive = false;
+        };
     },
 
     updatePromptDisplay() {

@@ -159,28 +159,27 @@ export default async function infiniteUserMinigame() {
             // Show completion message
             if (isFirstCompletion) {
                 messageDiv.innerHTML = `
-                    <div style="font-size: 2.5vh;">🎉 FIRST COMPLETION! 🎉</div>
-                    <div style="font-size: 2vh; margin-top: 10px;">New user password created!</div>
+                    <div style="font-size: 2.2vh; color: #0a5;">CODE FRAGMENT RECOVERED</div>
+                    <div style="font-size: 1.8vh; margin-top: 10px; color: #888;">Found a faded page wedged behind the keyboard. The password list.</div>
                     <div style="margin-top: 15px;">
-                        <img src="${baseurl}/images/DBS2/codescrapPassword.png" style="max-width: 80px; border: 2px solid #0f0; border-radius: 8px;" onerror="this.style.display='none'">
+                        <img src="${baseurl}/images/DBS2/codescrapPassword.png" style="max-width: 70px; border: 1px solid #0a5; border-radius: 4px;" onerror="this.style.display='none'">
                     </div>
-                    <div style="font-size: 2.5vh; margin-top: 10px; color: #ffd700;">+${totalReward} Crypto!</div>
-                    <div style="font-size: 1.5vh; color: #888;">(includes +20 first completion bonus)</div>
+                    <div style="font-size: 1.6vh; margin-top: 10px; color: #0a5;">+${totalReward} Crypto</div>
                 `;
             } else {
-                messageDiv.innerText = `New user password created. You earned ${totalReward} Crypto!`;
+                messageDiv.innerText = `Password updated. +${totalReward} Crypto`;
             }
             
             setTimeout(() => {
                 closeMinigame();
                 try {
                     if (isFirstCompletion) {
-                        Prompt.showDialoguePopup('Computer1', `🎉 First completion! Code scrap collected! +${totalReward} Crypto!`);
+                        Prompt.showDialoguePopup('System', `Found a page with passwords behind the terminal. +${totalReward} Crypto.`);
                     } else {
-                        Prompt.showDialoguePopup('Computer1', `Password system updated! You earned ${totalReward} Crypto!`);
+                        Prompt.showDialoguePopup('System', `Password updated. +${totalReward} Crypto.`);
                     }
                 } catch(e) {
-                    console.log(`Earned ${totalReward} Crypto!`);
+                    console.log(`Earned ${totalReward} Crypto`);
                 }
             }, isFirstCompletion ? 2500 : 1500);
         }

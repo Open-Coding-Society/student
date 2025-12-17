@@ -25,13 +25,15 @@ console.log("GameControl.js loaded!");
  * @property {function} resize - Resize the canvas and player object when the window is resized.
  */
 const GameControl = {
-    intervalId: null, // Variable to hold the timer interval reference
+    intervalId: null,
     localStorageTimeKey: "localTimes",
     currentPass: 0,
     currentLevelIndex: 0,
     levelClasses: [],
     path: '',
     leaderboard: null,
+    cryptoWinTriggered: false,
+    scrapWinTriggered: false,
 
     start: function(path) {
         console.log("GameControl.start() called with path:", path);
@@ -44,8 +46,12 @@ const GameControl = {
             console.error("GameControl: Failed to create GameEnv:", error);
             throw error;
         }
-        // Initialize inventory UI (flexible; persists to localStorage for now)
+        // Initialize inventory UI
         try { Inventory.init(); } catch (e) { console.error('Inventory init failed', e); }
+        
+        // Initialize win condition listeners
+        this.initWinConditionListeners();
+        
         this.levelClasses = [GameLevelBasement];
         this.currentLevelIndex = 0;
         this.path = path;
@@ -114,12 +120,151 @@ const GameControl = {
     },
 
     handleLevelStart: function() {
-        // First time message for level 0, delay 10 passes
-        if (this.currentLevelIndex === 0 && this.currentPass === 10) {
-            try { Prompt.showDialoguePopup('How To Play', 'Press E to interact with NPCs. WASD to move around. Collect Crypto, appease IShowGreen and escape the basement!. Make sure to complete all minigames in order to earn code scraps to give to IShowGreen. Maybe he will let you out of the basement!'); } catch(e){ console.warn('Prompt not available', e); }
+        // Story intro sequence
+        if (this.currentLevelIndex === 0) {
+            if (this.currentPass === 10) {
+                try { 
+                    Prompt.showDialoguePopup('???', 'You wake up in a basement. The door is locked.'); 
+                } catch(e){ console.warn('Prompt not available', e); }
+            }
+            if (this.currentPass === 200) {
+                try { 
+                    Prompt.showDialoguePopup('IShowGreen', 'Good. You are awake. I need your help.'); 
+                } catch(e){ console.warn('Prompt not available', e); }
+            }
+            if (this.currentPass === 400) {
+                try { 
+                    Prompt.showDialoguePopup('IShowGreen', 'I wrote a program called The Green Machine. Every line by hand. On paper.'); 
+                } catch(e){ console.warn('Prompt not available', e); }
+            }
+            if (this.currentPass === 600) {
+                try { 
+                    Prompt.showDialoguePopup('IShowGreen', 'I lost the pages. Five of them. One in the wash. One burned. One the rats took. The others... somewhere in here.'); 
+                } catch(e){ console.warn('Prompt not available', e); }
+            }
+            if (this.currentPass === 800) {
+                try { 
+                    Prompt.showDialoguePopup('IShowGreen', 'Find all five pages and bring them to me. Or earn 500 crypto and buy your way out. WASD to move. E to interact.'); 
+                } catch(e){ console.warn('Prompt not available', e); }
+            }
+            
+            // Check win conditions every 60 frames
+            if (this.currentPass > 100 && this.currentPass % 60 === 0) {
+                this.checkWinConditions();
+            }
         }
-        // Recursion tracker
+        
         this.currentPass++;
+    },
+
+    checkWinConditions: function() {
+        // Check crypto win condition (500 crypto)
+        const cryptoEl = document.getElementById('balance');
+        if (cryptoEl) {
+            const crypto = parseInt(cryptoEl.textContent) || 0;
+            if (crypto >= 500 && !this.cryptoWinTriggered) {
+                this.cryptoWinTriggered = true;
+                this.triggerCryptoWin();
+            }
+        }
+        
+        // Check if all code scraps collected (handled by event listener)
+    },
+
+    triggerCryptoWin: function() {
+        try {
+            Prompt.showDialoguePopup('IShowGreen', '500 crypto. You kept your end of the deal. The door is unlocked. Get out of my sight.');
+            setTimeout(() => {
+                this.showWinScreen('crypto');
+            }, 3000);
+        } catch(e) {
+            console.warn('Could not show crypto win:', e);
+        }
+    },
+
+    triggerCodeScrapWin: function() {
+        try {
+            Prompt.showDialoguePopup('IShowGreen', 'All five fragments. My program... I can rebuild it. You have done well.');
+            setTimeout(() => {
+                Prompt.showDialoguePopup('IShowGreen', 'There is another way this could end. But for now... the door is open. You may leave.');
+                setTimeout(() => {
+                    this.showWinScreen('scraps');
+                }, 3000);
+            }, 3000);
+        } catch(e) {
+            console.warn('Could not show scrap win:', e);
+        }
+    },
+
+    showWinScreen: function(winType) {
+        const overlay = document.createElement('div');
+        overlay.id = 'win-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            font-family: 'Courier New', monospace;
+            color: #0a5;
+        `;
+        
+        let title, subtitle, hint;
+        
+        if (winType === 'crypto') {
+            title = 'BOUGHT YOUR FREEDOM';
+            subtitle = 'You paid 500 crypto. IShowGreen unlocks the door. You climb the stairs and leave.';
+            hint = '';
+        } else if (winType === 'scraps') {
+            title = 'THE PAGES RETURNED';
+            subtitle = 'You gave IShowGreen his five pages. He can rebuild The Green Machine. He lets you go.';
+            hint = '<p style="color: #640; margin-top: 30px; font-style: italic;">There was another choice. What if you had kept them?</p>';
+        } else if (winType === 'alternate') {
+            title = 'STOLEN';
+            subtitle = 'You kept the pages. The Green Machine belongs to you now. IShowGreen can only watch as you walk out with his lifes work.';
+            hint = '<p style="color: #640; margin-top: 30px; font-style: italic;">The full alternate ending is coming soon.</p>';
+        } else {
+            title = 'ESCAPED';
+            subtitle = 'You found a way out.';
+            hint = '';
+        }
+        
+        overlay.innerHTML = `
+            <h1 style="font-size: 32px; margin-bottom: 20px; letter-spacing: 3px;">${title}</h1>
+            <p style="color: #888; font-size: 13px; max-width: 500px; text-align: center; line-height: 1.6;">${subtitle}</p>
+            ${hint}
+            <button onclick="location.reload()" style="
+                margin-top: 40px;
+                background: #052;
+                color: #0a5;
+                border: 1px solid #0a5;
+                padding: 12px 30px;
+                font-size: 13px;
+                cursor: pointer;
+                font-family: 'Courier New', monospace;
+            ">PLAY AGAIN</button>
+        `;
+        
+        document.body.appendChild(overlay);
+        GameEnv.continueLevel = false;
+    },
+
+    initWinConditionListeners: function() {
+        // Listen for code scrap collection event
+        window.addEventListener('allCodeScrapsCollected', () => {
+            if (!this.scrapWinTriggered) {
+                // Don't auto-trigger - player must present to IShowGreen
+                try {
+                    Prompt.showDialoguePopup('System', 'All five pages found. Bring them to IShowGreen.');
+                } catch(e) {}
+            }
+        });
     },
 
     handleLevelEnd: function() {
@@ -280,7 +425,7 @@ const GameControl = {
         if (!this.leaderboard) {
             this.leaderboard = new Leaderboard();
         }
-        this.leaderboard.init(true, 3000);
+        this.leaderboard.init();
     },
 
 };

@@ -1,52 +1,61 @@
-import Prompt from './Prompt.js';
-import { getInventory, addInventoryItem, removeInventoryItem } from './StatsManager.js';
-
 /**
- * Inventory System for DBS2
- * Syncs with backend and displays code scraps with descriptions
+ * Inventory.js
+ * Manages player inventory with backend sync and code scrap collection
+ * 
+ * STORY: IShowGreen once ran a legendary crypto mining rig he called "The Green Machine."
+ * Years of neglect destroyed it - rats gnawed the cables, a flood ruined the drives,
+ * a fire burned his backups, and he forgot his own passwords. Now he has trapped you
+ * in his basement until you help him recover the fragments of his lost program.
  */
 
-// Code Scrap definitions - awarded by each minigame
+import { getInventory, addInventoryItem } from './StatsManager.js';
+
+// Code scrap definitions with story elements
 const CODE_SCRAPS = {
     crypto_miner: {
-        id: 'codescrap_crypto',
-        name: 'Crypto Miner Code Scrap',
+        id: 'crypto_miner',
+        name: 'Mining Algorithm Core',
+        icon: 'CORE',
         image: 'codescrapCrypto.png',
-        icon: '⛏️',
-        description: 'A fragment of encrypted mining algorithms. The code hints at underground crypto operations.',
-        hint: 'Found by completing the Bitcoin Miner minigame.'
+        description: 'The heart of The Green Machine. A mining algorithm that once generated thousands of crypto per hour. IShowGreen wrote this during a sleepless weekend, fueled by energy drinks and desperation. Without it, the rest of the code is worthless.',
+        hint: 'Prove your worth at the mining terminal.',
+        storyFragment: '"The algorithm was my masterpiece. Sixty hours of pure focus. I would give anything to have it back." - Journal Entry #47'
     },
     laundry: {
-        id: 'codescrap_laundry',
-        name: 'Laundry Code Scrap',
-        image: 'codescrapLaundry.png',
-        icon: '🧺',
-        description: 'Suspicious transaction records hidden in laundry machine logs. Money laundering evidence?',
-        hint: 'Found by completing the Laundry minigame.'
+        id: 'laundry',
+        name: 'Transaction Validator',
+        icon: 'VALID',
+        image: 'codescrapLaundry.png', 
+        description: 'The transaction verification module. It processed and validated every crypto exchange. A burst pipe flooded the basement and destroyed the drive it was stored on. The water damage was total.',
+        hint: 'The old washing machine holds secrets in its wreckage.',
+        storyFragment: '"The flood came at 3 AM. By morning, half my drives were dead. The validator was gone." - Journal Entry #62'
     },
     whackarat: {
-        id: 'codescrap_rats',
-        name: 'Rat Exterminator Code Scrap',
+        id: 'whackarat',
+        name: 'Security Protocol',
+        icon: 'SECURE',
         image: 'codescrapRats.png',
-        icon: '🐀',
-        description: 'Pest control logs with coded messages. The rats know more than they let on...',
-        hint: 'Found by completing the Whack-a-Rat minigame.'
+        description: 'The firewall and intrusion detection system that kept The Green Machine safe from hackers. When the rat infestation hit, they chewed through everything. Power cables. Network lines. Storage drives. The security module was corrupted beyond recovery.',
+        hint: 'The rats still guard their territory.',
+        storyFragment: '"I heard them in the walls for weeks before I saw the damage. By then it was too late." - Journal Entry #78'
     },
     ash_trail: {
-        id: 'codescrap_pages',
-        name: 'Ash Trail Code Scrap',
+        id: 'ash_trail',
+        name: 'Backup Recovery Data',
+        icon: 'BACKUP',
         image: 'codescrapPages.png',
-        icon: '📚',
-        description: 'Burnt document fragments with partial account numbers. Someone tried to destroy evidence.',
-        hint: 'Found by completing the Ash Trail minigame.'
+        description: 'Printed documentation and recovery keys. IShowGreen was paranoid about digital-only backups, so he printed everything. Then he knocked over a candle. The fire was small, but his "paper backups" were ash in minutes.',
+        hint: 'Trace what remains of the burned pages.',
+        storyFragment: '"I printed them to be SAFE. Ironic. The fire took everything on the bookshelf." - Journal Entry #91'
     },
     infinite_user: {
-        id: 'codescrap_password',
-        name: 'Infinite User Code Scrap',
+        id: 'infinite_user',
+        name: 'Authentication System',
+        icon: 'AUTH',
         image: 'codescrapPassword.png',
-        icon: '💻',
-        description: 'Login credentials and backdoor access codes. The system has been compromised.',
-        hint: 'Found by completing the Infinite User minigame.'
+        description: 'The master access control system. After months of not logging in, IShowGreen forgot his own credentials. The system he built to keep others out now keeps him locked away from his own creation.',
+        hint: 'Crack the password encryption to recover the access keys.',
+        storyFragment: '"PASSWORD DENIED. Again. I wrote this system. I should remember. Why cant I remember?" - Journal Entry #103'
     }
 };
 
@@ -59,13 +68,9 @@ const Inventory = {
     owner: null,
     _keyListenerAdded: false,
 
-    /**
-     * Initialize the inventory system
-     */
     init(options = {}) {
         if (options.slots) this.slots = options.slots;
         
-        // Get base path for images
         const baseurl = document.body.getAttribute('data-baseurl') || '';
         this.baseImagePath = `${baseurl}/images/DBS2`;
         
@@ -73,12 +78,10 @@ const Inventory = {
         this.renderButton();
         this.renderPanel();
         
-        // Load from backend asynchronously (don't block)
         this.loadFromBackend().catch(e => {
             console.error('[Inventory] Background load failed:', e);
         });
         
-        // Keyboard shortcut
         if (!this._keyListenerAdded) {
             this._keyListenerAdded = true;
             window.addEventListener('keydown', (e) => {
@@ -91,9 +94,13 @@ const Inventory = {
         console.log('[Inventory] Initialized');
     },
 
-    /**
-     * Load inventory from backend
-     */
+    setOwner(owner) {
+        this.owner = owner || null;
+        if (this.owner) {
+            this.owner.inventory = this.getItems();
+        }
+    },
+
     async loadFromBackend() {
         this.isLoading = true;
         this.updateLoadingState();
@@ -102,14 +109,12 @@ const Inventory = {
             const inventory = await getInventory();
             console.log('[Inventory] Loaded from backend:', inventory);
             
-            // Convert backend format to display format
             this.items = [];
             if (Array.isArray(inventory) && inventory.length > 0) {
                 for (const item of inventory) {
                     if (!item) continue;
                     
                     try {
-                        // Check if it's a code scrap
                         const scrapInfo = this.getCodeScrapInfo(item);
                         if (scrapInfo) {
                             this.items.push({
@@ -117,7 +122,6 @@ const Inventory = {
                                 raw: item
                             });
                         } else {
-                            // Regular item - extract name safely
                             let name = 'Unknown Item';
                             if (typeof item === 'string') {
                                 name = item;
@@ -132,7 +136,7 @@ const Inventory = {
                             this.items.push({
                                 id: item.id || name || 'unknown',
                                 name: name,
-                                icon: '📦',
+                                icon: 'ITEM',
                                 description: item.description || `Found at: ${item.found_at || 'unknown'}`,
                                 raw: item
                             });
@@ -144,9 +148,11 @@ const Inventory = {
             }
             
             this.refreshGrid();
+            this.updateBadge();
+            this.checkCodeScrapWinCondition();
+            
         } catch (e) {
             console.error('[Inventory] Failed to load from backend:', e);
-            // Show empty state instead of loading forever
             this.items = [];
             this.refreshGrid();
         }
@@ -155,40 +161,29 @@ const Inventory = {
         this.updateLoadingState();
     },
 
-    /**
-     * Check if an item is a code scrap and return its info
-     */
     getCodeScrapInfo(item) {
         if (!item) return null;
         
-        // Handle various item formats from backend
         let itemName = '';
         let foundAt = '';
         
-        // Get item name (could be string or nested object)
         if (typeof item === 'string') {
             itemName = item.toLowerCase();
         } else if (typeof item.name === 'string') {
             itemName = item.name.toLowerCase();
         } else if (item.name && typeof item.name.name === 'string') {
-            // Handle nested {name: {name: "..."}} format
             itemName = item.name.name.toLowerCase();
         } else if (item.item_name && typeof item.item_name === 'string') {
             itemName = item.item_name.toLowerCase();
         }
         
-        // Get found_at
         if (typeof item.found_at === 'string') {
             foundAt = item.found_at.toLowerCase();
         } else if (item.name && typeof item.name.found_at === 'string') {
             foundAt = item.name.found_at.toLowerCase();
         }
         
-        console.log('[Inventory] Parsing item:', { itemName, foundAt, raw: item });
-        
-        // Check each code scrap type
         for (const [minigame, scrap] of Object.entries(CODE_SCRAPS)) {
-            // Match by found_at location or by name containing the minigame
             if (foundAt.includes(minigame) || 
                 foundAt.includes(minigame.replace('_', '')) ||
                 itemName.includes(minigame) ||
@@ -201,22 +196,20 @@ const Inventory = {
             }
         }
         
-        // Check for generic "code scrap" items
         if (itemName.includes('code scrap') || itemName.includes('codescrap')) {
-            // Try to determine which one based on other clues
-            if (itemName.includes('crypto') || itemName.includes('miner') || itemName.includes('bitcoin')) {
+            if (itemName.includes('crypto') || itemName.includes('miner') || itemName.includes('bitcoin') || itemName.includes('algorithm')) {
                 return { ...CODE_SCRAPS.crypto_miner, minigame: 'crypto_miner' };
             }
-            if (itemName.includes('laundry') || itemName.includes('wash')) {
+            if (itemName.includes('laundry') || itemName.includes('wash') || itemName.includes('transaction') || itemName.includes('validator')) {
                 return { ...CODE_SCRAPS.laundry, minigame: 'laundry' };
             }
-            if (itemName.includes('rat') || itemName.includes('whack')) {
+            if (itemName.includes('rat') || itemName.includes('whack') || itemName.includes('security')) {
                 return { ...CODE_SCRAPS.whackarat, minigame: 'whackarat' };
             }
-            if (itemName.includes('ash') || itemName.includes('trail') || itemName.includes('book') || itemName.includes('page')) {
+            if (itemName.includes('ash') || itemName.includes('trail') || itemName.includes('book') || itemName.includes('page') || itemName.includes('backup')) {
                 return { ...CODE_SCRAPS.ash_trail, minigame: 'ash_trail' };
             }
-            if (itemName.includes('infinite') || itemName.includes('user') || itemName.includes('password')) {
+            if (itemName.includes('infinite') || itemName.includes('user') || itemName.includes('password') || itemName.includes('auth')) {
                 return { ...CODE_SCRAPS.infinite_user, minigame: 'infinite_user' };
             }
         }
@@ -224,582 +217,468 @@ const Inventory = {
         return null;
     },
 
-    /**
-     * Add styles to page
-     */
+    hasAllCodeScraps() {
+        const collected = this.getCollectedMinigames();
+        return collected.size >= 5;
+    },
+
+    getCollectedMinigames() {
+        const collected = new Set();
+        for (const item of this.items) {
+            if (item.minigame) {
+                collected.add(item.minigame);
+            }
+        }
+        return collected;
+    },
+
+    checkCodeScrapWinCondition() {
+        if (this.hasAllCodeScraps()) {
+            window.dispatchEvent(new CustomEvent('allCodeScrapsCollected', {
+                detail: { items: this.items }
+            }));
+            console.log('[Inventory] All code scraps collected. Player can present to IShowGreen.');
+        }
+    },
+
     ensureStyles() {
         if (document.getElementById('inventory-styles')) return;
+        
         const style = document.createElement('style');
         style.id = 'inventory-styles';
         style.textContent = `
-            #inventoryButton {
+            #inventory-btn {
                 position: fixed;
-                bottom: 18px;
-                right: 18px;
+                bottom: 80px;
+                right: 20px;
                 width: 50px;
                 height: 50px;
-                border-radius: 8px;
-                background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(50,50,50,0.95) 100%);
-                color: #ffd700;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 2px solid #0a5;
+                border-radius: 10px;
+                cursor: pointer;
+                z-index: 9998;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                cursor: pointer;
-                z-index: 10050;
-                border: 2px solid #666;
-                box-shadow: 3px 3px 0px rgba(0,0,0,0.5);
-                font-size: 24px;
-                transition: all 0.2s;
+                font-size: 11px;
+                font-weight: bold;
+                color: #0a5;
+                font-family: 'Courier New', monospace;
+                box-shadow: 0 4px 15px rgba(0, 170, 85, 0.3);
+                transition: all 0.3s ease;
             }
-            #inventoryButton:hover {
-                background: linear-gradient(135deg, rgba(50,50,50,0.95) 0%, rgba(70,70,70,0.95) 100%);
-                border-color: #ffd700;
-                transform: scale(1.05);
+            #inventory-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(0, 170, 85, 0.5);
+                border-color: #0f0;
+                color: #0f0;
             }
-            #inventoryButton .badge {
+            #inventory-btn .badge {
                 position: absolute;
                 top: -5px;
                 right: -5px;
-                background: #ff4444;
+                background: #a00;
                 color: white;
-                font-size: 12px;
-                font-weight: bold;
+                font-size: 11px;
                 padding: 2px 6px;
                 border-radius: 10px;
-                min-width: 18px;
-                text-align: center;
+                font-weight: bold;
             }
-            
-            #inventoryPanel {
+            #inventory-panel {
                 position: fixed;
-                bottom: 80px;
-                right: 18px;
-                width: 420px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 100%);
+                border: 2px solid #0a5;
+                border-radius: 10px;
+                padding: 20px;
+                z-index: 9999;
+                min-width: 450px;
                 max-width: 95vw;
-                max-height: 70vh;
-                background: linear-gradient(135deg, rgba(20,20,30,0.98) 0%, rgba(30,30,40,0.98) 100%);
-                color: #fff;
-                border-radius: 12px;
-                border: 3px solid #666;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.7);
-                z-index: 10050;
+                box-shadow: 0 0 30px rgba(0, 100, 50, 0.4);
+                font-family: 'Courier New', monospace;
                 display: none;
-                overflow: hidden;
             }
-            
-            #inventoryPanel .inv-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px 16px;
-                background: rgba(0,0,0,0.3);
-                border-bottom: 2px solid #444;
+            #inventory-panel.open {
+                display: block;
+                animation: inventoryOpen 0.2s ease;
             }
-            
-            #inventoryPanel .inv-title {
+            @keyframes inventoryOpen {
+                from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+                to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            }
+            #inventory-panel h2 {
+                color: #0a5;
+                margin: 0 0 5px 0;
+                text-align: center;
                 font-size: 18px;
-                font-weight: bold;
-                color: #ffd700;
-                text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+                letter-spacing: 2px;
             }
-            
-            #inventoryPanel .inv-close {
-                background: rgba(255,100,100,0.2);
-                border: 2px solid #ff6464;
-                color: #ff6464;
-                padding: 6px 12px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: bold;
-                transition: all 0.2s;
+            .inventory-subtitle {
+                color: #666;
+                font-size: 11px;
+                text-align: center;
+                margin-bottom: 15px;
             }
-            #inventoryPanel .inv-close:hover {
-                background: rgba(255,100,100,0.4);
-            }
-            
-            #inventoryPanel .inv-content {
-                padding: 16px;
-                overflow-y: auto;
-                max-height: calc(70vh - 60px);
-            }
-            
-            #inventoryPanel .inv-section-title {
-                font-size: 14px;
-                color: #888;
-                margin-bottom: 12px;
-                padding-bottom: 8px;
-                border-bottom: 1px solid #333;
-            }
-            
-            #inventoryPanel .inv-grid {
+            .inventory-grid {
                 display: grid;
                 grid-template-columns: repeat(5, 1fr);
-                gap: 10px;
-                margin-bottom: 20px;
+                gap: 8px;
+                margin-bottom: 15px;
             }
-            
             .inventory-slot {
                 aspect-ratio: 1;
-                position: relative;
-                background: rgba(255,255,255,0.03);
-                border-radius: 8px;
-                border: 2px solid #333;
-                cursor: pointer;
-                transition: all 0.2s;
-                overflow: hidden;
-            }
-            .inventory-slot:hover {
-                border-color: #ffd700;
-                transform: scale(1.05);
-                z-index: 1;
-            }
-            .inventory-slot.empty {
-                opacity: 0.4;
-                cursor: default;
-            }
-            .inventory-slot.empty:hover {
-                border-color: #333;
-                transform: none;
-            }
-            .inventory-slot.code-scrap {
-                border-color: #0f0;
-                background: rgba(0,255,0,0.1);
-            }
-            .inventory-slot.code-scrap:hover {
-                border-color: #0f0;
-                box-shadow: 0 0 10px rgba(0,255,0,0.3);
-            }
-            
-            .inventory-slot .slot-content {
-                position: absolute;
-                inset: 4px;
+                background: rgba(0, 40, 20, 0.4);
+                border: 2px solid #052;
+                border-radius: 6px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 24px;
+                cursor: pointer;
+                transition: all 0.2s;
+                position: relative;
+                min-height: 70px;
             }
-            .inventory-slot .slot-content img {
-                max-width: 100%;
-                max-height: 100%;
+            .inventory-slot:hover {
+                border-color: #0a5;
+                background: rgba(0, 80, 40, 0.4);
+            }
+            .inventory-slot.collected {
+                border-color: #0a5;
+                box-shadow: inset 0 0 15px rgba(0, 170, 85, 0.3);
+            }
+            .inventory-slot.empty {
+                opacity: 0.5;
+            }
+            .inventory-slot .slot-icon {
+                font-size: 10px;
+                color: #0a5;
+                font-weight: bold;
+            }
+            .inventory-slot .slot-image {
+                width: 80%;
+                height: 80%;
                 object-fit: contain;
+                image-rendering: pixelated;
             }
-            
-            .inventory-slot .slot-label {
-                position: absolute;
-                bottom: 2px;
-                left: 2px;
-                right: 2px;
-                font-size: 8px;
+            .inventory-slot .slot-unknown {
+                font-size: 24px;
+                color: #333;
+            }
+            .inventory-progress {
                 text-align: center;
-                color: #aaa;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                background: rgba(0,0,0,0.7);
-                padding: 2px;
-                border-radius: 0 0 4px 4px;
+                padding: 12px;
+                background: rgba(0, 40, 20, 0.4);
+                border-radius: 6px;
+                margin-bottom: 15px;
+                border: 1px solid #052;
             }
-            
-            /* Item Detail Modal */
-            #itemDetailModal {
+            .inventory-progress-title {
+                color: #0a5;
+                font-size: 12px;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .inventory-progress-icons {
+                font-size: 11px;
+                letter-spacing: 3px;
+                color: #0a5;
+                font-weight: bold;
+            }
+            .inventory-progress-text {
+                color: #888;
+                font-size: 12px;
+                margin-top: 8px;
+            }
+            .inventory-story-hint {
+                background: rgba(80, 60, 0, 0.2);
+                border: 1px solid #640;
+                border-radius: 6px;
+                padding: 12px;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+            .inventory-story-hint p {
+                color: #a80;
+                font-size: 11px;
+                margin: 0;
+                line-height: 1.5;
+            }
+            .inventory-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #600;
+                color: #ccc;
+                border: 1px solid #800;
+                padding: 4px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                font-family: 'Courier New', monospace;
+            }
+            .inventory-close:hover {
+                background: #800;
+            }
+            .inventory-loading {
+                text-align: center;
+                padding: 40px;
+                color: #0a5;
+                font-size: 12px;
+            }
+            .item-modal {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0,0,0,0.8);
-                z-index: 10060;
-                display: none;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 10001;
+                display: flex;
                 align-items: center;
                 justify-content: center;
             }
-            #itemDetailModal.show {
-                display: flex;
-            }
-            #itemDetailModal .modal-content {
+            .item-modal-content {
                 background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                border: 3px solid #0f0;
-                border-radius: 12px;
-                padding: 24px;
-                max-width: 450px;
-                width: 90%;
+                border: 2px solid #0a5;
+                border-radius: 10px;
+                padding: 25px;
+                max-width: 400px;
                 text-align: center;
-                box-shadow: 0 0 30px rgba(0,255,0,0.3);
             }
-            #itemDetailModal .modal-image {
-                max-width: 200px;
-                max-height: 150px;
-                margin: 16px auto;
-                border: 2px solid #0f0;
-                border-radius: 8px;
+            .item-modal-content h3 {
+                color: #0a5;
+                margin: 0 0 15px 0;
+                font-size: 16px;
+                letter-spacing: 1px;
             }
-            #itemDetailModal .modal-title {
-                font-size: 20px;
-                font-weight: bold;
-                color: #0f0;
-                margin-bottom: 12px;
-            }
-            #itemDetailModal .modal-description {
-                font-size: 14px;
-                color: #ccc;
-                line-height: 1.6;
-                margin-bottom: 16px;
-            }
-            #itemDetailModal .modal-hint {
-                font-size: 12px;
-                color: #888;
-                font-style: italic;
-            }
-            #itemDetailModal .modal-close {
-                margin-top: 20px;
-                background: linear-gradient(135deg, #0f0 0%, #0a0 100%);
-                color: #000;
-                border: none;
-                padding: 12px 32px;
+            .item-modal-content img {
+                max-width: 120px;
+                margin: 15px auto;
+                display: block;
+                border: 1px solid #0a5;
                 border-radius: 6px;
+                image-rendering: pixelated;
+            }
+            .item-modal-content p {
+                color: #999;
+                font-size: 12px;
+                line-height: 1.6;
+                margin: 10px 0;
+            }
+            .item-modal-content .story-fragment {
+                color: #a80;
+                font-style: italic;
+                font-size: 11px;
+                background: rgba(80, 60, 0, 0.2);
+                padding: 12px;
+                border-radius: 4px;
+                margin-top: 15px;
+                border-left: 3px solid #640;
+                text-align: left;
+            }
+            .item-modal-content .hint {
+                color: #088;
+                font-size: 11px;
+            }
+            .item-modal-content button {
+                margin-top: 15px;
+                background: #052;
+                color: #0a5;
+                border: 1px solid #0a5;
+                padding: 8px 20px;
+                border-radius: 4px;
                 cursor: pointer;
-                font-weight: bold;
-                font-size: 14px;
-                transition: all 0.2s;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
             }
-            #itemDetailModal .modal-close:hover {
-                transform: scale(1.05);
-                box-shadow: 0 0 15px rgba(0,255,0,0.5);
-            }
-            
-            /* Loading state */
-            .inv-loading {
-                text-align: center;
-                padding: 40px;
-                color: #888;
-            }
-            .inv-loading .spinner {
-                display: inline-block;
-                width: 30px;
-                height: 30px;
-                border: 3px solid #333;
-                border-top-color: #ffd700;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            }
-            @keyframes spin {
-                to { transform: rotate(360deg); }
-            }
-            
-            /* Empty state */
-            .inv-empty {
-                text-align: center;
-                padding: 40px 20px;
-                color: #666;
-            }
-            .inv-empty-icon {
-                font-size: 48px;
-                margin-bottom: 16px;
+            .item-modal-content button:hover {
+                background: #0a5;
+                color: #000;
             }
         `;
         document.head.appendChild(style);
     },
 
-    /**
-     * Render the inventory button
-     */
     renderButton() {
-        if (document.getElementById('inventoryButton')) return;
+        if (document.getElementById('inventory-btn')) return;
+        
         const btn = document.createElement('div');
-        btn.id = 'inventoryButton';
-        btn.title = 'Inventory (I)';
-        btn.innerHTML = '🎒<span class="badge" id="invBadge" style="display:none;">0</span>';
-        btn.addEventListener('click', () => this.toggle());
+        btn.id = 'inventory-btn';
+        btn.innerHTML = 'DATA<span class="badge" style="display:none">0</span>';
+        btn.title = 'Code Fragments [I]';
+        btn.onclick = () => this.toggle();
         document.body.appendChild(btn);
-        this.updateBadge();
     },
 
-    /**
-     * Update the item count badge
-     */
-    updateBadge() {
-        const badge = document.getElementById('invBadge');
-        if (!badge) return;
-        
-        const count = this.items.filter(i => i).length;
-        if (count > 0) {
-            badge.textContent = count;
-            badge.style.display = 'block';
-        } else {
-            badge.style.display = 'none';
-        }
-    },
-
-    /**
-     * Render the inventory panel
-     */
     renderPanel() {
-        let panel = document.getElementById('inventoryPanel');
-        if (!panel) {
-            panel = document.createElement('div');
-            panel.id = 'inventoryPanel';
-            panel.innerHTML = `
-                <div class="inv-header">
-                    <div class="inv-title">🎒 Inventory</div>
-                    <div class="inv-close" id="invClose">✕ Close</div>
-                </div>
-                <div class="inv-content" id="invContent">
-                    <div class="inv-loading"><div class="spinner"></div><p>Loading...</p></div>
-                </div>
-            `;
-            document.body.appendChild(panel);
-            document.getElementById('invClose').addEventListener('click', () => this.close());
-        }
+        if (document.getElementById('inventory-panel')) return;
         
-        // Create item detail modal
-        if (!document.getElementById('itemDetailModal')) {
-            const modal = document.createElement('div');
-            modal.id = 'itemDetailModal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-icon" id="modalIcon"></div>
-                    <img class="modal-image" id="modalImage" src="" alt="" style="display:none;">
-                    <div class="modal-title" id="modalTitle"></div>
-                    <div class="modal-description" id="modalDescription"></div>
-                    <div class="modal-hint" id="modalHint"></div>
-                    <button class="modal-close" id="modalClose">OK</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
+        const panel = document.createElement('div');
+        panel.id = 'inventory-panel';
+        panel.innerHTML = `
+            <button class="inventory-close" onclick="Inventory.close()">CLOSE</button>
+            <h2>THE GREEN MACHINE</h2>
+            <div class="inventory-subtitle">Recovery Status</div>
             
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) this.closeItemDetail();
-            });
-            document.getElementById('modalClose').addEventListener('click', () => this.closeItemDetail());
-        }
+            <div class="inventory-story-hint">
+                <p>Recover all five code fragments and present them to IShowGreen.</p>
+                <p>He may let you leave. Or you can earn 500 crypto to buy your way out.</p>
+            </div>
+            
+            <div class="inventory-progress">
+                <div class="inventory-progress-title">Code Fragments</div>
+                <div class="inventory-progress-icons" id="progress-icons">[ ] [ ] [ ] [ ] [ ]</div>
+                <div class="inventory-progress-text" id="progress-text">0 of 5 recovered</div>
+            </div>
+            
+            <div class="inventory-grid" id="inventory-grid"></div>
+            
+            <div class="inventory-loading" id="inventory-loading" style="display:none">
+                Loading...
+            </div>
+        `;
+        document.body.appendChild(panel);
         
         this.refreshGrid();
     },
 
-    /**
-     * Update loading state
-     */
-    updateLoadingState() {
-        const content = document.getElementById('invContent');
-        if (!content) return;
-        
-        if (this.isLoading) {
-            content.innerHTML = '<div class="inv-loading"><div class="spinner"></div><p>Loading inventory...</p></div>';
+    updateBadge() {
+        const badge = document.querySelector('#inventory-btn .badge');
+        if (badge) {
+            const count = this.getCodeScrapCount();
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'block' : 'none';
+            
+            if (count >= 5) {
+                badge.style.background = '#0a5';
+                badge.style.color = '#000';
+            }
         }
     },
 
-    /**
-     * Refresh the inventory grid
-     */
     refreshGrid() {
-        const content = document.getElementById('invContent');
-        if (!content) return;
+        const grid = document.getElementById('inventory-grid');
+        if (!grid) return;
         
-        // Count code scraps
-        const codeScraps = this.items.filter(i => i && i.minigame);
-        const otherItems = this.items.filter(i => i && !i.minigame);
+        const collected = this.getCollectedMinigames();
         
         let html = '';
-        
-        // Code Scraps Section
-        html += `<div class="inv-section-title">📜 Code Scraps (${codeScraps.length}/5)</div>`;
-        html += '<div class="inv-grid">';
-        
-        // Show all 5 code scrap slots
-        const minigames = ['crypto_miner', 'laundry', 'whackarat', 'ash_trail', 'infinite_user'];
-        for (const mg of minigames) {
-            const scrap = codeScraps.find(s => s.minigame === mg);
-            const scrapDef = CODE_SCRAPS[mg];
-            
-            if (scrap) {
-                html += `
-                    <div class="inventory-slot code-scrap" data-minigame="${mg}" onclick="Inventory.showItemDetail('${mg}')">
-                        <div class="slot-content">
-                            <img src="${this.baseImagePath}/${scrapDef.image}" alt="${scrapDef.name}" 
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <span style="display:none; font-size:28px;">${scrapDef.icon}</span>
-                        </div>
-                        <div class="slot-label">${scrapDef.icon}</div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="inventory-slot empty" title="${scrapDef.hint}">
-                        <div class="slot-content" style="opacity:0.3; font-size:28px;">?</div>
-                        <div class="slot-label">${scrapDef.icon}</div>
-                    </div>
-                `;
-            }
-        }
-        html += '</div>';
-        
-        // Other Items Section
-        if (otherItems.length > 0) {
-            html += `<div class="inv-section-title">📦 Other Items (${otherItems.length})</div>`;
-            html += '<div class="inv-grid">';
-            for (let i = 0; i < otherItems.length; i++) {
-                const item = otherItems[i];
-                html += `
-                    <div class="inventory-slot" data-index="${i}" onclick="Inventory.showOtherItemDetail(${i})">
-                        <div class="slot-content">${item.icon || '📦'}</div>
-                        <div class="slot-label">${item.name.substring(0, 10)}</div>
-                    </div>
-                `;
-            }
-            html += '</div>';
+        for (const [minigame, scrap] of Object.entries(CODE_SCRAPS)) {
+            const isCollected = collected.has(minigame);
+            html += `
+                <div class="inventory-slot ${isCollected ? 'collected' : 'empty'}" 
+                     onclick="Inventory.showItemDetail('${minigame}')"
+                     title="${isCollected ? scrap.name : 'Unknown'}">
+                    ${isCollected 
+                        ? `<img class="slot-image" src="${this.baseImagePath}/${scrap.image}" alt="${scrap.name}" onerror="this.outerHTML='<span class=\\'slot-icon\\'>${scrap.icon}</span>'">`
+                        : '<span class="slot-unknown">?</span>'
+                    }
+                </div>
+            `;
         }
         
-        // Progress indicator
-        html += `
-            <div style="margin-top: 20px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; text-align: center;">
-                <div style="color: #888; font-size: 12px; margin-bottom: 8px;">Collection Progress</div>
-                <div style="display: flex; justify-content: center; gap: 8px;">
-                    ${minigames.map(mg => {
-                        const has = codeScraps.some(s => s.minigame === mg);
-                        return `<span style="font-size: 20px; opacity: ${has ? 1 : 0.3};" title="${CODE_SCRAPS[mg].name}">${CODE_SCRAPS[mg].icon}</span>`;
-                    }).join('')}
-                </div>
-                <div style="color: ${codeScraps.length === 5 ? '#0f0' : '#ffd700'}; font-size: 14px; margin-top: 8px;">
-                    ${codeScraps.length === 5 ? '✨ All Code Scraps Collected! ✨' : `${codeScraps.length}/5 Code Scraps`}
-                </div>
-            </div>
-        `;
-        
-        content.innerHTML = html;
+        grid.innerHTML = html;
+        this.updateProgress(collected);
         this.updateBadge();
     },
 
-    /**
-     * Show item detail modal for code scraps
-     */
+    updateProgress(collected) {
+        const icons = document.getElementById('progress-icons');
+        const text = document.getElementById('progress-text');
+        
+        if (icons) {
+            const order = ['crypto_miner', 'laundry', 'whackarat', 'ash_trail', 'infinite_user'];
+            icons.innerHTML = order.map(m => {
+                return collected.has(m) ? '[X]' : '[ ]';
+            }).join(' ');
+        }
+        
+        if (text) {
+            const count = collected.size;
+            if (count >= 5) {
+                text.innerHTML = '<span style="color:#0a5">All fragments recovered. Present them to IShowGreen.</span>';
+            } else {
+                text.textContent = `${count} of 5 recovered`;
+            }
+        }
+    },
+
     showItemDetail(minigame) {
         const scrap = CODE_SCRAPS[minigame];
         if (!scrap) return;
         
-        const modal = document.getElementById('itemDetailModal');
-        const modalIcon = document.getElementById('modalIcon');
-        const modalImage = document.getElementById('modalImage');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalDescription = document.getElementById('modalDescription');
-        const modalHint = document.getElementById('modalHint');
+        const collected = this.getCollectedMinigames();
+        const isCollected = collected.has(minigame);
         
-        modalIcon.innerHTML = `<span style="font-size: 48px;">${scrap.icon}</span>`;
-        modalImage.src = `${this.baseImagePath}/${scrap.image}`;
-        modalImage.style.display = 'block';
-        modalImage.onerror = () => { modalImage.style.display = 'none'; };
-        modalTitle.textContent = scrap.name;
-        modalDescription.textContent = scrap.description;
-        modalHint.textContent = scrap.hint;
+        const modal = document.createElement('div');
+        modal.className = 'item-modal';
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
         
-        modal.classList.add('show');
+        modal.innerHTML = `
+            <div class="item-modal-content">
+                <h3>${scrap.name.toUpperCase()}</h3>
+                ${isCollected 
+                    ? `<img src="${this.baseImagePath}/${scrap.image}" alt="${scrap.name}" onerror="this.style.display='none'">`
+                    : '<div style="font-size: 48px; margin: 20px 0; color: #333;">?</div>'
+                }
+                <p>${isCollected ? scrap.description : 'Fragment not yet recovered.'}</p>
+                ${isCollected 
+                    ? `<div class="story-fragment">${scrap.storyFragment}</div>`
+                    : `<p class="hint">${scrap.hint}</p>`
+                }
+                <button onclick="this.closest('.item-modal').remove()">CLOSE</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     },
 
-    /**
-     * Show item detail for other items
-     */
-    showOtherItemDetail(index) {
-        const otherItems = this.items.filter(i => i && !i.minigame);
-        const item = otherItems[index];
-        if (!item) return;
+    updateLoadingState() {
+        const loading = document.getElementById('inventory-loading');
+        const grid = document.getElementById('inventory-grid');
         
-        const modal = document.getElementById('itemDetailModal');
-        const modalIcon = document.getElementById('modalIcon');
-        const modalImage = document.getElementById('modalImage');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalDescription = document.getElementById('modalDescription');
-        const modalHint = document.getElementById('modalHint');
-        
-        modalIcon.innerHTML = `<span style="font-size: 48px;">${item.icon || '📦'}</span>`;
-        modalImage.style.display = 'none';
-        modalTitle.textContent = item.name;
-        modalDescription.textContent = item.description || 'A mysterious item.';
-        modalHint.textContent = item.raw?.found_at ? `Found at: ${item.raw.found_at}` : '';
-        
-        modal.classList.add('show');
+        if (loading) loading.style.display = this.isLoading ? 'block' : 'none';
+        if (grid) grid.style.display = this.isLoading ? 'none' : 'grid';
     },
 
-    /**
-     * Close item detail modal
-     */
-    closeItemDetail() {
-        const modal = document.getElementById('itemDetailModal');
-        if (modal) modal.classList.remove('show');
-    },
-
-    /**
-     * Open inventory panel
-     */
-    open() {
-        const panel = document.getElementById('inventoryPanel');
-        if (panel) panel.style.display = 'block';
-        this.isOpen = true;
-        this.loadFromBackend(); // Refresh data when opening
-    },
-
-    /**
-     * Close inventory panel
-     */
-    close() {
-        const panel = document.getElementById('inventoryPanel');
-        if (panel) panel.style.display = 'none';
-        this.isOpen = false;
-        this.closeItemDetail();
-    },
-
-    /**
-     * Toggle inventory panel
-     */
     toggle() {
-        if (this.isOpen) this.close(); else this.open();
-    },
-
-    /**
-     * Add item (for local use, syncs to backend via StatsManager)
-     */
-    async addItem(item) {
-        try {
-            await addInventoryItem(item);
-            await this.loadFromBackend();
-            return true;
-        } catch (e) {
-            console.error('[Inventory] Failed to add item:', e);
-            return false;
+        if (this.isOpen) {
+            this.close();
+        } else {
+            this.open();
         }
     },
 
-    /**
-     * Get all items
-     */
+    open() {
+        const panel = document.getElementById('inventory-panel');
+        if (panel) {
+            panel.classList.add('open');
+            this.isOpen = true;
+            this.loadFromBackend();
+        }
+    },
+
+    close() {
+        const panel = document.getElementById('inventory-panel');
+        if (panel) {
+            panel.classList.remove('open');
+            this.isOpen = false;
+        }
+    },
+
     getItems() {
-        return this.items.slice();
+        return this.items;
     },
 
-    /**
-     * Check if player has a specific code scrap
-     */
-    hasCodeScrap(minigame) {
-        return this.items.some(i => i && i.minigame === minigame);
-    },
-
-    /**
-     * Get count of code scraps
-     */
     getCodeScrapCount() {
-        return this.items.filter(i => i && i.minigame).length;
-    },
-
-    /**
-     * Set owner for backward compatibility with Player.js
-     */
-    setOwner(owner) {
-        this.owner = owner || null;
-        if (this.owner) {
-            this.owner.inventory = this.getItems();
-        }
+        return this.getCollectedMinigames().size;
     }
 };
 
-// Make available globally for onclick handlers
 window.Inventory = Inventory;
 
 export default Inventory;
