@@ -244,6 +244,14 @@ function closeOverlay() {
   cleanupRunInput();
   // Re-enable main game controls
   window.ashTrailActive = false;
+  window.minigameActive = false;
+  
+  // Refresh leaderboard
+  try {
+    if (window.Leaderboard && typeof window.Leaderboard.fetchLeaderboard === 'function') {
+      window.Leaderboard.fetchLeaderboard();
+    }
+  } catch(e) { console.log('Could not refresh leaderboard'); }
 }
 
 function createHeader() {
@@ -257,7 +265,7 @@ function createHeader() {
   });
 
   const subtitle = createEl("div", {
-    textContent: "Follow the ash trail and restore Ishowgreen’s crypto scriptures.",
+    textContent: "Trace the ash trail to recover the burned pages.",
     style: {
       fontSize: "12px",
       color: "#9ca3af",
@@ -333,7 +341,7 @@ function renderIntroScene() {
   });
 
   const introTitle = createEl("h2", {
-    textContent: "Ishowgreen’s Burnt Library",
+    textContent: "IShowGreen’s Burnt Library",
     style: {
       margin: "0",
       fontSize: "22px",
@@ -343,7 +351,7 @@ function renderIntroScene() {
 
   const introText = createEl("p", {
     textContent:
-      "Ishowgreen torched his own crypto scriptures in a rage. Now he wants you to reconstruct them from ash trails.",
+      "IShowGreen's backup pages burned in a candle accident. Trace the ash trails to recover the code.",
     style: {
       margin: "4px 0 0",
       fontSize: "14px",
@@ -971,7 +979,7 @@ function renderRunScene() {
 
   const info = createEl("p", {
     textContent:
-      "Press Enter at any time to finish your run and see Ishowgreen’s reaction.",
+      "Press Enter at any time to finish your run and see IShowGreen’s reaction.",
     style: {
       fontSize: "12px",
       color: "#9ca3af",
@@ -1342,7 +1350,7 @@ function reactionForScore(score) {
     return {
       label: "Not enough pages collected",
       text:
-        'Ishowgreen squints at the half‑burnt pages: "The rat burns down and tape? That doesn’t even make sense. Try again."',
+        'IShowGreen squints at the half‑burnt pages: "The rat burns down and tape? That doesn’t even make sense. Try again."',
       tone: "error",
     };
   }
@@ -1350,14 +1358,14 @@ function reactionForScore(score) {
     return {
       label: "Somewhat collected",
       text:
-        'Ishowgreen mutters: "The rat escapes and the house burns down? You’re close, but I’m missing way too many details."',
+        'IShowGreen mutters: "The rat escapes and the house burns down? You’re close, but I’m missing way too many details."',
       tone: "warn",
     };
   }
   return {
     label: "Enough collected",
     text:
-      'Ishowgreen actually smiles: "Impressive. I can finally read my precious possession again. Maybe there’s hope for you."',
+      'IShowGreen actually smiles: "Impressive. I can finally read my precious possession again. Maybe there’s hope for you."',
     tone: "success",
   };
 }

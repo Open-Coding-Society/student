@@ -46,35 +46,34 @@ export async function showLaundryMinigame(onComplete) {
         width: 90%;
         max-width: 900px;
         height: 80vh;
-        background: #2a2a2a;
-        border-radius: 15px;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        border: 2px solid #0a5;
+        border-radius: 10px;
         padding: 20px;
         box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
         position: relative;
         display: flex;
         flex-direction: column;
-        background-size: cover;
-        background-position: center;
+        font-family: 'Courier New', monospace;
     `;
-    container.style.backgroundImage = `url('${baseurl}/images/DBS2/basement.png')`;
 
     const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✕ Close';
+    closeBtn.textContent = 'EXIT';
     closeBtn.style.cssText = `
         position: absolute;
         top: 10px;
         right: 10px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
+        background: #600;
+        color: #ccc;
+        border: 1px solid #800;
+        padding: 8px 15px;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
         z-index: 10;
     `;
-    closeBtn.onmouseover = () => closeBtn.style.background = '#cc0000';
-    closeBtn.onmouseout = () => closeBtn.style.background = '#ff4444';
+    closeBtn.onmouseover = () => closeBtn.style.background = '#800';
+    closeBtn.onmouseout = () => closeBtn.style.background = '#600';
     closeBtn.onclick = () => {
         window.laundryMinigameActive = false;
         window.minigameActive = false;
@@ -82,26 +81,27 @@ export async function showLaundryMinigame(onComplete) {
     };
 
     const title = document.createElement('h1');
-    title.textContent = '🔧 Repair the Washing Machine';
+    title.textContent = 'WASHING MACHINE REPAIR';
     title.style.cssText = `
         text-align: center;
-        color: #fff;
-        font-size: 24px;
+        color: #0a5;
+        font-size: 20px;
         margin-bottom: 10px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        letter-spacing: 2px;
+        font-family: 'Courier New', monospace;
     `;
 
     const instructions = document.createElement('div');
-    instructions.textContent = 'Drag and drop the parts onto the correct spots on the washing machine. Once all parts are installed, load the laundry!';
+    instructions.textContent = 'Drag the parts to the correct spots on the machine. Then load the laundry.';
     instructions.style.cssText = `
         text-align: center;
-        color: #ffff99;
-        font-size: 14px;
+        color: #888;
+        font-size: 12px;
         margin-bottom: 15px;
         padding: 10px;
         background: rgba(0, 0, 0, 0.6);
-        border-radius: 8px;
-        transition: all 0.3s;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
     `;
 
     const gameArea = document.createElement('div');
@@ -680,11 +680,18 @@ export async function showLaundryMinigame(onComplete) {
                 window.laundryMinigameActive = false;
                 window.minigameActive = false;
                 document.body.removeChild(overlay);
+                // Refresh leaderboard
+                try {
+                    if (window.Leaderboard && typeof window.Leaderboard.fetchLeaderboard === 'function') {
+                        window.Leaderboard.fetchLeaderboard();
+                    }
+                } catch(e) { console.log('Could not refresh leaderboard'); }
                 if (onComplete) onComplete();
             }, 1500);
         }
     }
 
+    overlay.appendChild(container);
     document.body.appendChild(overlay);
 }
 

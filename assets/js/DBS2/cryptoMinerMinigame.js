@@ -434,6 +434,13 @@ function cryptoMinerMinigame() {
         window.removeEventListener('keyup', keyUpHandler, true);
         heldKeys.clear();
         delete window.exitCryptoMiner;
+        
+        // Refresh leaderboard
+        try {
+            if (window.Leaderboard && typeof window.Leaderboard.fetchLeaderboard === 'function') {
+                window.Leaderboard.fetchLeaderboard();
+            }
+        } catch(e) { console.log('Could not refresh leaderboard'); }
     };
     
     // Start the game
