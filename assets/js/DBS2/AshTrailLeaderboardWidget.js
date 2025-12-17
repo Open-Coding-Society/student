@@ -10,7 +10,7 @@ export default class AshTrailLeaderboardWidget {
     this.refreshInterval = null;
     this.isRefreshing = false;
     this.rows = [];
-    this.mode = "defi_grimoire"; // defi_grimoire | lost_ledger | proof_of_burn
+    this.mode = "overall"; // overall | defi_grimoire | lost_ledger | proof_of_burn
   }
 
   _inferApiBase() {
@@ -19,7 +19,10 @@ export default class AshTrailLeaderboardWidget {
   }
 
   async fetchLeaderboard(limit = 5) {
-    const gameKey = `ash_trail_${this.mode}`;
+    const gameKey =
+      this.mode === "overall"
+        ? "ash_trail"
+        : `ash_trail_${this.mode}`;
     const url = `${this.apiBase}/leaderboard/minigame?game=${encodeURIComponent(gameKey)}&limit=${limit}`;
     const res = await fetch(url, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -115,6 +118,7 @@ export default class AshTrailLeaderboardWidget {
       outline: none;
     `;
     select.innerHTML = `
+      <option value="overall">Overall</option>
       <option value="defi_grimoire">DeFi</option>
       <option value="lost_ledger">Ledger</option>
       <option value="proof_of_burn">Burn</option>
