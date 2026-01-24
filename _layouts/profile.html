@@ -1,13 +1,12 @@
 ---
 title: Profile Settings
-layout: openaesthetic
+layout: aesthetihawk
 active_tab: profile
 ---
 
 <head>
-    <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/openaesthetic/shake.css">
+    <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/aesthetihawk/shake.css">
 </head>
-
 
 <form id="profileSettingsForm">
     <!-- Personal Information Section -->
@@ -96,7 +95,7 @@ active_tab: profile
                     ID (7 digits)</label>
                 <input type="text" id="sidChangeInput" name="studentId"
                     class="w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value="" maxlength="7" pattern="\d{7}" onchange="checkForChanges()" autocomplete="off">
+                    value="" onchange="checkForChanges()" autocomplete="off">
             </div>
         </div>
     </div>
@@ -106,43 +105,296 @@ active_tab: profile
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">Classes</h2>
             <button type="button" id="addClassBtn"
-                class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 focus:outline-none"
-                onclick="addClass()">
+                class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 focus:outline-none">
                 Add Class
             </button>
         </div>
-
+    
         <div id="classesContainer">
-            <!-- Classes will be added here dynamically -->
-            <div class="class-entry mb-4 p-4 border rounded-lg border-neutral-700 border">
-                <div class="flex flex-col md:flex-row md:space-x-4 mb-2">
-                    <div class="flex-grow mb-2 md:mb-0">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Class
-                            Name</label>
-                        <input type="text"
-                            class="class-name w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            value="Computer Science" onchange="checkForChanges()">
-                    </div>
-                    <div class="w-full md:w-1/3">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Year</label>
-                        <select
-                            class="class-year w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            onchange="checkForChanges()">
-                            <option>2025</option>
-                            <option>2026</option>
-                            <option>2027</option>
-                            <option>2028</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium"
-                    onclick="removeClass(this)">
-                    Remove
+            <!-- Classes will be loaded here dynamically -->
+            <p class="text-gray-400 text-center py-4">Loading classes...</p>
+        </div>
+    </div>
+
+<div class="bg-neutral-800 rounded-lg shadow-md p-6 mb-6 border-neutral-700 border">
+    <h2 class="text-xl font-semibold mb-6">Group Information</h2>
+
+    <div id="springGroupInfo" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="col-span-1 md:col-span-2 text-center text-gray-400">
+            Loading group information...
+        </div>
+    </div>
+</div>
+
+<div class="bg-neutral-800 rounded-lg shadow-md p-6 mb-6 border-neutral-700 border">
+    <div class="flex items-start justify-between gap-4 mb-4">
+        <div>
+            <h2 class="text-xl font-semibold">Join a Group</h2>
+        </div>
+        <div id="joinGroupStatus" class="text-sm text-gray-300"></div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4">
+        <div>
+            <label for="groupSearchInput" class="block text-sm font-medium text-gray-300 mb-1">Search
+                Groups</label>
+            <div class="flex gap-2">
+                <input id="groupSearchInput" type="text" placeholder="Enter a group name"
+                    class="flex-1 px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    autocomplete="off">
+                <button id="groupSearchBtn" type="button"
+                    class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 focus:outline-none">
+                    Search
                 </button>
             </div>
         </div>
+        <div id="groupResultsList" class="bg-neutral-700 border border-gray-600 rounded-lg max-h-64 overflow-y-auto hidden">
+        </div>
     </div>
+</div>
+
+<div class="bg-neutral-800 rounded-lg shadow-md p-6 mb-6 border-neutral-700 border">
+    <h2 class="text-xl font-semibold mb-6">Select Your Persona</h2>
+    
+    <div id="personaSelectionContainer">
+        <p class="text-gray-400 text-center py-4">Loading personas...</p>
+    </div>
+</div>
+
+
 </form>
+
+<script type="module">
+    import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
+
+    /**
+     * API Request Chaining Implementation
+     * ==================================
+     * This script demonstrates chaining API requests where:
+     * 1. First fetch user identity from Java backend (required for all subsequent calls)
+     * 2. Then chain to fetch user's groups using the personId from step 1
+     * 
+     * Benefits:
+     * - Proper dependency management (can't fetch groups without personId)
+     * - Single cached personId reused for join/leave operations
+     * - Clear error propagation through the chain
+     */
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const springGroupInfo = document.getElementById('springGroupInfo');
+        const groupSearchInput = document.getElementById('groupSearchInput');
+        const groupResultsList = document.getElementById('groupResultsList');
+        const joinGroupStatus = document.getElementById('joinGroupStatus');
+        
+        // Module-level cache for current user data - fetched once, reused throughout
+        let currentPersonId = null;
+        let currentUid = null;
+        let userGroupIds = new Set(); // Track user's group IDs for O(1) lookup
+
+        /**
+         * CHAINED API PATTERN:
+         * Step 1: Fetch user identity -> Step 2: Use personId to fetch groups
+         * 
+         * This uses .then() chaining to demonstrate the pattern where
+         * each subsequent request depends on data from the previous one.
+         */
+        fetch(`${javaURI}/api/person/get`, fetchOptions)
+            .then(response => {
+                // Handle authentication errors
+                if (response.status === 401) {
+                    springGroupInfo.innerHTML = `<p class="text-gray-400 col-span-2 text-center">Please sign in to view group information.</p>`;
+                    groupSearchInput.disabled = true;
+                    return null; // Stop the chain
+                }
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch user: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(personData => {
+                if (!personData) return null; // Chain was stopped
+                
+                // Cache user identity for reuse in join/leave operations
+                currentPersonId = personData.id;
+                currentUid = personData.uid;
+
+                if (!currentPersonId || !currentUid) {
+                    springGroupInfo.innerHTML = `<p class="text-gray-400 col-span-2 text-center">Unable to verify user identity for group data.</p>`;
+                    return null;
+                }
+
+                // CHAIN: Now fetch groups using the personId we just obtained
+                // This request DEPENDS on having currentPersonId from the previous call
+                return fetch(`${javaURI}/api/groups/person/${currentPersonId}`, fetchOptions);
+            })
+           
+            .then(groupResp => {
+                if (!groupResp) return null; // Chain was stopped
+                
+                // Handle group fetch response
+                if (groupResp.ok) {
+                    return groupResp.json();
+                } else if (groupResp.status === 404) {
+                    // Fallback: endpoint not available, try fetching all groups
+                    console.warn('Person groups endpoint not available, using fallback');
+                    return fetch(`${javaURI}/api/groups`, fetchOptions)
+                        .then(fallbackResp => {
+                            if (!fallbackResp.ok) return [];
+                            return fallbackResp.json().then(allGroups => {
+                                // Filter client-side (less efficient fallback)
+                                return (Array.isArray(allGroups) ? allGroups : []).filter(group =>
+                                    Array.isArray(group.members) && group.members.some(m => m.uid === currentUid)
+                                );
+                            });
+                        });
+                }
+                throw new Error('Failed to fetch group data');
+            })
+            .then(userGroups => {
+                if (!userGroups) return; // Chain was stopped
+                
+                const groups = Array.isArray(userGroups) ? userGroups : [];
+
+                // Build a Set of user's group IDs for O(1) lookup during search
+                groups.forEach(group => userGroupIds.add(group.id));
+
+                if (groups.length > 0) {
+                    springGroupInfo.innerHTML = groups.map(group => `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Group Name</label>
+                        <input type="text" readonly
+                            class="w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 text-gray-300 focus:outline-none cursor-default"
+                            value="${group.name}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Period</label>
+                        <input type="text" readonly
+                            class="w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 text-gray-300 focus:outline-none cursor-default"
+                            value="${group.period}">
+                    </div>
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Members & GitHub IDs</label>
+                        <div class="w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 text-gray-300">
+                            ${group.members.map(member => `${member.name} (${member.uid})`).join(', ')}
+                        </div>
+                    </div>
+                    <div class="col-span-1 md:col-span-2">
+                        <button type="button" class="px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-600 transition-colors" onclick="leaveGroup('${group.id}', ${currentPersonId})">
+                            Leave Group
+                        </button>
+                    </div>
+                    `).join('');
+                } else {
+                    springGroupInfo.innerHTML = `<p class="text-gray-400 col-span-2 text-center">No group assignments found.</p>`;
+                }
+
+                // Set up search functionality (uses cached personId)
+                setupGroupSearch(groupSearchInput, groupResultsList, joinGroupStatus, userGroupIds, currentPersonId);
+            })
+            .catch(error => {
+                console.error("Error in API chain:", error);
+                springGroupInfo.innerHTML = `<p class="text-red-400 col-span-2 text-center">Error loading group information.</p>`;
+                groupSearchInput.disabled = true;
+            });
+
+        /**
+         * Set up group search and join functionality
+         * Separated into a function to keep the main chain clean
+         */
+        function setupGroupSearch(groupSearchInput, groupResultsList, joinGroupStatus, userGroupIds, personId) {
+            // Search function using server-side API
+            const searchGroups = async (query) => {
+                const normalized = query.trim();
+                
+                if (!normalized) {
+                    groupResultsList.classList.add('hidden');
+                    return;
+                }
+
+                try {
+                    const searchResp = await fetch(`${javaURI}/api/groups/search?name=${encodeURIComponent(normalized)}`, fetchOptions);
+                    if (!searchResp.ok) throw new Error('Search failed');
+                    
+                    const filtered = await searchResp.json();
+
+                    if (filtered.length === 0) {
+                        groupResultsList.innerHTML = `<div class="px-4 py-3 text-gray-400 text-sm">No matching groups</div>`;
+                        groupResultsList.classList.remove('hidden');
+                        return;
+                    }
+
+                    groupResultsList.innerHTML = filtered.map(group => {
+                        const label = `${group.name || 'Unnamed'} (Period ${group.period || 'N/A'})`;
+                        const isAlreadyMember = userGroupIds.has(group.id);
+                        const disabledClass = isAlreadyMember ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-600 cursor-pointer';
+                        const membersText = group.members?.length > 0 
+                            ? group.members.map(m => m.name).join(', ')
+                            : 'No members';
+                        return `
+                            <div data-group-id="${group.id}" class="px-4 py-3 border-b border-gray-600 last:border-b-0 text-gray-300 ${disabledClass} transition-colors"
+                                onclick="joinGroupFromList('${group.id}', '${label}', ${isAlreadyMember})">
+                                <div class="font-medium">${label}</div>
+                                <div class="text-xs text-gray-500 mt-1">${membersText}</div>
+                                ${isAlreadyMember ? '<div class="text-xs text-gray-400 mt-1">Already a member</div>' : ''}
+                            </div>
+                        `;
+                    }).join('');
+                    groupResultsList.classList.remove('hidden');
+                } catch (error) {
+                    console.error('Search error:', error);
+                    groupResultsList.innerHTML = `<div class="px-4 py-3 text-red-400 text-sm">Search failed</div>`;
+                    groupResultsList.classList.remove('hidden');
+                }
+            };
+
+            // Search button click handler
+            document.getElementById('groupSearchBtn')?.addEventListener('click', () => {
+                searchGroups(groupSearchInput.value);
+            });
+
+            // Optimized join function - uses cached personId instead of fetching all people
+            // This demonstrates how the cached personId from the initial chain is reused
+            window.joinGroupFromList = async (groupId, groupLabel, isAlreadyMember) => {
+                if (isAlreadyMember) {
+                    joinGroupStatus.textContent = 'You are already a member of this group.';
+                    return;
+                }
+
+                groupSearchInput.disabled = true;
+                joinGroupStatus.textContent = 'Joining group...';
+                groupResultsList.classList.add('hidden');
+
+                // Use cached personId - no additional API call needed!
+                if (!personId) {
+                    joinGroupStatus.textContent = 'User ID not available. Please refresh the page.';
+                    groupSearchInput.disabled = false;
+                    return;
+                }
+
+                // Join group using the cached person ID from the initial chain
+                fetch(`${javaURI}/api/groups/${groupId}/members/${personId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                })
+                .then(joinResp => {
+                    if (!joinResp.ok) {
+                        return joinResp.text().then(body => {
+                            throw new Error(body || 'Failed to join group');
+                        });
+                    }
+                    joinGroupStatus.textContent = 'Refreshing...';
+                    window.location.reload();
+                })
+                .catch(joinError => {
+                    console.error('Join group error:', joinError);
+                    joinGroupStatus.textContent = joinError.message || 'Unable to join group.';
+                    groupSearchInput.disabled = false;
+                });
+            };
+        }
+    });
+</script>
 
 <div class="flex justify-between items-center mb-8">
     <button id="saveChangesBtn" disabled
@@ -152,11 +404,10 @@ active_tab: profile
     </button>
 </div>
 
-
 <!-- toasts -->
 <script type="module">
     // import the toast handler module
-    import { showToast } from "{{site.baseurl}}/assets/js/openaesthetic/shared/toastHandler.js";
+    import { showToast } from "{{site.baseurl}}/assets/js/aesthetihawk/shared/toastHandler.js";
 
     window.addEventListener('load', () => {
         const callToast = document.querySelector("#saveChangesBtn");
@@ -174,16 +425,328 @@ active_tab: profile
         });
     });
 </script>
-
 <script type="module">
-    import { javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
-    import { pythonURI } from '{{site.baseurl}}/assets/js/api/config.js';
+    import { pythonURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadPersonas();
+    });
+
+    async function loadPersonas() {
+        const container = document.getElementById('personaSelectionContainer');
+        
+        try {
+            // Fetch all available personas
+            const personasResp = await fetch(`${pythonURI}/api/persona`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!personasResp.ok) throw new Error('Failed to load personas');
+            const personas = await personasResp.json();
+            
+            // Get user's personas from the RIGHT endpoint
+            const userPersonasResp = await fetch(`${pythonURI}/api/user/personas`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (!userPersonasResp.ok) {
+                // If 401, user might not be authenticated or endpoint doesn't exist
+                console.log('No personas found for user or not authenticated');
+                showPersonaSelectionCards(personas);
+                return;
+            }
+            
+            const userPersonasData = await userPersonasResp.json();
+            
+            // Check if user has personas
+            if (userPersonasData.personas && userPersonasData.personas.length > 0) {
+                const userPersona = userPersonasData.personas[0];
+                const personaId = userPersona.persona_id || userPersona.id;
+                
+                // Find the full persona details
+                const selectedPersona = personas.find(p => p.id === personaId);
+                if (selectedPersona) {
+                    showSelectedPersona(selectedPersona, personas);  // Pass all personas
+                    return;
+                }
+            }
+            
+            // If no persona selected, show all cards to choose from
+            showPersonaSelectionCards(personas);
+            
+        } catch (error) {
+            console.error('Error loading personas:', error);
+            container.innerHTML = `
+                <p class="text-red-400 text-center py-4">Error loading personas. Please try again later.</p>
+            `;
+        }
+    }
+
+    function showPersonaSelectionCards(personas) {
+        const container = document.getElementById('personaSelectionContainer');
+        
+        if (personas.length === 0) {
+            container.innerHTML = `
+                <p class="text-gray-400 text-center py-4">No personas available.</p>
+            `;
+            return;
+        }
+        
+        // Group personas by category
+        const grouped = personas.reduce((acc, persona) => {
+            const category = persona.category || 'other';
+            if (!acc[category]) acc[category] = [];
+            acc[category].push(persona);
+            return acc;
+        }, {});
+        
+        const categoryLabels = {
+            'student': 'Student Archetypes',
+            'social': 'Social Interests',
+            'achievement': 'Achievement Oriented',
+            'fantasy': 'Fantasy Personas'
+        };
+        
+        container.innerHTML = `
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-100 mb-2">Choose Your Persona</h2>
+                <p class="text-gray-400">Select the persona that best represents you</p>
+            </div>
+            
+            ${Object.entries(grouped).map(([category, personas]) => `
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-indigo-400 mb-4 border-b border-gray-700 pb-2">
+                        ${categoryLabels[category] || category}
+                    </h3>
+                                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        ${personas.map(persona => {
+                            const title = persona.bio_map?.title || persona.alias || 'Unnamed';
+                            const description = persona.bio_map?.description || 'No description';
+                            
+                            return `
+                                <div 
+                                    class="flex flex-col p-4 bg-neutral-800 hover:bg-neutral-700 border border-gray-700 hover:border-indigo-500 rounded-lg cursor-pointer transition-all group h-full"
+                                    onclick="selectPersona(${persona.id})">
+                                    <h4 class="font-semibold text-gray-200 group-hover:text-indigo-300 mb-2">${title}</h4>
+                                    <p class="text-sm text-gray-400 flex-1 line-clamp-4">${description}</p>
+                                    <div class="mt-3 flex justify-end">
+                                        <svg class="w-6 h-6 text-gray-600 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    }
+    function showSelectedPersona(persona, allPersonas) {
+        const container = document.getElementById('personaSelectionContainer');
+        const title = persona.bio_map?.title || persona.alias || 'Unnamed Persona';
+        const description = persona.bio_map?.description || 'No description available';
+        const category = persona.category || persona._category || 'Uncategorized';
+        const says = persona.empathy_map?.says?.[0] || '';
+        const thinks = persona.empathy_map?.thinks?.[0] || '';
+        const feels = persona.empathy_map?.feels?.[0] || '';
+        const does = persona.empathy_map?.does?.[0] || '';
+        
+        const categoryLabels = {
+            'student': 'Student Archetype',
+            'social': 'Social Interest',
+            'achievement': 'Achievement Oriented',
+            'fantasy': 'Fantasy Persona'
+        };
+        window.allPersonasData = allPersonas;
+        container.innerHTML = `
+            <div class="max-w-4xl mx-auto">
+                <!-- Header with change button -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-100">Your Persona</h2>
+                        <p class="text-gray-400 text-sm">This represents your personality and interests</p>
+                    </div>
+                    <button 
+                        onclick="showAllPersonas()"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Change Persona
+                    </button>
+                </div>
+                
+                <!-- Selected persona card -->
+                <div class="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 border-2 border-indigo-500 rounded-xl p-6 mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-3xl flex-shrink-0">
+                            ${getPersonaEmoji(category)}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-2xl font-bold text-gray-100">${title}</h3>
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-indigo-600 text-white">
+                                    ${categoryLabels[category] || category}
+                                </span>
+                            </div>
+                            <p class="text-gray-300 leading-relaxed">${description}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                ${says || thinks || feels || does ? `
+                    <!-- Persona insights -->
+                    <div class="bg-neutral-800 border border-gray-700 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
+                            </svg>
+                            Persona Insights
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${says ? `
+                                <div class="bg-neutral-900 rounded-lg p-4 border-l-4 border-blue-500">
+                                    <h5 class="font-medium text-blue-400 mb-2 text-sm">💬 Says</h5>
+                                    <p class="text-gray-300 text-sm italic">"${says}"</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${thinks ? `
+                                <div class="bg-neutral-900 rounded-lg p-4 border-l-4 border-purple-500">
+                                    <h5 class="font-medium text-purple-400 mb-2 text-sm">💭 Thinks</h5>
+                                    <p class="text-gray-300 text-sm">${thinks}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${feels ? `
+                                <div class="bg-neutral-900 rounded-lg p-4 border-l-4 border-pink-500">
+                                    <h5 class="font-medium text-pink-400 mb-2 text-sm">❤️ Feels</h5>
+                                    <p class="text-gray-300 text-sm">${feels}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${does ? `
+                                <div class="bg-neutral-900 rounded-lg p-4 border-l-4 border-green-500">
+                                    <h5 class="font-medium text-green-400 mb-2 text-sm">⚡ Does</h5>
+                                    <p class="text-gray-300 text-sm">${does}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    function getPersonaEmoji(category) {
+        const emojis = {
+            'student': '📚',
+            'social': '🎉',
+            'achievement': '🏆',
+            'fantasy': '✨'
+        };
+        return emojis[category] || '👤';
+    }
+
+    function showAllPersonas() {
+        if (window.allPersonasData) {
+            showPersonaSelectionCards(window.allPersonasData);
+        } else {
+            loadPersonas();
+        }
+    }
+
+    async function selectPersona(personaId) {
+        console.log('selectPersona called with ID:', personaId);
+        
+        try {
+            // Show loading
+            const container = document.getElementById('personaSelectionContainer');
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-16">
+                    <svg class="animate-spin h-12 w-12 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-gray-300 font-medium">Saving your persona selection...</p>
+                </div>
+            `;
+            
+            console.log('About to make POST request...');
+            
+            // Add the new persona - backend handles replacement
+            const response = await fetch(`${pythonURI}/api/user/persona`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    persona_id: personaId,
+                    weight: 2
+                })
+            });
+            
+            console.log('POST request completed, status:', response.status);
+            
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('Response not OK:', error);
+                throw new Error(error.message || 'Failed to select persona');
+            }
+            
+            console.log('About to call loadPersonas()...');
+            
+            // Success - reload to show selected persona
+            loadPersonas();
+            
+        } catch (error) {
+            console.error('Error in selectPersona:', error);
+            console.error('Error stack:', error.stack);
+            
+            const container = document.getElementById('personaSelectionContainer');
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/30 mb-4">
+                        <svg class="w-8 h-8 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-red-400 mb-2">Error</h3>
+                    <p class="text-gray-400 mb-6">${error.message}</p>
+                    <button 
+                        onclick="loadPersonas()"
+                        class="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 text-gray-200 rounded-lg transition">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    function changePersona() {
+        // Simply reload which will show selection cards again
+        loadPersonas();
+    }
+
+    // Make functions globally accessible
+    window.loadPersonas = loadPersonas;
+    window.selectPersona = selectPersona;
+    window.changePersona = changePersona;
+    window.showPersonaSelectionCards = showPersonaSelectionCards;
+    window.showSelectedPersona = showSelectedPersona;
+    window.showAllPersonas = showAllPersonas;
+</script>
+<script type="module">
+    import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
     import { putUpdate, postUpdate, deleteData, logoutUserJava } from "{{site.baseurl}}/assets/js/api/profile.js";
 
     // external functions
-    import { getUserData } from '{{site.baseurl}}/assets/js/openaesthetic/profile/getUserData.js';
-    import { setUserData } from '{{site.baseurl}}/assets/js/openaesthetic/profile/setUserData.js';
-
+    import { getUserData } from '{{site.baseurl}}/assets/js/aesthetihawk/profile/getUserData.js';
+    import { setUserData } from '{{site.baseurl}}/assets/js/aesthetihawk/profile/setUserData.js';
 
     // this runs on page load
     document.addEventListener("DOMContentLoaded", async () => {
@@ -207,7 +770,7 @@ active_tab: profile
         const changePfpBox = document.getElementById('change-pfp');
         console.log("Change pfp button clicked");
         if (changePfpBox) {
-            changePfpBox.style.visibility = 'visible'; // Make the modal visible
+            changePfpBox.style.visibility = 'visible';
         } else {
             console.error('Change PFP modal not found in the DOM.');
         }
@@ -230,17 +793,11 @@ active_tab: profile
         }
     };
 
-
     window.getUserData = getUserData; // get the data
     window.setUserData = setUserData; // setting the user data to display
-    document.addEventListener("DOMContentLoaded", async () => {
-        try {
-            await window.setUserData();
-        } catch (error) {
-            console.error("Error initializing user data:", error.message);
-        }
-    });
-
+    // NOTE: Removed duplicate DOMContentLoaded listener that called setUserData()
+    // setUserData() is already called once at line ~427, calling it twice causes
+    // redundant API requests. This is an example of optimizing by removing duplicate calls.
 
     window.changeClass = async function (event) {
         event.preventDefault(); // Prevent the form from refreshing the page
@@ -250,7 +807,6 @@ active_tab: profile
         const classDisplayedInfo = document.getElementById("classDisplayedInfo");
         classDisplayedInfo.textContent = classInput + " " + classInputYear;
     }
-
 
     window.changeProfilePicture = async function (event) {
         event.preventDefault(); // Prevent the form from refreshing the page
@@ -314,18 +870,41 @@ active_tab: profile
     }
 </script>
 
-<script>
+<script type="module">
+    import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
     // Store original form values
     let originalValues = {};
     let formChanged = false;
+    let currentUserClasses = []; // ADD THIS LINE
 
     // how long toast stays (ms)
     const toastDuration = 10000;
 
     // Initialize the form
     document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOMContentLoaded fired'); // ADD THIS
+        
         // Store original values
         saveOriginalValues();
+        
+        // Load user classes
+        loadUserClasses();
+
+        const form = document.getElementById('profileSettingsForm');
+        form.addEventListener('input', checkForChanges);
+        form.addEventListener('change', checkForChanges);
+
+        // Attach event listener to Add Class button
+        const addClassBtn = document.getElementById('addClassBtn');
+        console.log('Add Class Button:', addClassBtn); // ADD THIS
+        if (addClassBtn) {
+            addClassBtn.addEventListener('click', function() {
+                console.log('Add Class button clicked!'); // ADD THIS
+                addClass();
+            });
+        } else {
+            console.error('addClassBtn not found!'); // ADD THIS
+        }
 
         // Set up toggle switch
         const toggle = document.querySelector('#kasmChangeInput');
@@ -340,15 +919,8 @@ active_tab: profile
                 toggle.classList.remove('bg-blue-600');
             }
         });
-
-        // Set up beforeunload event
-        window.addEventListener('beforeunload', function (e) {
-            if (formChanged) {
-                showUnsavedChangesAlert();
-            }
-        });
     });
-
+    
     // Save original form values
     function saveOriginalValues() {
         const form = document.getElementById('profileSettingsForm');
@@ -382,14 +954,17 @@ active_tab: profile
 
         formChanged = false;
 
-        // Check standard inputs
+        // Check standard inputs - only compare if they have original values
         inputs.forEach(input => {
+            // Skip if this input doesn't have an id
+            if (!input.id) return;
+
             if (input.type === 'checkbox') {
-                if (originalValues[input.id] !== input.checked) {
+                if (originalValues[input.id] !== undefined && originalValues[input.id] !== input.checked) {
                     formChanged = true;
                 }
-            } else if (input.id && originalValues[input.id] !== undefined) {
-                if (originalValues[input.id] !== input.value) {
+            } else {
+                if (originalValues[input.id] !== undefined && originalValues[input.id] !== input.value) {
                     formChanged = true;
                 }
             }
@@ -397,19 +972,8 @@ active_tab: profile
 
         // Check class entries
         const classEntries = document.querySelectorAll('.class-entry');
-        if (classEntries.length !== originalValues.classEntries.length) {
+        if (classEntries.length !== (originalValues.classEntries?.length || 0)) {
             formChanged = true;
-        } else {
-            classEntries.forEach((entry, index) => {
-                const name = entry.querySelector('.class-name').value;
-                const year = entry.querySelector('.class-year').value;
-
-                if (index >= originalValues.classEntries.length ||
-                    originalValues.classEntries[index].name !== name ||
-                    originalValues.classEntries[index].year !== year) {
-                    formChanged = true;
-                }
-            });
         }
 
         // Update save button
@@ -423,56 +987,199 @@ active_tab: profile
             saveButton.classList.remove('bg-indigo-500', 'text-white', 'hover:bg-indigo-600');
         }
     }
+    
+    async function loadUserClasses() {
+        try {
+            const response = await fetch(`${pythonURI}/api/user/class`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                console.error('Failed to load classes');
+                return;
+            }
+
+            const data = await response.json();
+            currentUserClasses = data.class || [];
+            renderClasses(currentUserClasses);
+        } catch (error) {
+            console.error('Error loading classes:', error);
+        }
+    }
+
+    // Render classes in the UI
+    function renderClasses(classes) {
+        const container = document.getElementById('classesContainer');
+        
+        if (!container) return;
+
+        if (!classes || classes.length === 0) {
+            container.innerHTML = `
+                <p class="text-gray-400 text-center py-4">No classes added yet. Click "Add Class" to get started.</p>
+            `;
+            return;
+        }
+
+        container.innerHTML = classes.map((classAbbr, index) => `
+            <div class="class-entry mb-4 p-4 border rounded-lg border-neutral-700" data-index="${index}">
+                <div class="flex flex-col md:flex-row md:space-x-4 mb-2">
+                    <div class="flex-grow mb-2 md:mb-0">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Class Name</label>
+                        <select class="class-name w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" onchange="updateClassInAPI(${index}, this.value)">
+                            <option value="CSSE" ${classAbbr === 'CSSE' ? 'selected' : ''}>Computer Science and Software Engineering</option>
+                            <option value="CSP" ${classAbbr === 'CSP' ? 'selected' : ''}>Computer Science Principles</option>
+                            <option value="CSA" ${classAbbr === 'CSA' ? 'selected' : ''}>Computer Science A</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium" onclick="removeClass(this)">
+                    Remove
+                </button>
+            </div>
+        `).join('');
+    }
 
     // Add new class
-    function addClass() {
-        const container = document.getElementById('classesContainer');
-        const classEntry = document.createElement('div');
-        classEntry.className = 'class-entry mb-4 p-4 border border-gray-700 rounded-lg';
+    async function addClass() {
+        // Determine which class to add
+        let newClass = 'CSP';
+        if (currentUserClasses.includes('CSP')) {
+            if (!currentUserClasses.includes('CSSE')) newClass = 'CSSE';
+            else if (!currentUserClasses.includes('CSA')) newClass = 'CSA';
+            else {
+                alert('All available classes have been added.');
+                return;
+            }
+        }
 
-        classEntry.innerHTML = `
-                    <div class="flex flex-col md:flex-row md:space-x-4 mb-2">
-                        <div class="flex-grow mb-2 md:mb-0">
-                            <label class="block text-sm font-medium text-neutral-300 mb-1">Class Name</label>
-                            <input type="text" 
-                                class="class-name w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                                placeholder="Enter class name" onchange="checkForChanges()">
-                        </div>
-                        <div class="w-full md:w-1/3">
-                            <label class="block text-sm font-medium text-neutral-300 mb-1">Year</label>
-                            <select class="class-year w-full px-4 py-2 rounded-lg border border-gray-600 bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" onchange="checkForChanges()">
-                                <option>2025</option>
-                                <option>2026</option>
-                                <option>2027</option>
-                                <option>2028</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium" onclick="removeClass(this)">
-                        Remove
-                    </button>
-                `;
+        try {
+            const response = await fetch(`${pythonURI}/api/user/class`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ class: newClass })
+            });
 
-        container.appendChild(classEntry);
-        checkForChanges();
+            if (!response.ok) throw new Error('Failed to add class');
+
+            const data = await response.json();
+            currentUserClasses = data.class || [];
+            renderClasses(currentUserClasses);
+            checkForChanges();
+        } catch (error) {
+            console.error('Error adding class:', error);
+            alert('Error adding class. Please try again.');
+        }
     }
 
-    // Remove class
-    function removeClass(button) {
-        const classEntry = button.closest('.class-entry');
-        classEntry.remove();
-        checkForChanges();
+    // Remove a class
+    async function removeClass(button) {
+        const entry = button.closest('.class-entry');
+        const index = parseInt(entry.dataset.index);
+        const classToRemove = currentUserClasses[index];
+
+        try {
+            // Use POST with action parameter instead of DELETE
+            const response = await fetch(`${pythonURI}/api/user/class`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'remove',
+                    class: classToRemove 
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to remove class');
+
+            const data = await response.json();
+            currentUserClasses = data.class || [];
+            renderClasses(currentUserClasses);
+            checkForChanges();
+        } catch (error) {
+            console.error('Error removing class:', error);
+            alert('Error removing class. Please try again.');
+        }
     }
 
-    // show toast, auto-hide, allow manual close
-    function showUnsavedChangesAlert() {
-        const saveButton = document.getElementById('saveChangesBtn');
+    async function updateClassInAPI(index, newClass) {
+        const updatedClasses = [...currentUserClasses];
+        updatedClasses[index] = newClass;
 
-        // trigger reflow so shake always retriggers
-        saveButton.classList.remove('shake-animation');
-        void saveButton.offsetWidth;
-        saveButton.classList.add('shake-animation');
+        try {
+            const response = await fetch(`${pythonURI}/api/user/class`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ class: updatedClasses })
+            });
 
+            if (!response.ok) throw new Error('Failed to update class');
+
+            const data = await response.json();
+            currentUserClasses = data.class || [];
+            renderClasses(currentUserClasses);
+            checkForChanges();
+        } catch (error) {
+            console.error('Error updating class:', error);
+            alert('Error updating class. Please try again.');
+            renderClasses(currentUserClasses); // Revert on error
+        }
+    }
+
+    // Fetch grade prediction from academic grade predictor API
+    async function fetchGradePrediction() {
+        const uidInput = document.getElementById("uidChangeInput");
+        const uid = uidInput.value.trim();
+
+        if (!uid) {
+            console.error('User ID is required to fetch grade prediction');
+            alert('Please ensure your User ID is set before fetching grade prediction.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${pythonURI}/api/grade-prediction/${uid}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch grade prediction: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('Grade Prediction Data:', data);
+            
+            // Process and display the grade prediction data
+            if (data && data.prediction) {
+                displayGradePrediction(data);
+            } else {
+                console.warn('No prediction data available');
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching grade prediction:', error.message);
+            alert(`Error fetching grade prediction: ${error.message}`);
+            return null;
+        }
+    }
+
+    // Display grade prediction results
+    function displayGradePrediction(data) {
+        console.log('Displaying grade prediction:', data);
+        
+        // You can add UI elements here to display the prediction
+        // For now, just log to console
+        if (data.prediction) {
+            console.log(`Predicted Grade: ${data.prediction.grade}`);
+            console.log(`Confidence: ${data.prediction.confidence || 'N/A'}`);
+            console.log(`Prediction Details:`, data.prediction);
+        }
     }
 
     // save all changes in one go
@@ -682,4 +1389,37 @@ active_tab: profile
             window.location.reload();
         }
     }
+    window.loadUserClasses = loadUserClasses;
+    window.addClass = addClass;
+    window.removeClass = removeClass;
+    window.updateClassInAPI = updateClassInAPI;
+    window.saveChanges = saveChanges;
+    window.checkForChanges = checkForChanges;
+    window.fetchGradePrediction = fetchGradePrediction;
+    window.displayGradePrediction = displayGradePrediction;
+
+    // Leave group function
+    window.leaveGroup = async function(groupId, personId) {
+        if (!confirm('Are you sure you want to leave this group?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${javaURI}/api/groups/${groupId}/members/${personId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to leave group: ${response.statusText}`);
+            }
+
+            // alert('Successfully left the group.');
+            window.location.reload();
+        } catch (error) {
+            console.error('Error leaving group:', error);
+            alert(`Error leaving group: ${error.message}`);
+        }
+    };
 </script>
