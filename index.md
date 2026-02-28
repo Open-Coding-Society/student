@@ -16,7 +16,7 @@ Hi! My name is [Your Full Name]
         <img src="{{ '/favicon.ico' | relative_url }}" alt="OCS logo" style="width: 16px; height: 16px;">
         OCS
     </a>
-    <a href="https://github.com/Open-Coding-Society/student" style=" text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid #FFF; border-radius: 6px; font-weight: 700;">
+    <a href="https://github.com/Open-Coding-Society/portfolio" style=" text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid #FFF; border-radius: 6px; font-weight: 700;">
         <img src="https://github.githubassets.com/favicons/favicon.svg" alt="GitHub logo" style="width: 16px; height: 16px;">
         GitHub
     </a>
@@ -51,10 +51,3 @@ Hi! My name is [Your Full Name]
 </div>
 
 <br>
-
-<!-- Contact Section -->
-### Get in Touch
-
-> Feel free to reach out if you'd like to collaborate or learn more about our work.
-
-

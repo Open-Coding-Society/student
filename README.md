@@ -55,8 +55,8 @@ The absolutes in setup up...
 **Update `_config.yml`**: You need to modify the `_config.yml` file to reflect your repository's name. This configuration is crucial because it ensures that your project's styling is correctly applied, making your deployed site look as intended rather than unstyled or broken.
 
 ```text
-github_repo: "student" 
-baseurl: "/student"
+github_repo: "portfolio" 
+baseurl: "/portfolio"
 ```
 
 **Set Repository Name in Makefile**: Adjust the `REPO_NAME` variable in your Makefile to match your GitHub repository's name. This action facilitates the automatic updating of posts and notebooks on your local development server, improving the development process.
@@ -88,7 +88,7 @@ Quick start.  A quick start below is a reminder, but is dependent on your knowle
 Run these commands to obtain the project, then locate into the project directory with the terminal, install an extensive set of tools, and make.
 
 ```bash
-git clone <this-repo> # git clone https://github.com/open-coding-society/student.git 
+git clone <this-repo> # git clone https://github.com/open-coding-society/portfolio.git 
 cd <repo-dir>/scripts # cd student 
 ```
 
@@ -199,7 +199,7 @@ Start the preview server in the terminal,
 The terminal output from `make` shows the server address. "Cmd" or "Ctl" click the http location to open the preview server in a browser. Here is an example Server address message, click on the Server address to load:...
 
   ```text
-  http://0.0.0.0:4600/student/
+  http://0.0.0.0:4599/portfolio/
   ```
 
 ### Regeneration of web application
