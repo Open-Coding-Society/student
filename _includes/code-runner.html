@@ -234,7 +234,7 @@ import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api
       })
       .catch(err => {
         // Fallback to local eval for JavaScript on localhost (handles both network and backend errors)
-        if (lang === "javascript" && isLocalhost) {
+        if (lang === "javascript") {
           try {
             const logs = [];
             const originalLog = console.log;

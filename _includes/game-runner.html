@@ -8,7 +8,6 @@
   <div class="editor-container">
     <div class="control-panel">
       <button class="runBtn" title="Start Game">▶ Start</button>
-      <button class="pauseBtn" title="Pause Game">⏸ Pause</button>
       <button class="stopBtn" title="Stop Game">■ Stop</button>
       <button class="resetBtn" title="Reset Game">↻ Reset</button>
       <select class="levelSelect" title="Select Level">
@@ -71,7 +70,6 @@
 
   // Get UI elements
   const runBtn = container.querySelector('.runBtn');
-  const pauseBtn = container.querySelector('.pauseBtn');
   const stopBtn = container.querySelector('.stopBtn');
   const resetBtn = container.querySelector('.resetBtn');
   const levelSelect = container.querySelector('.levelSelect');
@@ -84,9 +82,11 @@
   let gameControl = null;
   let gameInstance = null;
   let currentLevelIndex = 0;
+  let escapeKeyHandler = null;
+  let originalCanvasId = null;
+  let originalContainerId = null;
 
   // Disable game controls initially
-  pauseBtn.disabled = true;
   stopBtn.disabled = true;
 
   // Update stats
@@ -158,8 +158,8 @@
     }
     
     // Clear canvas
-    const canvas = document.getElementById('game-canvas-{{ include.runner_id }}');
-    const container = document.getElementById('game-container-{{ include.runner_id }}');
+    const canvas = document.getElementById('gameCanvas') || document.getElementById('game-canvas-{{ include.runner_id }}');
+    const container = document.getElementById('gameContainer') || document.getElementById('game-container-{{ include.runner_id }}');
     
     if (canvas) {
       const ctx = canvas.getContext('2d');
@@ -173,21 +173,34 @@
       const canvases = container.querySelectorAll('canvas:not(#game-canvas-{{ include.runner_id }})');
       canvases.forEach(c => c.remove());
     }
+
+    if (canvas && originalCanvasId !== null) {
+      canvas.id = originalCanvasId;
+      originalCanvasId = null;
+    }
+
+    if (container && originalContainerId !== null) {
+      container.id = originalContainerId;
+      originalContainerId = null;
+    }
     
     updateStatus('Stopped');
     runBtn.disabled = false;
-    pauseBtn.disabled = true;
     stopBtn.disabled = true;
     levelSelect.disabled = false;
+    
+    // Remove escape key listener
+    if (escapeKeyHandler) {
+      document.removeEventListener('keydown', escapeKeyHandler);
+      escapeKeyHandler = null;
+    }
   }
 
-  // Pause game
+  // Pause game via Escape key via Escape key
   function pauseGame() {
     if (gameControl && gameControl.pause) {
       gameControl.pause();
-      updateStatus('Paused');
-      pauseBtn.innerHTML = '▶ Resume';
-      pauseBtn.onclick = resumeGame;
+      updateStatus('Paused (Press Esc to Resume)');
     }
   }
 
@@ -196,8 +209,6 @@
     if (gameControl && gameControl.resume) {
       gameControl.resume();
       updateStatus('Running');
-      pauseBtn.innerHTML = '⏸ Pause';
-      pauseBtn.onclick = pauseGame;
     }
   }
 
@@ -221,13 +232,37 @@
 
       updateStatus('Loading...');
       runBtn.disabled = true;
-      pauseBtn.disabled = false;
       stopBtn.disabled = false;
       levelSelect.disabled = true;
+
+      // Setup Escape key listener for pause/resume
+      escapeKeyHandler = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (gameControl) {
+            if (gameControl.isPaused) {
+              resumeGame();
+            } else {
+              pauseGame();
+            }
+          }
+        }
+      };
+      document.addEventListener('keydown', escapeKeyHandler);
 
       // Get canvas and container
       const gameContainer = document.getElementById('game-container-{{ include.runner_id }}');
       const gameCanvas = document.getElementById('game-canvas-{{ include.runner_id }}');
+
+      if (gameCanvas) {
+        originalCanvasId = gameCanvas.id;
+        gameCanvas.id = 'gameCanvas';
+      }
+
+      if (gameContainer) {
+        originalContainerId = gameContainer.id;
+        gameContainer.id = 'gameContainer';
+      }
       
       // Setup game environment
       const path = '{{ site.baseurl }}';
@@ -246,7 +281,7 @@
       });
       
       // Import core Game engine
-      const GameModule = await import(baseUrl + '/assets/js/BetterGameEngine/GameEngine/Game.js');
+      const GameModule = await import(baseUrl + '/assets/js/GameEnginev1/essentials/Game.js');
       const Game = GameModule.default;
       
       // Create a blob URL to execute user code as a module
@@ -261,8 +296,8 @@
         const GameControl = userModule.GameControl;
         const gameLevelClasses = userModule.gameLevelClasses;
         
-        if (!GameControl || !gameLevelClasses) {
-          throw new Error('Code must export GameControl and gameLevelClasses');
+        if (!gameLevelClasses) {
+          throw new Error('Code must export gameLevelClasses');
         }
 
         // Initialize canvas dimensions before game starts
@@ -278,7 +313,8 @@
           gameCanvas: gameCanvas,
           gameLevelClasses: gameLevelClasses,
           innerWidth: containerWidth,   // Override window.innerWidth
-          innerHeight: containerHeight  // Override window.innerHeight
+          innerHeight: containerHeight,  // Override window.innerHeight
+          disablePauseMenu: true  // Disable pause menu in game runner
         };
 
         // Populate level selector
@@ -298,9 +334,7 @@
         gameInstance = Game.main(environment, GameControl);
         gameControl = gameInstance; // Store reference for pause/stop
         
-        updateStatus('Running');
-        pauseBtn.innerHTML = '⏸ Pause';
-        pauseBtn.onclick = pauseGame;
+        updateStatus('Running (Press Esc to Pause)');
         
       } finally {
         // Clean up blob URL
@@ -311,15 +345,19 @@
       updateStatus('Error: ' + error.message);
       console.error('Game error:', error);
       runBtn.disabled = false;
-      pauseBtn.disabled = true;
       stopBtn.disabled = true;
       levelSelect.disabled = false;
+      
+      // Remove escape key listener on error
+      if (escapeKeyHandler) {
+        document.removeEventListener('keydown', escapeKeyHandler);
+        escapeKeyHandler = null;
+      }
     }
   }
 
   // Event listeners
   runBtn.onclick = runGame;
-  pauseBtn.onclick = pauseGame;
   stopBtn.onclick = stopGame;
   resetBtn.onclick = resetGame;
 

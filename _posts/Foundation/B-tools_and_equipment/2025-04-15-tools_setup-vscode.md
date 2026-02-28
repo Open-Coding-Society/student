@@ -184,7 +184,7 @@ The SDLC adds the important steps of Make and Test to the workflow. This ensures
    Starting server with Minima theme...
    Server PID: 57693
    Server started in 17 seconds
-    Server address: http://127.0.0.1:4500/
+    Server address: http://127.0.0.1:4599/
    ```
 
    * If delayed open 2nd terminal an run command `cat \tmp\jekyl4500.log`.  The log shoown is if things are right.
@@ -199,7 +199,7 @@ The SDLC adds the important steps of Make and Test to the workflow. This ensures
          Remote Theme: Using theme jekyll/minima
    ```
 
-   * Open the localhost Server address in deskop or cloud computer browser `http://127.0.0.1:4500/`
+   * Open the localhost Server address in deskop or cloud computer browser `http://127.0.0.1:4599/student`
    * Test your changes before you commit.
    * If there are errors, make adjustments, commit, and run make again.
 
