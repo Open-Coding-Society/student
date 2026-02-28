@@ -35,12 +35,17 @@ Hi! My name is [Your Full Name]
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
     <a href="{{site.baseurl}}/snake" style="text-decoration: none;">
         <div style="background-color: #00FF00; color: black; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
-            Snake Game
+            Snake
+        </div>
+    </a>
+    <a href="{{site.baseurl}}/gamify/parallax" style="text-decoration: none;">
+        <div style="background-color: #3c1de8; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
+           Fish
         </div>
     </a>
     <a href="{{site.baseurl}}/gamify/water" style="text-decoration: none;">
-        <div style="background-color: #FF0000; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
-           Water
+        <div style="background-color: #b71dc5; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
+           Squid
         </div>
     </a>
 </div>
